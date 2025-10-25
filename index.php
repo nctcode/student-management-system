@@ -8,15 +8,12 @@ if (session_status() === PHP_SESSION_NONE) {
 $controller = $_GET['controller'] ?? 'home';
 $action = $_GET['action'] ?? 'index';
 
-// Cho phép test không cần đăng nhập
-$allowedControllers = [
-    'home', 'hocphi', 'tinnhan', 'donchuyenloptruong', 
-    'thoikhoabieu', 'tuyensinh', 'phancongdethi', 'duyetdethi'
-];
+// Cho phép auth controller không cần đăng nhập
+$publicControllers = ['auth'];
 
-if (!in_array($controller, $allowedControllers)) {
-    $controller = 'home';
-    $action = 'index';
+if (!in_array($controller, $publicControllers) && !isset($_SESSION['user'])) {
+    header('Location: index.php?controller=auth&action=login');
+    exit;
 }
 
 // Include controller
