@@ -29,6 +29,12 @@
                 </a>
             </li>
             <li>
+                <a href="index.php?controller=donchuyenloptruong&action=index">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Đơn chuyển trường</span>
+                </a>
+            </li>
+            <li>
                 <a href="index.php?controller=tinnhan&action=index">
                     <i class="fas fa-comments"></i>
                     <span>Tin nhắn GV</span>

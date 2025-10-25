@@ -26,7 +26,39 @@ if (file_exists($controllerFile)) {
         $controllerInstance = new $controllerClass();
         
         if (method_exists($controllerInstance, $action)) {
-            $controllerInstance->$action();
+            // Xử lý các action cần tham số
+            switch ($controller) {
+                case 'donchuyenloptruong':
+                    switch ($action) {
+                        case 'detail':
+                        case 'pheduyetdon':
+                        case 'cancel':
+                            $maDon = $_GET['maDon'] ?? '';
+                            $controllerInstance->$action($maDon);
+                            break;
+                        default:
+                            $controllerInstance->$action();
+                    }
+                    break;
+                
+                case 'home':
+                    switch ($action) {
+                        case 'admin':
+                        case 'teacher':
+                        case 'student':
+                        case 'parent':
+                        case 'principal':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->$action();
+                    }
+                    break;
+                
+                // Thêm các controller khác cần xử lý tham số ở đây
+                default:
+                    $controllerInstance->$action();
+            }
         } else {
             die("Action không tồn tại: $action");
         }

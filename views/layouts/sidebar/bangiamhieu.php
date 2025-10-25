@@ -46,6 +46,12 @@
                     <span>Báo cáo học tập</span>
                 </a>
             </li>
+            <li>
+                <a href="index.php?controller=donchuyenloptruong&action=index">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Đơn chuyển trường</span>
+                </a>
+            </li>
         </ul>
     </div>
 </nav>

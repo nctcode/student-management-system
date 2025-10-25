@@ -1,21 +1,25 @@
 <?php
 class Database {
-    private $connection;
-    
+    private $conn;
+
     public function __construct() {
-        $config = require_once __DIR__ . '/../config/database.php';
-        
         try {
-            $dsn = "mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}";
-            $this->connection = new PDO($dsn, $config['username'], $config['password']);
-            $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conn = new PDO(
+                "mysql:host=localhost;dbname=qlhs;charset=utf8mb4",
+                "root", 
+                "",
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                ]
+            );
         } catch(PDOException $e) {
             die("Lỗi kết nối database: " . $e->getMessage());
         }
     }
-    
+
     public function getConnection() {
-        return $this->connection;
+        return $this->conn; // Đảm bảo trả về đối tượng PDO, không phải true
     }
 }
 ?>
