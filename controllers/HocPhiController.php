@@ -9,14 +9,23 @@ class HocPhiController {
     }
     
     public function index() {
-        $title = "Quản lý Học phí";
+        $title = "Dashboard Học phí";
         $showSidebar = true;
         
-        // Lấy danh sách học phí (tạm thời dùng mock data)
-        $hocPhiList = $this->hocPhiModel->getAll();
+        require_once 'views/layouts/header.php';
+        require_once 'views/hocphi/dashboard.php';
+        require_once 'views/layouts/footer.php';
+    }
+
+    public function lichsu() {
+        $title = "Lịch sử Thanh toán";
+        $showSidebar = true;
+        
+        // Lấy lịch sử thanh toán
+        $lichSuThanhToan = $this->hocPhiModel->getLichSuThanhToan();
         
         require_once 'views/layouts/header.php';
-        require_once 'views/hocphi/danhsachhocphi.php';
+        require_once 'views/hocphi/lichsuthanhtoan.php';
         require_once 'views/layouts/footer.php';
     }
     
@@ -24,8 +33,78 @@ class HocPhiController {
         $title = "Đóng Học phí";
         $showSidebar = true;
         
+        // Lấy danh sách học phí cần đóng
+        $hocPhiCanDong = $this->hocPhiModel->getHocPhiCanDong();
+        
         require_once 'views/layouts/header.php';
         require_once 'views/hocphi/donghocphi.php';
+        require_once 'views/layouts/footer.php';
+    }
+    
+    public function thanhtoan() {
+        header('Content-Type: application/json');
+        
+        if ($_POST) {
+            $maHocPhi = $_POST['maHocPhi'];
+            $phuongThuc = $_POST['phuongThuc'];
+            
+            // Xử lý thanh toán
+            $result = $this->hocPhiModel->xuLyThanhToan($maHocPhi, $phuongThuc);
+            
+            if ($result) {
+                echo json_encode([
+                    'success' => true, 
+                    'maGiaoDich' => $result,
+                    'message' => 'Thanh toán thành công'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Thanh toán thất bại. Vui lòng thử lại.'
+                ]);
+            }
+        }
+    }
+
+    public function thanhcong() {
+        $title = "Thanh toán thành công";
+        $showSidebar = true;
+        
+        $maGiaoDich = $_GET['maGiaoDich'] ?? '';
+        
+        // Lấy thông tin biên lai
+        $bienLai = $this->hocPhiModel->getThongTinBienLai($maGiaoDich);
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/hocphi/thanhtoanthanhcong.php';
+        require_once 'views/layouts/footer.php';
+    }
+
+    public function inphieu() {
+        $title = "In phiếu thu";
+        $showSidebar = false; // Ẩn sidebar khi in
+        
+        $maHocPhi = $_GET['maHocPhi'] ?? '';
+        
+        // Lấy thông tin phiếu thu
+        $phieuThu = $this->hocPhiModel->taoPhieuThu($maHocPhi);
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/hocphi/inphieu.php';
+        require_once 'views/layouts/footer.php';
+    }
+
+    public function bienlai() {
+        $title = "Biên lai thanh toán";
+        $showSidebar = false; // Ẩn sidebar khi in
+        
+        $maGiaoDich = $_GET['maGiaoDich'] ?? '';
+        
+        // Lấy thông tin biên lai
+        $bienLai = $this->hocPhiModel->getThongTinBienLai($maGiaoDich);
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/hocphi/bienlai.php';
         require_once 'views/layouts/footer.php';
     }
 }
