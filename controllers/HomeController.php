@@ -58,7 +58,7 @@ class HomeController {
                                     <div class="card-body text-center">
                                         <i class="fas fa-exchange-alt fa-3x text-info mb-3"></i>
                                         <h5>Đơn chuyển lớp</h5>
-                                        <p class="text-muted">Quản lý đơn chuyển lớp</p>
+                                        <p class="text-muted">Quản lý đơn chuyển lớp/trường</p>
                                         <a href="index.php?controller=donchuyenlop&action=index" class="btn btn-info btn-sm">Truy cập</a>
                                     </div>
                                 </div>

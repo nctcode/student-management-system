@@ -10,8 +10,8 @@ $action = $_GET['action'] ?? 'index';
 
 // Cho phép test không cần đăng nhập
 $allowedControllers = [
-    'home', 'hocphi', 'tinnhan', 'donchuyenlop', 
-    'thoikhoabieu', 'tuyensinh'
+    'home', 'hocphi', 'tinnhan', 'donchuyenloptruong', 
+    'thoikhoabieu', 'tuyensinh', 'phancongdethi', 'duyetdethi'
 ];
 
 if (!in_array($controller, $allowedControllers)) {
