@@ -1,202 +1,204 @@
 <?php
+require_once 'models/HomeModel.php';
 class HomeController {
     
+    private $homeModel;
+
+    public function __construct() {
+        $this->homeModel = new HomeModel();
+    }
+    
+    private function checkAuth() {
+        if (!isset($_SESSION['user'])) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+    }
+    
+    private function checkRole($allowedRoles) {
+        $this->checkAuth();
+        $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        
+        if (!in_array($userRole, $allowedRoles)) {
+            header('Location: index.php?controller=home&action=index');
+            exit;
+        }
+    }
+    
     public function index() {
-        $title = "Trang Chủ - QLHS";
+        $this->checkAuth();
+        
+        // Chuyển hướng đến trang phù hợp với vai trò
+        $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        switch ($userRole) {
+            case 'QTV':
+                $this->admin();
+                break;
+            case 'GIAOVIEN':
+                $this->teacher();
+                break;
+            case 'HOCSINH':
+                $this->student();
+                break;
+            case 'PHUHUYNH':
+                $this->parent();
+                break;
+            case 'BGH':
+                $this->principal();
+                break;
+            default:
+                $this->showDefaultHome();
+        }
+    }
+    
+    public function admin() {
+        $this->checkRole(['QTV']);
+        $title = "Quản trị viên - QLHS";
+        
+        // Lấy dữ liệu thống kê
+        $stats = $this->homeModel->getAdminStats();
+        $systemOverview = $this->homeModel->getSystemOverview();
+        $newNotifications = $this->homeModel->getNewNotifications('QTV');
+        
         $showSidebar = true;
         
         require_once 'views/layouts/header.php';
-        ?>
+        require_once 'views/layouts/sidebar/admin.php';
+        require_once 'views/home/admin.php';
+        require_once 'views/layouts/footer.php';
+    }
+    
+    public function teacher() {
+        $this->checkRole(['GIAOVIEN']);
+        $title = "Giáo viên - QLHS";
         
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="dashboard-card">
-                        <h1>Chào mừng đến với Hệ thống QLHS</h1>
-                        <p class="lead">Hệ thống đang trong quá trình phát triển</p>
-                        
-                        <div class="row mt-4">
-                            <!-- Học Phí -->
-                            <div class="col-md-3 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-money-bill-wave fa-3x text-primary mb-3"></i>
-                                        <h5>Học phí</h5>
-                                        <p class="text-muted">Quản lý và đóng học phí</p>
-                                        <a href="index.php?controller=hocphi&action=index" class="btn btn-primary btn-sm">Truy cập</a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tin Nhắn -->
-                            <div class="col-md-3 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-comments fa-3x text-success mb-3"></i>
-                                        <h5>Tin nhắn</h5>
-                                        <p class="text-muted">Gửi và nhận tin nhắn</p>
-                                        <a href="index.php?controller=tinnhan&action=index" class="btn btn-success btn-sm">Truy cập</a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Thời Khóa Biểu -->
-                            <div class="col-md-3 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-calendar-alt fa-3x text-warning mb-3"></i>
-                                        <h5>Thời khóa biểu</h5>
-                                        <p class="text-muted">Xem lịch học</p>
-                                        <a href="index.php?controller=thoikhoabieu&action=index" class="btn btn-warning btn-sm">Truy cập</a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Đơn Chuyển Lớp -->
-                            <div class="col-md-3 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-exchange-alt fa-3x text-info mb-3"></i>
-                                        <h5>Đơn chuyển lớp</h5>
-                                        <p class="text-muted">Quản lý đơn chuyển lớp/trường</p>
-                                        <a href="index.php?controller=donchuyenloptruong&action=index" class="btn btn-info btn-sm">Truy cập</a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Phân Công Đề Thi -->
-                            <div class="col-md-3 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-tasks fa-3x text-secondary mb-3"></i>
-                                        <h5>Phân công đề thi</h5>
-                                        <p class="text-muted">Phân công coi thi, chấm thi</p>
-                                        <a href="index.php?controller=phancondethi&action=index" class="btn btn-secondary btn-sm">Truy cập</a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tuyển Sinh -->
-                            <div class="col-md-3 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-user-graduate fa-3x text-dark mb-3"></i>
-                                        <h5>Tuyển sinh</h5>
-                                        <p class="text-muted">Quản lý hồ sơ tuyển sinh</p>
-                                        <a href="index.php?controller=tuyensinh&action=index" class="btn btn-dark btn-sm">Truy cập</a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Duyệt Đề Thi -->
-                            <div class="col-md-3 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-check-circle fa-3x text-danger mb-3"></i>
-                                        <h5>Duyệt đề thi</h5>
-                                        <p class="text-muted">Duyệt và phê duyệt đề thi</p>
-                                        <a href="index.php?controller=duyetdethi&action=index" class="btn btn-danger btn-sm">Truy cập</a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Quản lý Người Dùng -->
-                            <div class="col-md-3 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-users fa-3x text-purple mb-3"></i>
-                                        <h5>Quản lý người dùng</h5>
-                                        <p class="text-muted">Quản lý học sinh, giáo viên</p>
-                                        <a href="index.php?controller=quanlynguoidung&action=index" class="btn btn-purple btn-sm">Truy cập</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Thống kê nhanh -->
-                        <div class="row mt-5">
-                            <div class="col-12">
-                                <h4>Thống kê hệ thống</h4>
-                                <div class="row">
-                                    <div class="col-md-2 col-6 mb-3">
-                                        <div class="stat-card">
-                                            <div class="stat-number">1,250</div>
-                                            <div class="stat-label">Học sinh</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 col-6 mb-3">
-                                        <div class="stat-card">
-                                            <div class="stat-number">85</div>
-                                            <div class="stat-label">Giáo viên</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 col-6 mb-3">
-                                        <div class="stat-card">
-                                            <div class="stat-number">45</div>
-                                            <div class="stat-label">Lớp học</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 col-6 mb-3">
-                                        <div class="stat-card">
-                                            <div class="stat-number">12</div>
-                                            <div class="stat-label">Môn học</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 col-6 mb-3">
-                                        <div class="stat-card">
-                                            <div class="stat-number">5</div>
-                                            <div class="stat-label">Đơn chờ duyệt</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 col-6 mb-3">
-                                        <div class="stat-card">
-                                            <div class="stat-number">8</div>
-                                            <div class="stat-label">Tin nhắn mới</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <style>
-        .btn-purple {
-            background-color: #6f42c1;
-            border-color: #6f42c1;
-            color: white;
-        }
-        .btn-purple:hover {
-            background-color: #5a2d91;
-            border-color: #5a2d91;
-        }
-        .stat-card {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border-left: 4px solid #007bff;
-        }
-        .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff;
-        }
-        .stat-label {
-            font-size: 14px;
-            color: #6c757d;
-        }
-        .card {
-            transition: transform 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        </style>
+        // Lấy mã người dùng từ session
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'];
         
-        <?php
+        // Lấy mã giáo viên thực tế
+        $maGiaoVien = $this->homeModel->getMaGiaoVien($maNguoiDung);
+        
+        if (!$maGiaoVien) {
+            $_SESSION['error'] = "Không tìm thấy thông tin giáo viên!";
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+        
+        // Lấy dữ liệu thống kê
+        $stats = $this->homeModel->getTeacherStats($maGiaoVien);
+        $todaySchedule = $this->homeModel->getTodaySchedule($maNguoiDung, 'GIAOVIEN');
+        $newNotifications = $this->homeModel->getNewNotifications('GIAOVIEN');
+        $teacherClasses = $this->homeModel->getTeacherClasses($maGiaoVien);
+        
+        $showSidebar = true;
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/giaovien.php';
+        require_once 'views/home/giaovien.php';
+        require_once 'views/layouts/footer.php';
+    }
+    
+    public function student() {
+        $this->checkRole(['HOCSINH']);
+        $title = "Học sinh - QLHS";
+        
+        // Lấy mã người dùng từ session
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+        
+        // Lấy thông tin học sinh
+        $studentInfo = $this->homeModel->getStudentInfo($maNguoiDung);
+        
+        if (!$studentInfo) {
+            $_SESSION['error'] = "Không tìm thấy thông tin học sinh!";
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+        
+        $maHocSinh = $studentInfo['maHocSinh'];
+        
+        // Lấy dữ liệu thống kê
+        $stats = $this->homeModel->getStudentStats($maHocSinh);
+        $todaySchedule = $this->homeModel->getTodaySchedule($maNguoiDung, 'HOCSINH');
+        $newNotifications = $this->homeModel->getNewNotifications('HOCSINH');
+        $recentScores = $this->homeModel->getRecentScores($maHocSinh);
+        $newAssignments = $this->homeModel->getNewAssignments($maHocSinh);
+        
+        $showSidebar = true;
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/hocsinh.php';
+        require_once 'views/home/hocsinh.php';
+        require_once 'views/layouts/footer.php';
+    }
+    
+    public function parent() {
+        $this->checkRole(['PHUHUYNH']);
+        $title = "Phụ huynh - QLHS";
+        
+        // Lấy mã người dùng từ session
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+        
+        // Lấy mã phụ huynh thực tế
+        $maPhuHuynh = $this->homeModel->getMaPhuHuynh($maNguoiDung);
+        
+        if (!$maPhuHuynh) {
+            $_SESSION['error'] = "Không tìm thấy thông tin phụ huynh!";
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+        
+        // Lấy dữ liệu thống kê
+        $stats = $this->homeModel->getParentStats($maPhuHuynh);
+        $newNotifications = $this->homeModel->getNewNotifications('PHUHUYNH');
+        $parentChildren = $this->homeModel->getParentChildren($maPhuHuynh);
+        
+        $showSidebar = true;
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/phuhuynh.php';
+        require_once 'views/home/phuhuynh.php';
+        require_once 'views/layouts/footer.php';
+    }
+    
+    public function principal() {
+        $this->checkRole(['BGH']);
+        $title = "Ban giám hiệu - QLHS";
+        
+        // Lấy dữ liệu thống kê
+        $stats = $this->homeModel->getPrincipalStats();
+        $systemOverview = $this->homeModel->getSystemOverview();
+        $newNotifications = $this->homeModel->getNewNotifications('BGH');
+        
+        $showSidebar = true;
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/bangiamhieu.php'; // Sidebar riêng cho BGH
+        require_once 'views/home/bangiamhieu.php';
+        require_once 'views/layouts/footer.php';
+    }
+    
+    private function showDefaultHome() {
+        header('Location: index.php?controller=auth&action=login');
+        exit;
+    }
+    
+    // Thêm hàm xử lý lỗi và trang không tìm thấy
+    public function notFound() {
+        http_response_code(404);
+        $title = "Trang không tồn tại - QLHS";
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/errors/404.php';
+        require_once 'views/layouts/footer.php';
+    }
+    
+    // Thêm hàm xử lý lỗi server
+    public function serverError() {
+        http_response_code(500);
+        $title = "Lỗi máy chủ - QLHS";
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/errors/500.php';
         require_once 'views/layouts/footer.php';
     }
 }
