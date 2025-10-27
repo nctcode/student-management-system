@@ -89,6 +89,10 @@ $roleName = 'Ban giám hiệu';
                                     <a href="index.php?controller=hocphi&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-money-bill-wave me-2"></i>Tài chính & Học phí
                                     </a>
+                                    <!-- Thêm mục mới cho phê duyệt chuyển lớp/trường -->
+                                    <a href="index.php?controller=donchuyenloptruong&action=index" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-exchange-alt me-2"></i>Phê duyệt chuyển lớp/trường
+                                    </a>
                                     <a href="index.php?controller=duyetdethi&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-check-circle me-2"></i>Duyệt đề thi
                                     </a>
