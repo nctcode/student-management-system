@@ -1,120 +1,155 @@
-<div class="container mt-4 mb-5">
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800"><strong>Gửi tin nhắn</strong></h1>
     
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>✉️ Soạn tin nhắn</h4>
-        <a href="index.php?controller=tinnhan&action=index" class="btn btn-secondary">← Quay lại danh sách</a>
-    </div>
-
-    <?php if (!empty($_SESSION['flash_error'])): ?>
-        <div class="alert alert-danger"><?= $_SESSION['flash_error']; unset($_SESSION['flash_error']); ?></div>
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert alert-danger"><?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
+    <?php endif; ?>
+    
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
     <?php endif; ?>
 
-    <form method="POST" enctype="multipart/form-data" action="index.php?controller=tinnhan&action=guitin">
-        
-        <div class="row g-4"> <div class="col-lg-7">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title mb-3">CHỌN ĐỐI TƯỢNG NHẬN</h5>
-
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <label class="form-label small">Đối tượng:</label>
-                            <div>
-                                <label class="form-check-label"><input type="checkbox" id="check_hoc_sinh" value="hoc_sinh" checked> Học sinh</label>
-                                <label class="form-check-label ms-2"><input type="checkbox" id="check_phu_huynh" value="phu_huynh"> Phụ huynh</label>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h5 class="m-0 font-weight-bold text-primary">CHỌN ĐỐI TƯỢNG NHẬN TIN NHẮN</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="checkHocSinh" value="HOCSINH" checked>
+                            <label class="form-check-label" for="checkHocSinh">Học sinh</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="checkPhuHuynh" value="PHUHUYNH">
+                            <label class="form-check-label" for="checkPhuHuynh">Phụ huynh</label>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <select class="form-control" id="selectLop">
+                                    <option value="">Chọn lớp</option>
+                                    <?php foreach ($danhSachLop as $lop): ?>
+                                        <option value="<?= $lop['maLop'] ?>"><?= $lop['tenLop'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                         </div>
-                        <div>
-                            <label for="lop" class="form-label small">Lớp:</label>
-                            <select id="lop" name="lop" class="form-select form-select-sm" style="width: 150px;" required>
-                                <option value="">-- Chọn lớp --</option>
-                                <?php foreach ($dsLop as $lop): ?>
-                                    <option value="<?= htmlspecialchars($lop['tenLop']) ?>"><?= htmlspecialchars($lop['tenLop']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <input type="text" class="form-control" id="timKiem" placeholder="Tìm kiếm...">
+                            </div>
                         </div>
                     </div>
-
-                    <div class="input-group input-group-sm mb-3">
-                        <span class="input-group-text">🔍</span>
-                        <input type="text" id="timNguoiNhan" class="form-control" placeholder="Tìm kiếm theo tên, vai trò...">
-                    </div>
-
-                    <small id="soKetQua" class="text-muted ms-2">Tìm thấy 0 kết quả</small>
                     <br>
-                    <div class="table-responsive flex-grow-1" style="max-height: 450px; overflow-y: auto;">
-                        <table class="table table-sm table-striped align-middle" id="bangNguoiNhan">
-                            <thead class="table-light" style="position: sticky; top: 0;">
-                                <tr>
-                                    <th style="width:40px"></th>
-                                    <th style="width:80px">Mã</th>
-                                    <th>Họ tên</th>
-                                    <th style="width:120px">Vai trò</th>
-                                    <th>Thông tin</th>
-                                    <th>Email</th>
-                                    <th>SĐT</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="7" class="text-center text-muted">Chọn lớp để xem danh sách...</td></tr>
-                            </tbody>
-                        </table>
-                        <button type="button" id="loadMoreBtn" class="btn btn-outline-primary btn-sm ms-2" style="display: none;">Xem thêm</button>
-
+                    <div id="danhSachHocSinh" class="danh-sach-container">
+                        <h6 class="font-weight-bold text-center">DANH SÁCH HỌC SINH</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm" id="tableHocSinh">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="chonTatCaHS"></th>
+                                        <th>Mã HS</th>
+                                        <th>Học sinh</th>
+                                        <th>Lớp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyHocSinh">
+                                    </tbody>
+                            </table>
+                        </div>
+                        <div id="paginationHS" class="pagination-container mt-2"></div>
                     </div>
-                                
-                    <div class="d-flex justify-content-between align-items-center mt-3 border-top pt-3">
-                        <div>
-                            <button type="button" id="chonTatCa" class="btn btn-outline-secondary btn-sm">Chọn tất cả</button>
+                    <br>
+                    <div id="danhSachPhuHuynh" class="danh-sach-container" style="display: none;">
+                        <h6 class="font-weight-bold text-center">DANH SÁCH PHỤ HUYNH</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm" id="tablePhuHuynh">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="chonTatCaPH"></th>
+                                        <th>Mã PH</th>
+                                        <th>Phụ huynh</th>
+                                        <th>Học sinh</th>
+                                        <th>Lớp</th>
+                                        <th>Email</th>
+                                        <th>SĐT</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyPhuHuynh">
+                                    </tbody>
+                            </table>
                         </div>
-                        <div id="soLuongChon" class="text-muted fw-bold">Đã chọn: 0 người</div>
+                        <div id="paginationPH" class="pagination-container mt-2"></div>
                     </div>
 
-                </div> 
-            </div> 
-            </div> 
-            <div class="col-lg-5">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">SOẠN TIN NHẮN</h5>
+                    <div class="mt-3">
+                        <strong>Đã chọn: <span id="soLuongChon">0</span></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <h6 class="text-muted small">NHẬP TIN NHẮN</h6>
-                        
-                        <div class="mb-3">
-                            <label for="tieuDe" class="form-label">Tiêu đề:</label>
-                            <input type="text" id="tieuDe" name="tieuDe" class="form-control" required>
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h5 class="m-0 font-weight-bold text-primary">GỬI TIN NHẮN</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="formGuiTinNhan">
+                        <div class="form-group">
+                            <label><strong>Người nhận</strong></label>
+                            <div class="border rounded p-2 bg-light" id="danhSachNguoiNhan" style="min-height: 40px;">
+                                </div>
+                            <input type="hidden" name="nguoiNhan" id="hiddenNguoiNhan">
                         </div>
 
-                        <div class="mb-3">
-                            <label for="noidung" class="form-label">Nội dung:</label>
-                            <textarea name="noidung" id="noidung" class="form-control" rows="8" maxlength="1000" required></textarea>
-                            <small id="demKyTu" class="form-text text-muted">0 / 1000 ký tự</small>
+                        <div class="form-group">
+                            <label><strong>Tiêu đề</strong></label>
+                            <input type="text" name="tieuDe" class="form-control" required placeholder="Nhập tiêu đề tin nhắn">
                         </div>
 
-                        <div class="mb-3">
-                            <label for="dinhkem" class="form-label">Đính kèm file:</label>
-                            <input type="file" name="dinhkem" id="dinhkem" class="form-control">
+                        <div class="form-group">
+                            <label><strong>Nội dung tin nhắn</strong></label>
+                            <textarea name="noiDung" class="form-control" rows="6" required 
+                                      placeholder="Nhập nội dung tin nhắn..." 
+                                      onkeyup="demKyTu(this)"></textarea>
+                            <small class="form-text text-muted">
+                                <span id="soKyTu">0</span>/1000 ký tự
+                            </small>
                         </div>
 
-                        <div class="small mt-4">
-                            <strong>Lưu ý:</strong>
-                            <ul class="mb-0" style="padding-left: 1.2rem;">
-                                <li>Tin nhắn tối đa 1000 ký tự.</li>
-                                <li>File đính kèm tối đa 10MB.</li>
-                                <li>Định dạng hỗ trợ: PDF, DOC, DOCX, JPG, PNG.</li>
-                            </ul>
+                        <div class="form-group">
+                            <label><strong>Đính kèm file</strong></label>
+                            <div id="danhSachFile" class="mb-2">
+                                </div>
+                            <input type="file" name="fileDinhKem[]" id="fileDinhKem" class="form-control-file" 
+                                onchange="hienThiFile()" multiple>
+                            <br>
+                            <small class="form-text text-muted">
+                                • File đính kèm tối đa 10MB<br>
+                                • Định dạng hỗ trợ: PDF, DOC, JPG, PNG, XLSX<br>
+                                • Không gửi nội dung không phù hợp
+                            </small>
                         </div>
 
-                        <div class="text-end mt-4">
-                            <a href="index.php?controller=tinnhan&action=index" class="btn btn-secondary">Hủy</a>
-                            <button type="submit" class="btn btn-primary ms-2">Gửi tin nhắn</button>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-danger btn-lg" onclick="history.back()">
+                                <i class="fas fa-times"></i> Hủy
+                            </button>
+                            <button type="submit" class="btn btn-success btn-lg ms-2">
+                                <i class="fas fa-paper-plane"></i> Gửi tin nhắn
+                            </button>
                         </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-                    </div> 
-                </div> 
-            </div> 
-        </div> 
-    </form> 
-</div> 
-
+<link rel="stylesheet" href="assets/css/tinnhan.css">
 <script src="assets/js/tinnhan.js"></script>

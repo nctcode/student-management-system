@@ -1,188 +1,318 @@
 <?php
-require_once "models/TinNhanModel.php";
-require_once "models/LopModel.php";
+require_once 'models/TinNhanModel.php';
+require_once 'models/HocSinhModel.php';
+require_once 'models/PhuHuynhModel.php';
 
 class TinNhanController {
-    private $model;
-    private $db;
+    private $tinNhanModel;
+    private $hocSinhModel;
+    private $phuHuynhModel;
 
     public function __construct() {
-        require_once "models/Database.php";
-        $this->db = (new Database())->getConnection();
-        $this->model = new TinNhanModel($this->db);
+        $this->tinNhanModel = new TinNhanModel();
+        $this->hocSinhModel = new HocSinhModel();
+        $this->phuHuynhModel = new PhuHuynhModel();
     }
-
-    // === Trang danh sách tin nhắn / cuộc hội thoại ===
+    
+    private function checkAuth() {
+        if (!isset($_SESSION['user'])) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+    }
+    
     public function index() {
-        if (empty($_SESSION['user']['maNguoiDung'])) {
-            header("Location: index.php?controller=auth&action=login");
+        $this->checkAuth();
+        
+        $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        $allowedRoles = ['QTV', 'BGH', 'PHUHUYNH', 'HOCSINH', 'GIAOVIEN'];
+        
+        if (!in_array($userRole, $allowedRoles)) {
+            $_SESSION['error'] = "Bạn không có quyền truy cập chức năng này!";
+            header('Location: index.php?controller=home&action=index');
             exit;
         }
 
+        $title = "Tin Nhắn - QLHS";
+        $showSidebar = true;
+        
+        // Lấy danh sách tin nhắn
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
-        $dscuoc = $this->model->getDanhSachCuocHoiThoaiCuaNguoiDung($maNguoiDung);
-
+        $tinNhan = $this->tinNhanModel->getTinNhanByNguoiDung($maNguoiDung);
+        
         require_once 'views/layouts/header.php';
+        
+        $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        if ($userRole === 'GIAOVIEN') {
+            require_once 'views/layouts/sidebar/giaovien.php';
+        } elseif ($userRole === 'PHUHUYNH') {
+            require_once 'views/layouts/sidebar/phuhuynh.php';
+        } elseif ($userRole === 'BGH') {
+            require_once 'views/layouts/sidebar/bangiamhieu.php';
+        } elseif ($userRole === 'QTV') {
+            require_once 'views/layouts/sidebar/admin.php';
+        } else {  
+            require_once 'views/layouts/sidebar/hocsinh.php';
+        }
+        
         require_once 'views/tinnhan/danhsachtinnhan.php';
         require_once 'views/layouts/footer.php';
     }
 
-    // === Trang soạn tin nhắn ===
-    public function gui() {
-        if (empty($_SESSION['user']['maNguoiDung'])) {
-            header("Location: index.php?controller=auth&action=login");
+    public function guitinnhan() {
+        $this->checkAuth();
+        
+        $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        $allowedRoles = ['QTV', 'BGH', 'GIAOVIEN'];
+        
+        if (!in_array($userRole, $allowedRoles)) {
+            $_SESSION['error'] = "Bạn không có quyền gửi tin nhắn!";
+            header('Location: index.php?controller=tinnhan&action=index');
             exit;
         }
 
-        $lopModel = new LopModel($this->db);
-        $dsLop = $lopModel->getTatCaLop();
+        $title = "Gửi Tin Nhắn - QLHS";
+        $showSidebar = true;
+
+        // Lấy danh sách học sinh và lớp học
+        $danhSachLop = $this->hocSinhModel->getDanhSachLop();
+        $danhSachHocSinh = [];
+        $danhSachPhuHuynh = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->xuLyGuiTinNhan();
+        }
 
         require_once 'views/layouts/header.php';
+        
+        if ($userRole === 'GIAOVIEN') {
+            require_once 'views/layouts/sidebar/giaovien.php';
+        } elseif ($userRole === 'BGH') {
+            require_once 'views/layouts/sidebar/bangiamhieu.php';
+        } else {
+            require_once 'views/layouts/sidebar/admin.php';
+        }
+        
         require_once 'views/tinnhan/guitinnhan.php';
         require_once 'views/layouts/footer.php';
     }
 
-    // === Xử lý gửi tin nhắn ===
-    public function guitin() {
-        if (empty($_SESSION['user']['maNguoiDung'])) {
-            header("Location: index.php?controller=auth&action=login");
-            exit;
-        }
-
+    private function xuLyGuiTinNhan() {
         $maNguoiGui = $_SESSION['user']['maNguoiDung'];
-        $nguoinhan_values = $_POST['nguoinhan'] ?? []; // (Vd: ['hs_1', 'ph_1'])
-        $tieuDe = trim($_POST['tieuDe'] ?? '');
-        $noiDung = trim($_POST['noidung'] ?? '');
-        $filePath = null; 
-        $tenLop = $_POST['lop'] ?? '';
+        $tieuDe = $_POST['tieuDe'] ?? '';
+        $noiDung = $_POST['noiDung'] ?? '';
+        $loaiNguoiNhan = $_POST['loaiNguoiNhan'] ?? '';
+        $danhSachNguoiNhan = $_POST['nguoiNhan'] ?? [];
 
-        // xử lý file đính kèm
-        if (!empty($_FILES['dinhkem']['name'])) {
-            $file = $_FILES['dinhkem'];
-            $allowed = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
-            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            if (!in_array($ext, $allowed) || $file['size'] > 10 * 1024 * 1024) {
-                $_SESSION['flash_error'] = "File không hợp lệ hoặc vượt quá 10MB.";
-                header("Location: index.php?controller=tinnhan&action=gui");
-                exit;
-            }
-            $uploadDir = "uploads/tinnhan/";
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-            $filename = time() . "_" . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', basename($file['name']));
-            $dest = $uploadDir . $filename;
-            if (!move_uploaded_file($file['tmp_name'], $dest)) {
-                $_SESSION['flash_error'] = "Không thể lưu file đính kèm.";
-                header("Location: index.php?controller=tinnhan&action=gui");
-                exit;
-            }
-            $filePath = $dest;
+        // Kiểm tra nếu danhSachNguoiNhan là string (từ hidden input) thì chuyển thành array
+        if (is_string($danhSachNguoiNhan) && !empty($danhSachNguoiNhan)) {
+            $danhSachNguoiNhan = explode(',', $danhSachNguoiNhan);
         }
 
-        // ==== Kiểm tra người nhận ====
-        if (empty($nguoinhan_values)) {
-            $_SESSION['flash_error'] = "Vui lòng chọn ít nhất một người nhận.";
-            header("Location: index.php?controller=tinnhan&action=gui");
+        if (empty($tieuDe) || empty($noiDung) || empty($danhSachNguoiNhan)) {
+            $_SESSION['error'] = "Vui lòng điền đầy đủ thông tin tin nhắn và chọn người nhận!";
+            return;
+        }
+
+        if (strlen($noiDung) > 1000) {
+            $_SESSION['error'] = "Tin nhắn không được vượt quá 1000 ký tự!";
+            return;
+        }
+
+        // Xử lý upload file
+        $fileDinhKem = $this->xuLyUploadFile();
+        
+        // Tạo cuộc hội thoại và gửi tin nhắn
+        $result = $this->tinNhanModel->taoTinNhan(
+            $maNguoiGui,
+            $danhSachNguoiNhan,
+            $tieuDe,
+            $noiDung,
+            $fileDinhKem,
+            $loaiNguoiNhan
+        );
+
+        if ($result) {
+            $_SESSION['success'] = "Gửi tin nhắn thành công!";
+            header('Location: index.php?controller=tinnhan&action=index');
             exit;
-        }
-
-        // ==== PHÂN TÁCH ID HỌC SINH VÀ PHỤ HUYNH ====
-        $ds_hocsinh_ids = [];
-        $ds_phuhuynh_ids = [];
-        foreach ($nguoinhan_values as $value) {
-            if (strpos($value, 'hs_') === 0) $ds_hocsinh_ids[] = (int)substr($value, 3);
-            elseif (strpos($value, 'ph_') === 0) $ds_phuhuynh_ids[] = (int)substr($value, 3);
-        }
-
-        // === GỬI 1 TIN NHẮN NHÓM ===
-        $tongSoNguoiNhan = count($ds_hocsinh_ids) + count($ds_phuhuynh_ids);
-        $loaiHoiThoai = ($tongSoNguoiNhan > 1) ? 'NHOM' : 'DOI_TUONG';
-        $tenHoiThoai = "";
-
-        // 1. Xác định tên hội thoại
-        if ($loaiHoiThoai === 'NHOM') {
-            $tenHoiThoai = "Nhóm " . $tenLop;
         } else {
-            // Nếu chỉ có 1 người, xác định là HS hay PH
-            $tenVaiTro = !empty($ds_hocsinh_ids) ? "Học sinh" : "Phụ huynh";
-            $tenHoiThoai = "Trao đổi Giáo viên - " . $tenVaiTro;
+            $_SESSION['error'] = "Có lỗi xảy ra khi gửi tin nhắn!";
+        }
+    }
+
+    private function xuLyUploadFile() {
+        // Kiểm tra xem có file nào được tải lên không
+        if (!isset($_FILES['fileDinhKem']) || empty($_FILES['fileDinhKem']['name'][0])) {
+            return null; // Không có file nào
         }
 
-        // 2. Tạo MỘT cuộc hội thoại duy nhất
-        $maHoiThoai = $this->model->taoCuocHoiThoai($tenHoiThoai, $loaiHoiThoai, $maNguoiGui);
-
-        // 3. Gửi MỘT tin nhắn duy nhất vào hội thoại đó
-        $this->model->themTinNhan($maHoiThoai, $tieuDe, $noiDung, $maNguoiGui, $filePath);
-
-        // 4. Thêm TẤT CẢ người dùng vào bảng trung gian (NGUOI DUNG HOI THOAI)
+        $files = $_FILES['fileDinhKem'];
+        $allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls'];
+        $maxSize = 10 * 1024 * 1024; // 10MB
+        $uploadDir = 'uploads/tinnhan/';
         
-        // Chuẩn bị câu lệnh SQL
-        $stmt_add_user = $this->db->prepare("INSERT INTO nguoidung_hoithoai (maHoiThoai, maNguoiDung) VALUES (:maHoiThoai, :maNguoiDung)");
+        $uploadedFilesInfo = []; // Mảng để lưu thông tin các file đã upload thành công
 
-        // Lấy maNguoiDung của học sinh
-        $dsMaNguoiDung = $this->model->getMaNguoiDungTuHocSinh($ds_hocsinh_ids);
-        // Lấy maNguoiDung của phụ huynh
-        $dsMaNguoiDung = array_merge($dsMaNguoiDung, $this->model->getMaNguoiDungTuPhuHuynh($ds_phuhuynh_ids));
-        
-        // Thêm chính người gửi vào hội thoại
-        $dsMaNguoiDung[] = $maNguoiGui; 
-        
-        // Xóa trùng lặp và thêm vào CSDL
-        foreach (array_unique($dsMaNguoiDung) as $maND) {
-            if ($maND) {
-                $stmt_add_user->execute(['maHoiThoai' => $maHoiThoai, 'maNguoiDung' => $maND]);
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // Lặp qua từng file được tải lên
+        // (files['name'] là một mảng)
+        foreach ($files['name'] as $key => $name) {
+            if ($files['error'][$key] !== UPLOAD_ERR_OK) {
+                continue; 
+            }
+
+            $fileSize = $files['size'][$key];
+            $fileTmpName = $files['tmp_name'][$key];
+            
+            // Kiểm tra kích thước file
+            if ($fileSize > $maxSize) {
+                $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' vượt quá 10MB!";
+                // Khi 1 file lỗi, dừng toàn bộ việc upload
+                return null; 
+            }
+
+            // Kiểm tra loại file
+            $fileExtension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            if (!in_array($fileExtension, $allowedTypes)) {
+                $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' có định dạng không hỗ trợ!";
+                return null;
+            }
+
+            // Tạo tên file mới
+            $fileName = uniqid() . '_' . time() . '_' . $key . '.' . $fileExtension;
+            $filePath = $uploadDir . $fileName;
+
+            if (move_uploaded_file($fileTmpName, $filePath)) {
+                // Nếu thành công, thêm thông tin file vào mảng
+                $uploadedFilesInfo[] = [
+                    'tenFile' => $name,
+                    'duongDan' => $filePath,
+                    'kichThuoc' => $fileSize
+                ];
+            } else {
+                // Nếu di chuyển file thất bại
+                $_SESSION['error'] = "Có lỗi khi lưu file '" . htmlspecialchars($name) . "'.";
+                return null;
             }
         }
 
-        // Thông báo và chuyển hướng
-        $_SESSION['flash_success'] = "Gửi tin nhắn thành công!";
-        header("Location: index.php?controller=tinnhan&action=index");
-        exit;
+        // Trả về mảng chứa thông tin của TẤT CẢ các file đã upload
+        return $uploadedFilesInfo;
     }
 
-    // === AJAX: Lấy danh sách học sinh / phụ huynh theo lớp ===
-    public function ajaxLayDanhSachNguoiNhan() {
-        header('Content-Type: application/json; charset=utf-8');
-        $loai = $_GET['loai'] ?? 'hoc_sinh';
-        $lop = $_GET['lop'] ?? '';
-        $data = $this->model->getNguoiNhanTheoLop($loai, $lop);
-        echo json_encode($data);
-        exit;
-    }
+    // Trong phương thức chitiettinnhan, thêm kiểm tra quyền truy cập:
 
-    // === AJAX: Lấy danh sách phụ huynh theo lớp học sinh ===
-    public function ajaxLayPhuHuynhTheoLop() {
-        header('Content-Type: application/json; charset=utf-8');
-        $lop = $_GET['lop'] ?? '';
-        $data = $this->model->getPhuHuynhTheoLop($lop);
-        echo json_encode($data);
-        exit;
-    }
+    public function chitiettinnhan($maHoiThoai) {
+        $this->checkAuth();
+        
+        $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'];
 
-    // === AJAX fallback: Lấy danh sách lớp ===
-    public function ajaxLayDanhSachLop() {
-        header('Content-Type: application/json; charset=utf-8');
-        $stmt = $this->db->query("SELECT maLop, tenLop FROM lophoc ORDER BY tenLop");
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo json_encode($rows);
-        exit;
-    }
-
-    // === Trang chi tiết cuộc hội thoại ===
-    public function chitiet() {
-        $maHoiThoai = intval($_GET['maHoiThoai'] ?? 0);
-        if ($maHoiThoai <= 0) {
-            header("Location: index.php?controller=tinnhan&action=index");
+        // Kiểm tra quyền truy cập
+        if (!$this->tinNhanModel->kiemTraQuyenTruyCap($maHoiThoai, $maNguoiDung)) {
+            $_SESSION['error'] = "Bạn không có quyền truy cập hội thoại này!";
+            header('Location: index.php?controller=tinnhan&action=index');
             exit;
         }
 
-        $tinnhans = $this->model->getTinNhanTheoCuocHoiThoai($maHoiThoai);
-        
-        // === Lấy danh sách người nhận ===
-        $dsNguoiNhan = $this->model->getNguoiNhanCuaHoiThoai($maHoiThoai);
+        $title = "Chi Tiết Tin Nhắn - QLHS";
+        $showSidebar = true;
+
+        // Lấy chi tiết hội thoại
+        $chiTietHoiThoai = $this->tinNhanModel->getChiTietHoiThoai($maHoiThoai, $maNguoiDung);
+        $tinNhan = $this->tinNhanModel->getTinNhanByHoiThoai($maHoiThoai);
+
+        $danhSachThanhVien = $this->tinNhanModel->getThanhVienHoiThoai($maHoiThoai);
+
+        if (!$chiTietHoiThoai) {
+            $_SESSION['error'] = "Không tìm thấy hội thoại!";
+            header('Location: index.php?controller=tinnhan&action=index');
+            exit;
+        }
+
+        // Đánh dấu đã đọc
+        $this->tinNhanModel->danhDauDaDoc($maHoiThoai, $maNguoiDung);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->xuLyGuiTinNhanTrongHoiThoai($maHoiThoai);
+        }
 
         require_once 'views/layouts/header.php';
+        
+        if ($userRole === 'GIAOVIEN') {
+            require_once 'views/layouts/sidebar/giaovien.php';
+        } elseif ($userRole === 'PHUHUYNH') {
+            require_once 'views/layouts/sidebar/phuhuynh.php';
+        } elseif ($userRole === 'BGH') {
+            require_once 'views/layouts/sidebar/bangiamhieu.php';
+        } elseif ($userRole === 'QTV') {
+            require_once 'views/layouts/sidebar/admin.php';
+        } else {  
+            require_once 'views/layouts/sidebar/hocsinh.php';
+        }
+        
         require_once 'views/tinnhan/chitiettinnhan.php';
         require_once 'views/layouts/footer.php';
+    }
+
+    private function xuLyGuiTinNhanTrongHoiThoai($maHoiThoai) {
+        $maNguoiGui = $_SESSION['user']['maNguoiDung'];
+        $noiDung = $_POST['noiDung'] ?? '';
+
+        if (empty($noiDung)) {
+            $_SESSION['error'] = "Vui lòng nhập nội dung tin nhắn!";
+            return;
+        }
+
+        // Xử lý upload file (nếu có)
+        $fileDinhKem = $this->xuLyUploadFile();
+
+        $result = $this->tinNhanModel->guiTinNhanTrongHoiThoai(
+            $maHoiThoai,
+            $maNguoiGui,
+            $noiDung,
+            $fileDinhKem
+        );
+
+        if ($result) {
+            $_SESSION['success'] = "Gửi tin nhắn thành công!";
+            header("Location: index.php?controller=tinnhan&action=chitiettinnhan&maHoiThoai=$maHoiThoai");
+            exit;
+        } else {
+            $_SESSION['error'] = "Có lỗi xảy ra khi gửi tin nhắn!";
+        }
+    }
+
+    // AJAX: Lấy danh sách học sinh theo lớp
+    public function getHocSinhByLop() {
+        $maLop = $_GET['maLop'] ?? '';
+        
+        if (empty($maLop)) {
+            echo json_encode([]);
+            exit;
+        }
+
+        $hocSinh = $this->hocSinhModel->getHocSinhByLop($maLop);
+        echo json_encode($hocSinh);
+        exit;
+    }
+
+    // AJAX: Lấy danh sách phụ huynh theo lớp
+    public function getPhuHuynhByLop() {
+        $maLop = $_GET['maLop'] ?? '';
+        
+        if (empty($maLop)) {
+            echo json_encode([]);
+            exit;
+        }
+
+        $phuHuynh = $this->phuHuynhModel->getPhuHuynhByLop($maLop);
+        echo json_encode($phuHuynh);
+        exit;
     }
 }
 ?>
