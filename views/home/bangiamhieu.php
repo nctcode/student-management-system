@@ -16,7 +16,7 @@ $roleName = 'Ban giám hiệu';
                         <small class="text-muted">Đăng nhập lúc: <?php echo date('H:i d/m/Y'); ?></small>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <div class="card bg-primary text-white h-100">
@@ -71,7 +71,7 @@ $roleName = 'Ban giám hiệu';
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row mt-4">
                     <div class="col-md-6">
                         <div class="card">
@@ -91,6 +91,9 @@ $roleName = 'Ban giám hiệu';
                                     </a>
                                     <a href="index.php?controller=duyetdethi&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-check-circle me-2"></i>Duyệt đề thi
+                                    </a>
+                                    <a href="index.php?controller=phancongrade&action=index" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-file-signature me-2"></i>Phân công ra đề
                                     </a>
                                 </div>
                             </div>
