@@ -3,7 +3,7 @@ class Database {
     private $connection;
     
     public function __construct() {
-        $config = require_once __DIR__ . '/../config/database.php';
+        $config = require __DIR__ . '/../config/database.php';
         
         try {
             $dsn = "mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}";
@@ -19,3 +19,5 @@ class Database {
     }
 }
 ?>
+
+

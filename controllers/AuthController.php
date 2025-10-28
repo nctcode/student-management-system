@@ -70,6 +70,9 @@ class AuthController {
             case 'BGH':
                 header('Location: index.php?controller=home&action=principal');
                 break;
+             case 'TOTRUONG':
+                header('Location: index.php?controller=home&action=leader');
+                break;
             default:
                 header('Location: index.php?controller=home&action=index');
         }
