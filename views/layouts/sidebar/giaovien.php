@@ -10,8 +10,16 @@
                     <span>Dashboard</span>
                 </a>
             </li>
-            <li>
-                <a href="index.php?controller=thoikhoabieu&action=index">
+            <?php if (in_array($_SESSION['user']['vaiTro'], ['QTV', 'BGH', 'GIAOVIEN'])): ?>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=tinnhan&action=guitinnhan">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Gửi tin nhắn</span>
+                </a>
+            </li>
+            <?php endif; ?>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=thoikhoabieu&action=xemluoi">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Thời khóa biểu</span>
                 </a>

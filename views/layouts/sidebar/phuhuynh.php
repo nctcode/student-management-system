@@ -16,6 +16,12 @@
                     <span>Kết quả học tập</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=thoikhoabieu&action=xemluoi">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Thời khóa biểu</span>
+                </a>
+            </li>
             <li>
                 <a href="#">
                     <i class="fas fa-calendar-check"></i>
@@ -62,6 +68,12 @@
                 <a href="#">
                     <i class="fas fa-phone"></i>
                     <span>Liên hệ</span>
+                </a>
+            </li>
+            <li>
+                <a href="index.php?controller=tuyensinh&action=hosocuatoi">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Hồ sơ tuyển sinh</span>
                 </a>
             </li>
         </ul>

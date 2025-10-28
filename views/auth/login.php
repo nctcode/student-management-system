@@ -271,6 +271,11 @@ $title = "Đăng Nhập - QLHS";
                     </div>
                 </div>
             </div>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=tuyensinh&action=dangkyhoso">
+                    <i class="fas fa-user-plus"></i> Đăng ký tuyển sinh
+                </a>
+            </li>
         </div>
     </div>
 

@@ -23,7 +23,7 @@ class DonChuyenLopTruongController {
         $this->checkAuth();
         
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
-        $allowedRoles = ['QTV', 'BGH', 'PHUHUYNH'];
+        $allowedRoles = ['QTV', 'BGH', 'PHUHUYNH', 'HOCSINH'];
         
         if (!in_array($userRole, $allowedRoles)) {
             $_SESSION['error'] = "Bạn không có quyền truy cập chức năng này!";
@@ -37,10 +37,14 @@ class DonChuyenLopTruongController {
         require_once 'views/layouts/header.php';
         
         // Sidebar theo role
-        if ($userRole === 'QTV' || $userRole === 'BGH') {
+        if ($userRole === 'QTV') {
             require_once 'views/layouts/sidebar/admin.php';
-        } else {
+        }elseif($userRole === 'BGH') {
+            require_once 'views/layouts/sidebar/bangiamhieu.php';
+        }elseif($userRole === 'PHUHUYNH') {
             require_once 'views/layouts/sidebar/phuhuynh.php';
+        }else{
+            require_once 'views/layouts/sidebar/hocsinh.php';
         }
         
         require_once 'views/donchuyenloptruong/danhsachdon.php';
@@ -63,7 +67,7 @@ class DonChuyenLopTruongController {
         $showSidebar = true;
         // Lấy thông tin học sinh của phụ huynh
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
-        $hocSinh = $this->hocSinhModel->getHocSinhByPhuHuynh($maNguoiDung);
+        $hocSinh = $this->hocSinhModel->getHocSinhByNguoiDung($maNguoiDung);
 
         // Lấy danh sách trường
         $truong = $this->donChuyenTruongModel->getAllTruong();
@@ -107,7 +111,7 @@ class DonChuyenLopTruongController {
         $this->checkAuth();
         
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
-        $allowedRoles = ['QTV', 'BGH', 'PHUHUYNH'];
+        $allowedRoles = ['QTV', 'BGH', 'PHUHUYNH', 'HOCSINH'];
         
         if (!in_array($userRole, $allowedRoles)) {
             $_SESSION['error'] = "Bạn không có quyền xem đơn này!";

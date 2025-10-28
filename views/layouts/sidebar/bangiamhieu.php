@@ -10,6 +10,20 @@
                     <span>Dashboard</span>
                 </a>
             </li>
+            <?php if (in_array($_SESSION['user']['vaiTro'], ['QTV', 'BGH', 'GIAOVIEN'])): ?>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=tinnhan&action=guitinnhan">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Gửi tin nhắn</span>
+                </a>
+            </li>
+            <?php endif; ?>
+            <li>
+                <a href="index.php?controller=thoikhoabieu&action=xemtkb">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Thời khóa biểu</span>
+                </a>
+            </li>
             <li>
                 <a href="index.php?controller=thongke&action=index">
                     <i class="fas fa-chart-bar"></i>
@@ -50,6 +64,12 @@
                 <a href="index.php?controller=donchuyenloptruong&action=index">
                     <i class="fas fa-exchange-alt"></i>
                     <span>Đơn chuyển trường</span>
+                </a>
+            </li>
+            <li>
+                <a href="index.php?controller=tuyensinh&action=danhsachhoso">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Tuyển sinh</span>
                 </a>
             </li>
         </ul>

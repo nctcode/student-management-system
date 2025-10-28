@@ -54,8 +54,94 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->$action();
                     }
                     break;
+
+                case 'tuyensinh':
+                    switch ($action) {
+                        case 'dangkyhoso':
+                            $controllerInstance->dangkyhoso();
+                            break;
+                        case 'danhsachhoso':
+                            $controllerInstance->danhsachhoso();
+                            break;
+                        case 'hosocuatoi':
+                            $controllerInstance->hosocuatoi();
+                            break;
+                        case 'xemhoso':
+                            $maHoSo = $_GET['maHoSo'] ?? '';
+                            $controllerInstance->xemhoso($maHoSo);
+                            break;
+                        case 'xemhoso_theohocsinh':
+                            $maHocSinh = $_GET['maHocSinh'] ?? '';
+                            $controllerInstance->xemhoso_theohocsinh($maHocSinh);
+                            break;
+                        case 'xulyhoso':
+                            $maHoSo = $_GET['maHoSo'] ?? '';
+                            $controllerInstance->xulyhoso($maHoSo);
+                            break;
+                        case 'chitiethoso':
+                            $maHoSo = $_GET['maHoSo'] ?? '';
+                            $controllerInstance->chitiethoso($maHoSo);
+                            break;
+                        case 'nhapdiem':
+                            $maHoSo = $_GET['maHoSo'] ?? '';
+                            $controllerInstance->nhapdiem($maHoSo);
+                            break;
+                        default:
+                            $userRole = $_SESSION['user']['vaiTro'] ?? '';
+                            if (in_array($userRole, ['QTV', 'BGH'])) {
+                                $controllerInstance->danhsachhoso();
+                            } else {
+                                $controllerInstance->hosocuatoi();
+                            }
+                    }
+                    break;
+
+                case 'thoikhoabieu':
+                    switch ($action) {
+                        case 'quanlytkb':
+                            $controllerInstance->quanlytkb();
+                            break;
+                        case 'taotkb':
+                            $controllerInstance->taotkb();
+                            break;
+                        case 'xemluoi':
+                            $controllerInstance->xemluoi();
+                            break;
+                        case 'xoatkb':
+                            $controllerInstance->xoatkb();
+                            break;
+                        case 'getGiaoVienByMon':
+                            $controllerInstance->getGiaoVienByMon();
+                            break;
+                        case 'luutiet':
+                            $controllerInstance->luutiet();
+                            break;
+                        default:
+                            $controllerInstance->xemluoi();
+                    }
+                    break;
                 
-                // Thêm các controller khác cần xử lý tham số ở đây
+                case 'tinnhan':
+                    $controller = new TinNhanController();
+                    switch ($action) {
+                        case 'guitinnhan':
+                            $controller->guitinnhan();
+                            break;
+                        case 'chitiettinnhan':
+                            $maHoiThoai = $_GET['maHoiThoai'] ?? '';
+                            $controller->chitiettinnhan($maHoiThoai);
+                            break;
+                        case 'getHocSinhByLop':
+                            $controller->getHocSinhByLop();
+                            break;
+                        case 'getPhuHuynhByLop':
+                            $controller->getPhuHuynhByLop();
+                            break;
+                        default:
+                            $controller->index();
+                    }
+                    break;
+                    
                 default:
                     $controllerInstance->$action();
             }
