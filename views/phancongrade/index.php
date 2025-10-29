@@ -1,7 +1,9 @@
 <?php
+require_once __DIR__ . '/../layouts/header.php';
+require_once __DIR__ . '/../layouts/sidebar/bangiamhieu.php'; 
 ?>
 
-<div class="container" style="padding: 20px;">
+<div class="container" style="padding: 20px; margin-left: 250px;">
     <h2>Quản lý Phân công Ra đề</h2>
     
     <a href="index.php?controller=phancongrade&action=create" style="display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-bottom: 20px;">
@@ -37,7 +39,7 @@
                             </span>
                         </td>
                         <td style="padding: 10px; border: 1px solid #ddd;">
-                            <a href="#">Xem</a> | <a href="#">Sửa</a>
+                            <a href="index.php?controller=duyetdethi&id=<?php echo $pc['maDeThi']; ?>">Xem / Duyệt</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -49,3 +51,7 @@
         </tbody>
     </table>
 </div>
+
+<?php
+require_once __DIR__ . '/../layouts/footer.php'; 
+?>

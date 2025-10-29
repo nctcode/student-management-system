@@ -1,15 +1,21 @@
 <?php
-// Giả sử file này được include vào layout chính (header/sidebar) của bạn
+require_once __DIR__ . '/../layouts/header.php';
+require_once __DIR__ . '/../layouts/sidebar/bangiamhieu.php'; 
 ?>
 
-<div class="container" style="padding: 20px;">
+<div class="container" style="padding: 20px; margin-left: 250px;">
     <h2>Tạo Phân công Ra đề mới</h2>
 
     <form action="index.php?controller=phancongrade&action=store" method="POST" style="max-width: 800px; margin: auto;">
         
         <div style="margin-bottom: 15px;">
-            <label for="tieuDe" style="display: block; margin-bottom: 5px; font-weight: bold;">Tiêu đề đề thi:</label>
-            <input type="text" id="tieuDe" name="tieuDe" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <label for="tieuDe" style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn loại đề thi:</label>
+            <select id="tieuDe" name="tieuDe" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="">-- Chọn loại đề thi --</option>
+                <option value="Kiểm tra 1 tiết (Giữa kỳ)">Kiểm tra 1 tiết (Giữa kỳ)</option>
+                <option value="Kiểm tra cuối kỳ">Kiểm tra cuối kỳ</option>
+                <option value="Đề thi Học sinh giỏi">Đề thi Học sinh giỏi</option>
+                </select>
         </div>
 
         <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 15px;">
@@ -37,18 +43,14 @@
             </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 15px;">
-            <div style="flex: 2;">
-                <label for="maGiaoVien" style="display: block; margin-bottom: 5px; font-weight: bold;">Giáo viên phụ trách:</label>
-                <select id="maGiaoVien" name="maGiaoVien" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                    <option value="">-- Chọn Giáo viên --</option>
-                    <?php if (isset($danhSachGiaoVien)): ?>
-                        <?php foreach ($danhSachGiaoVien as $gv): ?>
-                            <option value="<?php echo $gv['maGiaoVien']; ?>"><?php echo htmlspecialchars($gv['hoTen']); ?></option>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </select>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Chọn Giáo viên phụ trách:</label>
+            <div id="teacher-list-container" style="border: 1px solid #ccc; border-radius: 4px; padding: 15px; min-height: 100px; background-color: #f9f9f9;">
+                <p style="color: #777;">Vui lòng chọn môn học để thấy danh sách giáo viên...</p>
             </div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 15px;">
             <div style="flex: 1.5;">
                 <label for="hanNopDe" style="display: block; margin-bottom: 5px; font-weight: bold;">Hạn nộp đề:</label>
                 <input type="datetime-local" id="hanNopDe" name="hanNopDe" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -75,3 +77,59 @@
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const monHocSelect = document.getElementById('maMonHoc');
+    const teacherContainer = document.getElementById('teacher-list-container');
+
+    monHocSelect.addEventListener('change', function() {
+        const monHocId = this.value;
+        
+        if (monHocId) {
+            teacherContainer.innerHTML = '<p>Đang tải giáo viên...</p>';
+            
+            fetch(`index.php?controller=phancongrade&action=getGiaoVienByMonHoc&id_monhoc=${monHocId}`)
+                .then(response => response.json())
+                .then(teachers => {
+                    if (teachers.length > 0) {
+                        let html = '<table style="width: 100%;"><thead><tr>';
+                        html += '<th style="text-align: left; padding: 5px;"><input type="checkbox" id="check-all-teachers"></th>';
+                        html += '<th style="text-align: left; padding: 5px;">Mã GV</th>';
+                        html += '<th style="text-align: left; padding: 5px;">Tên Giáo Viên</th>';
+                        html += '</tr></thead><tbody>';
+
+                        teachers.forEach(teacher => {
+                            html += `<tr>`;
+                            html += `<td style="padding: 5px;"><input type="checkbox" name="maGiaoVien[]" class="teacher-checkbox" value="${teacher.maGiaoVien}"></td>`;
+                            html += `<td style="padding: 5px;">${teacher.maGiaoVien}</td>`;
+                            html += `<td style="padding: 5px;">${teacher.hoTen}</td>`;
+                            html += `</tr>`;
+                        });
+                        html += '</tbody></table>';
+                        teacherContainer.innerHTML = html;
+
+                        document.getElementById('check-all-teachers').addEventListener('change', function() {
+                            document.querySelectorAll('.teacher-checkbox').forEach(checkbox => {
+                                checkbox.checked = this.checked;
+                            });
+                        });
+
+                    } else {
+                        teacherContainer.innerHTML = '<p style="color: red;">Không tìm thấy giáo viên nào cho môn học này.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải giáo viên:', error);
+                    teacherContainer.innerHTML = '<p style="color: red;">Đã xảy ra lỗi khi tải danh sách.</p>';
+                });
+        } else {
+            teacherContainer.innerHTML = '<p style="color: #777;">Vui lòng chọn môn học để thấy danh sách giáo viên...</p>';
+        }
+    });
+});
+</script>
+
+<?php
+require_once __DIR__ . '/../layouts/footer.php'; 
+?>
