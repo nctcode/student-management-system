@@ -2,7 +2,7 @@
 .container-main { 
     padding: 40px; 
     max-width: 1200px; 
-    margin-left: 250px; /* nếu sidebar cố định 250px */
+    margin-left: 260px; /* nếu sidebar cố định 260px */
 }
 
 /* Responsive: màn hình nhỏ sidebar ẩn hoặc thành top menu */
@@ -71,33 +71,6 @@ input[type="checkbox"] {
     width: 25%; 
 }
 
-/* --- Popup thông báo --- */
-.popup { 
-    position: fixed; 
-    top: 50%; 
-    left: 50%; 
-    transform: translate(-50%, -50%); 
-    background-color: #fff; 
-    border: 2px solid #333; 
-    border-radius: 10px; 
-    padding: 25px 40px; 
-    text-align: center; 
-    box-shadow: 0 3px 15px rgba(0,0,0,0.2); 
-    z-index: 9999; 
-    display: none; 
-}
-
-.popup i { 
-    font-size: 3rem; 
-    color: #000; 
-}
-
-.popup h5 { 
-    margin-top: 15px; 
-    font-size: 18px; 
-    color: #333; 
-    font-weight: 600; 
-}
 
 /* Responsive bảng và button */
 @media (max-width: 768px) {

@@ -118,6 +118,9 @@ $roleName = 'Phụ huynh';
                                     <a href="#" class="list-group-item list-group-item-action">
                                         <i class="fas fa-file-alt me-2"></i>Đơn từ & Biểu mẫu
                                     </a>
+                                    <a href="index.php?controller=tracuuhoso&action=traCuuHoSo" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-file-alt me-2"></i>Tra cứu tình trạng hồ sơ
+                                    </a>
                                 </div>
                             </div>
                         </div>

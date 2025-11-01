@@ -45,7 +45,7 @@ require_once 'views/layouts/sidebar/totruong.php';
             <?php endforeach; ?>
           </select>
 
-          <button class="btn btn-secondary w-100" type="submit">Xác nhận</button>
+          <button class="btn btn-success w-100" type="submit">Xác nhận</button>
         </form>
       </div>
     </div>
@@ -152,7 +152,7 @@ require_once 'views/layouts/sidebar/totruong.php';
   <form method="POST" action="index.php?controller=duyetdethi&action=capNhatTrangThai">
     <input type="hidden" name="maDeThi" value="<?= $examDetail['maDeThi'] ?? '' ?>">
     <div class="text-center mt-4">
-      <button type="submit" name="hanhDong" value="duyet" class="btn btn-dark btn-action" <?= !$examDetail ? 'disabled' : '' ?>>Duyệt đề</button>
+      <button type="submit" name="hanhDong" value="duyet" class="btn btn-success btn-action" <?= !$examDetail ? 'disabled' : '' ?>>Duyệt đề</button>
       <button type="submit" name="hanhDong" value="tuchoi" class="btn btn-secondary btn-action" <?= !$examDetail ? 'disabled' : '' ?>>Từ chối</button>
     </div>
   </form>
