@@ -10,34 +10,37 @@ class HomeModel
     }
 
     //Thống kê cho Tổ trưởng chuyên môn
-    public function getLeaderStats($maToTruong)
+    public function getLeaderStats($maToTruong = null)
     {
         $conn = $this->db->getConnection();
 
-        $stats = [];
+        $stats = [
+            'pending_exams' => 0,
+            'approved_exams' => 0,
+            'rejected_exams' => 0
+        ];
 
-        // Đề thi chờ duyệt
-        $sql = "SELECT COUNT(*) as total 
-            FROM dethi dt
-            JOIN giaovien gv ON dt.maGiaoVien = gv.maGiaoVien
-            WHERE gv.maToTruong = ? 
-              AND (dt.trangThai IS NULL OR dt.trangThai = 'CHO_DUYET')";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$maToTruong]);
-        $stats['pending_exams'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        // Truy vấn tổng số đề thi theo trạng thái
+        $sql = "SELECT 
+                CASE 
+                    WHEN trangThai IS NULL OR trangThai = 'CHO_DUYET' THEN 'pending_exams'
+                    WHEN trangThai = 'DA_DUYET' THEN 'approved_exams'
+                    WHEN trangThai = 'TU_CHOI' THEN 'rejected_exams'
+                END AS status_group,
+                COUNT(*) as total
+            FROM dethi
+            GROUP BY status_group";
 
-        // Đề thi đã duyệt
-        $sql = "SELECT COUNT(*) as total 
-            FROM dethi dt
-            JOIN giaovien gv ON dt.maGiaoVien = gv.maGiaoVien
-            WHERE gv.maToTruong = ? 
-              AND dt.trangThai = 'DA_DUYET'";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$maToTruong]);
-        $stats['approved_exams'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        $stmt->execute();
+
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $stats[$row['status_group']] = $row['total'];
+        }
 
         return $stats;
     }
+
 
 
     // Thống kê cho Admin
