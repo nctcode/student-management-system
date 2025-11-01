@@ -58,35 +58,6 @@ class DethiModel
         return $stmt->rowCount();
     }
 
-    // Lấy số lượng đề thi theo trạng thái
-    public function getStats()
-    {
-        $conn = $this->db->getConnection();
-        $sql = "SELECT trangThai, COUNT(*) as total FROM dethi GROUP BY trangThai";
-        $stmt = $conn->query($sql);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $stats = [
-            'pending_exams' => 0,
-            'approved_exams' => 0,
-            'rejected_exams' => 0
-        ];
-
-        foreach ($rows as $row) {
-            switch ($row['trangThai']) {
-                case 'CHO_DUYET':
-                    $stats['pending_exams'] = $row['total'];
-                    break;
-                case 'DA_DUYET':
-                    $stats['approved_exams'] = $row['total'];
-                    break;
-                case 'TU_CHOI':
-                    $stats['rejected_exams'] = $row['total'];
-                    break;
-            }
-        }
-        return $stats;
-    }
 
     // Lấy danh sách Khối học (dùng cho combobox)
     public function getKhoiHoc()
@@ -136,4 +107,44 @@ class DethiModel
         $stmt->execute([$maDeThi]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    //Lấy trạng thái đề thi
+   public function getLichSuDuyet($maKhoi = null, $maNienKhoa = null)
+{
+    $conn = $this->db->getConnection();
+
+    $sql = "
+        SELECT 
+            d.maDeThi,
+            d.tieuDe,
+            nd.hoTen AS tenGiaoVien,
+            d.ngayNop,
+            d.trangThai
+        FROM 
+            dethi d
+        JOIN 
+            giaovien g ON d.maGiaoVien = g.maGiaoVien
+        JOIN 
+            nguoidung nd ON g.maNguoiDung = nd.maNguoiDung
+        WHERE 
+            (d.trangThai = 'DA_DUYET' OR d.trangThai = 'TU_CHOI')
+    ";
+
+    $params = [];
+
+    if (!empty($maKhoi)) {
+        $sql .= " AND d.maKhoi = :maKhoi";
+        $params['maKhoi'] = $maKhoi;
+    }
+
+    if (!empty($maNienKhoa)) {
+        $sql .= " AND d.maNienKhoa = :maNienKhoa";
+        $params['maNienKhoa'] = $maNienKhoa;
+    }
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 }

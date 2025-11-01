@@ -14,36 +14,44 @@ class DuyetDeThiController
     }
 
     // Trang duyệt đề thi
-    public function duyet()
-    {
-        $user = $_SESSION['user'];
+   public function duyet()
+{
+    $user = $_SESSION['user'];
 
-        // Lấy danh sách Khối học và Niên khóa để combobox
-        $khoiHocList = $this->model->getKhoiHoc();
-        $nienKhoaList = $this->model->getNienKhoa();
+    // Lấy danh sách Khối học và Niên khóa để combobox
+    $khoiHocList = $this->model->getKhoiHoc();
+    $nienKhoaList = $this->model->getNienKhoa();
 
-        // Lấy dữ liệu filter nếu có
-        $maKhoi = $_GET['maKhoi'] ?? null;
-        $maNienKhoa = $_GET['maNienKhoa'] ?? null;
+    // Lấy dữ liệu filter nếu có
+    $maKhoi = $_GET['maKhoi'] ?? null;
+    $maNienKhoa = $_GET['maNienKhoa'] ?? null;
 
-        // Danh sách đề thi
-        $exams = [];
-        if ($maKhoi && $maNienKhoa) {
-            $exams = $this->model->getExams($maKhoi, $maNienKhoa);
+    //Kiểm tra dữ liệu lọc
+    if (isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) {
+        if (empty($maKhoi) || empty($maNienKhoa)) {
+            echo "<script>alert('Vui lòng chọn đầy đủ Khối học và Học kỳ trước khi lọc!');</script>";
         }
-
-        // Nếu user chọn một đề thi, lấy chi tiết và câu hỏi
-        $maDeThi = $_GET['maDeThi'] ?? null;
-        $examDetail = [];
-        $questions = [];
-        if ($maDeThi) {
-            $examDetail = $this->model->getExamDetail($maDeThi);
-            $questions = $this->model->getQuestions($maDeThi);
-        }
-
-        // Load view
-        require 'views/duyetdethi/pheduyetdethi.php';
     }
+
+    // Danh sách đề thi
+    $exams = [];
+    if ($maKhoi && $maNienKhoa) {
+        $exams = $this->model->getExams($maKhoi, $maNienKhoa);
+    }
+
+    // Nếu user chọn một đề thi, lấy chi tiết và câu hỏi
+    $maDeThi = $_GET['maDeThi'] ?? null;
+    $examDetail = [];
+    $questions = [];
+    if ($maDeThi) {
+        $examDetail = $this->model->getExamDetail($maDeThi);
+        $questions = $this->model->getQuestions($maDeThi);
+    }
+
+    // Load view
+    require 'views/duyetdethi/pheduyetdethi.php';
+}
+
 
     // Xử lý duyệt/từ chối đề thi
     public function capNhatTrangThai()
@@ -88,5 +96,50 @@ class DuyetDeThiController
                 }
             }
         }
+    }
+
+    // Trang lịch sử duyệt đề
+    public function lichSuDuyetDeThi()
+    {
+        require_once 'models/DethiModel.php';
+        $model = new DethiModel();
+
+        $khoiHocList = $model->getKhoiHoc();
+        $nienKhoaList = $model->getNienKhoa();
+
+        $maKhoi = $_GET['maKhoi'] ?? null;
+        $maNienKhoa = $_GET['maNienKhoa'] ?? null;
+
+        $deDaDuyet = [];
+        $deTuChoi = [];
+
+        // Kiểm tra dữ liệu lọc
+        if (isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) {
+            if (empty($maKhoi) || empty($maNienKhoa)) {
+                echo "<script>alert('Vui lòng chọn đầy đủ Khối học và Học kỳ trước khi lọc!');</script>";
+            } else {
+                // Khi có đủ dữ liệu lọc thì mới lấy danh sách
+                $lichSu = $model->getLichSuDuyet($maKhoi, $maNienKhoa);
+
+                foreach ($lichSu as $row) {
+                    if ($row['trangThai'] === 'DA_DUYET') {
+                        $deDaDuyet[] = $row;
+                    } elseif ($row['trangThai'] === 'TU_CHOI') {
+                        $deTuChoi[] = $row;
+                    }
+                }
+            }
+        }
+
+        // Nếu có mã đề thì lấy chi tiết
+        $examDetail = null;
+        $questions = [];
+        if (!empty($_GET['maDeThi'])) {
+            $maDeThi = $_GET['maDeThi'];
+            $examDetail = $model->getExamDetail($maDeThi);
+            $questions = $model->getQuestions($maDeThi);
+        }
+
+        require_once 'views/duyetdethi/lichsuduyetde.php';
     }
 }
