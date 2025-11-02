@@ -9,6 +9,7 @@
         <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
     <?php endif; ?>
 
+    <div class="chat-window">
     <div class="row">
         <div class="col-md-12">
             <div class="card shadow mb-4">
@@ -37,12 +38,12 @@
                                         
                                         <!-- Thông tin người gửi -->
                                         <?php if ($tn['maNguoiDung'] != $_SESSION['user']['maNguoiDung']): ?>
-                                        <div class="font-weight-bold mb-1" style="font-size: 0.9em;">
+                                        <div class="font-weight-bold mb-1" style="font-size: 0.9em; font-style: italic;">
                                             <?= htmlspecialchars($tn['nguoiGui']) ?>
                                             <small class="text-muted ml-2">(<?= $tn['vaiTro'] ?>)</small>
                                         </div>
                                         <?php else: ?>
-                                        <div class="font-weight-bold mb-1 text-right" style="font-size: 0.9em;">
+                                        <div class="font-weight-bold mb-1 text-right" style="font-size: 0.9em; font-style: italic;">
                                             Bạn (<?= htmlspecialchars($tn['nguoiGui']) ?>)
                                         </div>
                                         <?php endif; ?>
@@ -61,7 +62,7 @@
                                                     foreach ($filesInfo as $fileInfo): // Lặp qua từng file
                                                         if (empty($fileInfo['duongDan'])) continue; // Bỏ qua nếu file không hợp lệ
                                             ?>
-                                            <div class="file-attachment mt-2 p-2 border rounded" style="background: rgba(255,255,255,0.1);">
+                                            <div class="file-attachment mt-2 p-2 border rounded">
                                                 <div class="d-flex align-items-center">
                                                     <i class="fas fa-paperclip mr-2"></i>
                                                     <div class="flex-grow-1">
@@ -70,7 +71,8 @@
                                                             <?= round($fileInfo['kichThuoc'] / 1024 / 1024, 2) ?> MB
                                                         </small>
                                                     </div>
-                                                    <a href="<?= htmlspecialchars($fileInfo['duongDan']) ?>" download class="btn btn-sm <?= $tn['maNguoiDung'] == $_SESSION['user']['maNguoiDung'] ? 'btn-light' : 'btn-primary' ?> ml-2">
+                                                    <a href="<?= htmlspecialchars($fileInfo['duongDan']) ?>" download 
+                                                    class="btn btn-sm <?= $tn['maNguoiDung'] == $_SESSION['user']['maNguoiDung'] ? 'btn-light' : 'btn-primary' ?> ml-2">
                                                         <i class="fas fa-download"></i>
                                                     </a>
                                                 </div>
@@ -133,6 +135,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </div>
 
@@ -223,27 +226,4 @@ setInterval(function() {
 }, 30000);
 </script>
 
-<style>
-    .message-bubble.bg-primary {
-    background-color: #cfe2ff !important; 
-    color: #000 !important; 
-}
-
-.message-bubble.bg-primary small.text-light {
-    color: #495057 !important; 
-}
-
-.message-bubble.bg-primary:after {
-    border-left-color: #cfe2ff !important; 
-}
-
-.message-bubble.bg-primary .file-attachment {
-    background: rgba(255,255,255,0.4) !important;
-}
-
-.message-bubble.bg-primary .file-attachment a.btn-light {
-    background-color: #007bff;
-    border-color: #007bff;
-    color: #fff;
-}
-</style>
+<link rel="stylesheet" href="assets/css/tinnhan.css">

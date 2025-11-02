@@ -45,9 +45,9 @@
                         </div>
                     </div>
                     <br>
-                    <div id="danhSachHocSinh" class="danh-sach-container">
-                        <h6 class="font-weight-bold text-center">DANH SÁCH HỌC SINH</h6>
-                        <div class="table-responsive">
+                    <div id="danhSachHocSinh" style="display: none;">
+                        <div class="danh-sach-scroll">
+                            <h6 class="font-weight-bold text-center"id="titleHocSinh">DANH SÁCH HỌC SINH</h6>
                             <table class="table table-bordered table-sm" id="tableHocSinh">
                                 <thead>
                                     <tr>
@@ -64,9 +64,9 @@
                         <div id="paginationHS" class="pagination-container mt-2"></div>
                     </div>
                     <br>
-                    <div id="danhSachPhuHuynh" class="danh-sach-container" style="display: none;">
-                        <h6 class="font-weight-bold text-center">DANH SÁCH PHỤ HUYNH</h6>
-                        <div class="table-responsive">
+                    <div id="danhSachPhuHuynh" style="display: none;">
+                        <div class="danh-sach-scroll">
+                            <h6 class="font-weight-bold text-center">DANH SÁCH PHỤ HUYNH</h6>
                             <table class="table table-bordered table-sm" id="tablePhuHuynh">
                                 <thead>
                                     <tr>
