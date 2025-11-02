@@ -141,7 +141,15 @@ if (file_exists($controllerFile)) {
                             $controller->index();
                     }
                     break;
-                    
+                
+                case 'diem':
+                    $controllerInstance->$action();
+                    break;
+
+                case 'chuyencan':
+                    $controllerInstance->$action();
+                    break;    
+
                 default:
                     $controllerInstance->$action();
             }

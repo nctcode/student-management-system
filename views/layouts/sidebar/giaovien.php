@@ -17,27 +17,20 @@
                 </a>
             </li>
             <li>
-                <a href="#">
+                <a href="index.php?controller=diem&action=index">
                     <i class="fas fa-clipboard-check"></i>
                     <span>Nhập điểm</span>
                 </a>
             </li>
             <li>
+                <a href="index.php?controller=chuyencan&action=index">
+                    <i class="fas fa-user-check"></i>
+                    <span>Chuyên cần</span>
+                </a>
+            <li>
                 <a href="#">
                     <i class="fas fa-tasks"></i>
                     <span>Bài tập</span>
-                </a>
-            </li>
-            <li>
-                <a href="index.php?controller=phancongdethi&action=index">
-                    <i class="fas fa-edit"></i>
-                    <span>Phân công đề thi</span>
-                </a>
-            </li>
-            <li>
-                <a href="index.php?controller=duyetdethi&action=index">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Duyệt đề thi</span>
                 </a>
             </li>
             <li>
