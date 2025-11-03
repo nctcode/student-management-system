@@ -70,11 +70,17 @@ $roleName = 'Giáo viên';
                                     <a href="index.php?controller=thoikhoabieu&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-calendar-alt me-2"></i>Thời khóa biểu
                                     </a>
-                                    <a href="index.php?controller=phancongdethi&action=index" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-tasks me-2"></i>Phân công đề thi
+                                    <a href="index.php?controller=diem&action=index" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-edit me-2"></i>Nhập điểm
+                                    </a>
+                                    <a href="index.php?controller=chuyencan&action=index" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-user-check me-2"></i>Ghi nhận chuyên cần
                                     </a>
                                     <a href="index.php?controller=tinnhan&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-comments me-2"></i>Tin nhắn
+                                    </a>
+                                    <a href="index.php?controller=baitap&action=danhsach" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-tasks me-2"></i>Bài tập
                                     </a>
                                 </div>
                             </div>

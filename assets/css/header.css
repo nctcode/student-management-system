@@ -320,3 +320,48 @@ body {
         font-size: 1.3rem;
     }
 }
+
+/* Hiệu ứng Hover cho các mục menu chính */
+.sidebar .nav-item .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Style cho mục menu đang được "Active" (đậm hơn) */
+.sidebar .nav-item .nav-link.active {
+    font-weight: 700;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Style cho các mục menu con (trong menu xổ xuống) */
+.sidebar .collapse-inner .collapse-item {
+    padding: 0.5rem 1rem;
+    display: block;
+    color: #3a3b45; 
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Hiệu ứng Hover cho menu con */
+.sidebar .collapse-inner .collapse-item:hover {
+    background-color: #d3d4d5; 
+    color: #007bff; 
+}
+
+/* Style cho menu con đang "Active" */
+.sidebar .collapse-inner .collapse-item.active {
+    background-color: #e9ecef;
+    color: #007bff;
+    font-weight: 700;
+}
+
+/* Xử lý Mũi tên xổ xuống */
+.sidebar .nav-link .sidebar-arrow {
+    font-size: 0.8rem;
+    margin-left: auto; 
+    transition: transform 0.2s ease;
+}
+
+/* Xoay mũi tên khi menu được mở (không bị collapsed) */
+.sidebar .nav-link:not(.collapsed) .sidebar-arrow {
+    transform: rotate(90deg);
+}

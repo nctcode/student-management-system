@@ -18,7 +18,7 @@
             </li>
             <li>
                 <a href="index.php?controller=diem&action=index">
-                    <i class="fas fa-clipboard-check"></i>
+                    <i class="fas fa-fw fa-pen-to-square"></i>
                     <span>Nhập điểm</span>
                 </a>
             </li>
@@ -27,17 +27,40 @@
                     <i class="fas fa-user-check"></i>
                     <span>Chuyên cần</span>
                 </a>
-            <li>
-                <a href="#">
-                    <i class="fas fa-tasks"></i>
-                    <span>Bài tập</span>
-                </a>
-            </li>
-            <li>
-                <a href="index.php?controller=tinnhan&action=index">
-                    <i class="fas fa-comments"></i>
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" 
+                   data-bs-toggle="collapse" 
+                   data-bs-target="#collapseTinNhan"
+                   aria-expanded="false" 
+                   aria-controls="collapseTinNhan">
+                    <i class="fas fa-fw fa-comments"></i>
                     <span>Tin nhắn</span>
+                    <i class="fas fa-fw fa-angle-right sidebar-arrow"></i>
                 </a>
+                <div id="collapseTinNhan" class="collapse" aria-labelledby="headingTinNhan" data-bs-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="index.php?controller=tinnhan&action=guitinnhan">Gửi tin nhắn mới</a>
+                        <a class="collapse-item" href="index.php?controller=tinnhan&action=index">Danh sách tin nhắn</a>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" 
+                   data-bs-toggle="collapse" 
+                   data-bs-target="#collapseBaiTap"
+                   aria-expanded="false" 
+                   aria-controls="collapseBaiTap">
+                    <i class="fas fa-fw fa-book"></i>
+                    <span>Bài tập</span>
+                    <i class="fas fa-fw fa-angle-right sidebar-arrow"></i>
+                </a>
+                <div id="collapseBaiTap" class="collapse" aria-labelledby="headingBaiTap" data-bs-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="index.php?controller=baitap&action=index">Giao bài tập</a>
+                        <a class="collapse-item" href="index.php?controller=baitap&action=danhsach">Danh sách đã giao</a>
+                    </div>
+                </div>
             </li>
             <li>
                 <a href="#">
