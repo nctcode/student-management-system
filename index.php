@@ -122,23 +122,22 @@ if (file_exists($controllerFile)) {
                     break;
                 
                 case 'tinnhan':
-                    $controller = new TinNhanController();
                     switch ($action) {
                         case 'guitinnhan':
-                            $controller->guitinnhan();
+                            $controllerInstance->guitinnhan();
                             break;
                         case 'chitiettinnhan':
                             $maHoiThoai = $_GET['maHoiThoai'] ?? '';
-                            $controller->chitiettinnhan($maHoiThoai);
+                            $controllerInstance->chitiettinnhan($maHoiThoai);
                             break;
                         case 'getHocSinhByLop':
-                            $controller->getHocSinhByLop();
+                            $controllerInstance->getHocSinhByLop();
                             break;
                         case 'getPhuHuynhByLop':
-                            $controller->getPhuHuynhByLop();
+                            $controllerInstance->getPhuHuynhByLop();
                             break;
                         default:
-                            $controller->index();
+                            $controllerInstance->index();
                     }
                     break;
                 
@@ -148,7 +147,24 @@ if (file_exists($controllerFile)) {
 
                 case 'chuyencan':
                     $controllerInstance->$action();
-                    break;    
+                    break; 
+                
+                case 'baitap':
+                    switch ($action) {
+                        case 'danhsach':
+                            $controllerInstance->danhsach();
+                            break;
+                        case 'luu': 
+                            $controllerInstance->luu();
+                            break;
+                        case 'chitiet':
+                            $maBaiTap = $_GET['maBaiTap'] ?? 0;
+                            $controllerInstance->chitiet($maBaiTap);
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
 
                 default:
                     $controllerInstance->$action();
