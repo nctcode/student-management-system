@@ -10,10 +10,10 @@
     <?php endif; ?>
 
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-10 offset-md-1">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h3 class="m-0 font-weight-bold text-primary">Danh sách tin nhắn</h3>
+                    <h4 class="m-0 font-weight-bold text-primary">Danh sách tin nhắn</h4>
                     <?php if (in_array($_SESSION['user']['vaiTro'], ['QTV', 'BGH', 'GIAOVIEN'])): ?>
                     <a href="index.php?controller=tinnhan&action=guitinnhan" class="btn btn-primary btn-sm">
                         <i class="fas fa-paper-plane"></i> Gửi tin nhắn mới

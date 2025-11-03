@@ -13,7 +13,7 @@
         <div class="col-md-6">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h5 class="m-0 font-weight-bold text-primary">CHỌN ĐỐI TƯỢNG NHẬN TIN NHẮN</h5>
+                    <h5 class="m-0 font-weight-bold text-primary">Chọn đối tượng nhận tin nhắn</h5>
                 </div>
                 <div class="card-body">
                     <div class="form-group">
@@ -96,7 +96,7 @@
         <div class="col-md-6">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h5 class="m-0 font-weight-bold text-primary">GỬI TIN NHẮN</h5>
+                    <h5 class="m-0 font-weight-bold text-primary">Gửi tin nhắn</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" enctype="multipart/form-data" id="formGuiTinNhan">
@@ -106,7 +106,7 @@
                                 </div>
                             <input type="hidden" name="nguoiNhan" id="hiddenNguoiNhan">
                         </div>
-
+                        <br>
                         <div class="form-group">
                             <label><strong>Tiêu đề</strong></label>
                             <input type="text" name="tieuDe" class="form-control" required placeholder="Nhập tiêu đề tin nhắn">
@@ -121,7 +121,7 @@
                                 <span id="soKyTu">0</span>/1000 ký tự
                             </small>
                         </div>
-
+                        <br>
                         <div class="form-group">
                             <label><strong>Đính kèm file</strong></label>
                             <div id="danhSachFile" class="mb-2">
