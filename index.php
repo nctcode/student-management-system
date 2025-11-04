@@ -122,23 +122,39 @@ if (file_exists($controllerFile)) {
                     break;
                 
                 case 'tinnhan':
-                    $controller = new TinNhanController();
                     switch ($action) {
                         case 'guitinnhan':
-                            $controller->guitinnhan();
+                            $controllerInstance->guitinnhan();
                             break;
                         case 'chitiettinnhan':
                             $maHoiThoai = $_GET['maHoiThoai'] ?? '';
-                            $controller->chitiettinnhan($maHoiThoai);
+                            $controllerInstance->chitiettinnhan($maHoiThoai);
                             break;
                         case 'getHocSinhByLop':
-                            $controller->getHocSinhByLop();
+                            $controllerInstance->getHocSinhByLop();
                             break;
                         case 'getPhuHuynhByLop':
-                            $controller->getPhuHuynhByLop();
+                            $controllerInstance->getPhuHuynhByLop();
                             break;
                         default:
-                            $controller->index();
+                            $controllerInstance->index();
+                    }
+                    break;
+
+                // THÊM CASE CHO DANGKYBANHOC - ĐÃ SỬA
+                case 'dangkybanhoc':
+                    switch ($action) {
+                        case 'index':
+                            $controllerInstance->index();
+                            break;
+                        case 'store':
+                            $controllerInstance->store();
+                            break;
+                        case 'success':
+                            $controllerInstance->success();
+                            break;
+                        default:
+                            $controllerInstance->index();
                     }
                     break;
                     

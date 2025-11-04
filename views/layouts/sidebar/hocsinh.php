@@ -52,6 +52,23 @@
                     <span>Thông báo</span>
                 </a>
             </li>
+            
+            <!-- THÊM MỤC ĐĂNG KÝ BAN HỌC CHỈ CHO KHỐI 11 -->
+            <?php 
+            // Kiểm tra nếu là học sinh và có thông tin khối
+            if (isset($_SESSION['user']) && 
+                $_SESSION['user']['vaiTro'] == 'HOCSINH' && 
+                isset($_SESSION['user']['khoi']) && 
+                $_SESSION['user']['khoi'] == 11): 
+            ?>
+            <li>
+                <a href="index.php?controller=dangkybanhoc&action=index">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Đăng ký ban học</span>
+                    <span class="badge bg-warning ms-2">Mới</span>
+                </a>
+            </li>
+            <?php endif; ?>
         </ul>
     </div>
 </nav>

@@ -1,6 +1,11 @@
 <?php
 $user = $_SESSION['user'];
 $roleName = 'Học sinh';
+
+// FIX LỖI: KIỂM TRA VÀ LẤY THÔNG TIN KHỐI
+$khoi = isset($user['khoi']) ? $user['khoi'] : null;
+$tenLop = isset($user['tenLop']) ? $user['tenLop'] : 'Chưa xác định';
+$maHocSinh = isset($user['maHocSinh']) ? $user['maHocSinh'] : null;
 ?>
 
 <div class="container-fluid">
@@ -9,8 +14,12 @@ $roleName = 'Học sinh';
             <div class="dashboard-card">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h1>Chào mừng, <?php echo $user['hoTen']; ?>!</h1>
+                        <h1>Chào mừng, <?php echo htmlspecialchars($user['hoTen']); ?>!</h1>
                         <p class="lead">Vai trò: <?php echo $roleName; ?></p>
+                        <!-- HIỂN THỊ THÔNG TIN KHỐI NẾU CÓ -->
+                        <?php if ($khoi && $tenLop): ?>
+                        <p class="text-muted">Khối: <?php echo htmlspecialchars($khoi); ?> - Lớp: <?php echo htmlspecialchars($tenLop); ?></p>
+                        <?php endif; ?>
                     </div>
                     <div class="text-end">
                         <small class="text-muted">Đăng nhập lúc: <?php echo date('H:i d/m/Y'); ?></small>
@@ -118,11 +127,62 @@ $roleName = 'Học sinh';
                                     <a href="#" class="list-group-item list-group-item-action">
                                         <i class="fas fa-book me-2"></i>Bài tập
                                     </a>
+                                    <!-- CHỈ HIỆN ĐĂNG KÝ BAN HỌC CHO HỌC SINH KHỐI 11 -->
+                                    <?php if ($khoi == 11): ?>
+                                    <a href="index.php?controller=dangkybanhoc&action=index" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-graduation-cap me-2"></i>Đăng ký ban học lớp 12
+                                    </a>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- THÔNG BÁO ĐĂNG KÝ BAN HỌC (CHỈ HIỆN CHO KHỐI 11) -->
+                <?php if ($khoi == 11): ?>
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h5><i class="fas fa-exclamation-circle me-2"></i>Thông báo quan trọng: Đăng ký Ban học Lớp 12</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <p class="mb-2">Bạn đang học <strong>khối 11</strong> và cần đăng ký ban học cho năm lớp 12.</p>
+                                        <p class="mb-3 text-muted">Thời hạn đăng ký: Từ <?php echo date('d/m/Y'); ?> đến <?php echo date('d/m/Y', strtotime('+2 weeks')); ?></p>
+                                        
+                                        <!-- Kiểm tra nếu đã đăng ký rồi -->
+                                        <?php 
+                                        // Tạm thời để trống, sẽ implement sau
+                                        $daDangKy = false;
+                                        if ($daDangKy): 
+                                            $thongTinDangKy = []; // Tạm thời
+                                        ?>
+                                            <div class="alert alert-success">
+                                                <i class="fas fa-check-circle me-2"></i>
+                                                <strong>Bạn đã đăng ký:</strong> <?php echo $thongTinDangKy['tenBan']; ?>
+                                                <br><small>Ngày đăng ký: <?php echo date('d/m/Y', strtotime($thongTinDangKy['ngayDangKy'])); ?></small>
+                                            </div>
+                                        <?php else: ?>
+                                            <a href="index.php?controller=dangkybanhoc&action=index" class="btn btn-primary">
+                                                <i class="fas fa-pencil-alt me-2"></i>Đăng ký ngay
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <div class="bg-light rounded p-3">
+                                            <i class="fas fa-clock fa-3x text-warning mb-2"></i>
+                                            <p class="mb-0"><small>Còn <strong id="countdown">14</strong> ngày</small></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <!-- Thông báo mới nhất -->
                 <div class="row mt-4">

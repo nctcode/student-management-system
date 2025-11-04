@@ -16,10 +16,14 @@ class AuthController {
             $db = new Database();
             $conn = $db->getConnection();
             
-            // Kiểm tra thông tin đăng nhập
-            $sql = "SELECT tk.*, nd.maNguoiDung, nd.hoTen, nd.loaiNguoiDung 
+            // Kiểm tra thông tin đăng nhập - CẬP NHẬT TRUY VẤN
+            $sql = "SELECT tk.*, nd.maNguoiDung, nd.hoTen, nd.loaiNguoiDung,
+                           hs.maHocSinh, l.tenLop, k.tenKhoi as khoi
                     FROM taikhoan tk 
                     JOIN nguoidung nd ON tk.maTaiKhoan = nd.maTaiKhoan 
+                    LEFT JOIN hocsinh hs ON nd.maNguoiDung = hs.maNguoiDung
+                    LEFT JOIN lophoc l ON hs.maLop = l.maLop
+                    LEFT JOIN khoi k ON l.maKhoi = k.maKhoi
                     WHERE tk.tenDangNhap = ? AND tk.trangThai = 'HOAT_DONG'";
             
             $stmt = $conn->prepare($sql);
@@ -32,13 +36,16 @@ class AuthController {
                 // Kiểm tra mật khẩu (trong thực tế dùng password_verify)
                 // Demo: so sánh với mật khẩu cố định 123456
                 if ($password === '123456' || password_verify($password, $user['matKhau'])) {
-                    // Lưu thông tin người dùng vào session
+                    // Lưu thông tin người dùng vào session - CẬP NHẬT THÔNG TIN
                     $_SESSION['user'] = [
                         'maTaiKhoan' => $user['maTaiKhoan'],
                         'maNguoiDung' => $user['maNguoiDung'],
                         'tenDangNhap' => $user['tenDangNhap'],
                         'hoTen' => $user['hoTen'],
-                        'vaiTro' => $user['loaiNguoiDung']
+                        'vaiTro' => $user['loaiNguoiDung'],
+                        'maHocSinh' => $user['maHocSinh'] ?? null,
+                        'tenLop' => $user['tenLop'] ?? null,
+                        'khoi' => $user['khoi'] ?? null
                     ];
                     
                     // Chuyển hướng theo vai trò
