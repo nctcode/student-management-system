@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['maHoSo'])) {
     if (isset($_POST['action']) && $_POST['action'] === 'xemchitiet') {
       $showDetail = true;
     }
-  }
+  }    
 }
 ?>
 <!DOCTYPE html>

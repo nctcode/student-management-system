@@ -11,7 +11,7 @@ class DethiModel
     }
 
     // Lấy danh sách tất cả đề thi theo khối và học kỳ (tùy chọn lọc)
-    public function getExams($maKhoi = null, $maNienKhoa = null)
+    public function getExams($maKhoi = null, $maNienKhoa = null, $maNguoiDung = null)
     {
         $conn = $this->db->getConnection();
 
@@ -21,18 +21,27 @@ class DethiModel
             INNER JOIN nguoidung u ON g.maNguoiDung = u.maNguoiDung
             INNER JOIN khoi k ON d.maKhoi = k.maKhoi
             INNER JOIN nienkhoa n ON d.maNienKhoa = n.maNienKhoa
+            INNER JOIN toTruongChuyenMon t ON d.maMonHoc = t.maMonHoc
             WHERE d.trangThai = 'CHO_DUYET'";
 
         $params = [];
 
+        // Lọc theo Khối
         if ($maKhoi) {
             $sql .= " AND d.maKhoi = ?";
             $params[] = $maKhoi;
         }
 
+        // Lọc theo Niên khóa
         if ($maNienKhoa) {
             $sql .= " AND d.maNienKhoa = ?";
             $params[] = $maNienKhoa;
+        }
+
+        // Lọc theo người dùng (tổ trưởng chuyên môn)
+        if ($maNguoiDung) {
+            $sql .= " AND t.maNguoiDung = ?";
+            $params[] = $maNguoiDung;
         }
 
         $sql .= " ORDER BY d.maDeThi ASC";
@@ -41,7 +50,6 @@ class DethiModel
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
 
 
     // Cập nhật trạng thái duyệt/từ chối nhiều đề thi
@@ -109,11 +117,11 @@ class DethiModel
     }
 
     //Lấy trạng thái đề thi
-   public function getLichSuDuyet($maKhoi = null, $maNienKhoa = null)
-{
-    $conn = $this->db->getConnection();
+    public function getLichSuDuyet($maKhoi = null, $maNienKhoa = null)
+    {
+        $conn = $this->db->getConnection();
 
-    $sql = "
+        $sql = "
         SELECT 
             d.maDeThi,
             d.tieuDe,
@@ -130,21 +138,20 @@ class DethiModel
             (d.trangThai = 'DA_DUYET' OR d.trangThai = 'TU_CHOI')
     ";
 
-    $params = [];
+        $params = [];
 
-    if (!empty($maKhoi)) {
-        $sql .= " AND d.maKhoi = :maKhoi";
-        $params['maKhoi'] = $maKhoi;
+        if (!empty($maKhoi)) {
+            $sql .= " AND d.maKhoi = :maKhoi";
+            $params['maKhoi'] = $maKhoi;
+        }
+
+        if (!empty($maNienKhoa)) {
+            $sql .= " AND d.maNienKhoa = :maNienKhoa";
+            $params['maNienKhoa'] = $maNienKhoa;
+        }
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-    if (!empty($maNienKhoa)) {
-        $sql .= " AND d.maNienKhoa = :maNienKhoa";
-        $params['maNienKhoa'] = $maNienKhoa;
-    }
-
-    $stmt = $conn->prepare($sql);
-    $stmt->execute($params);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
 }
