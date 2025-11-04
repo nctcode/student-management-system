@@ -111,17 +111,16 @@ class DuyetDeThiController
 
         $maKhoi = $_GET['maKhoi'] ?? null;
         $maNienKhoa = $_GET['maNienKhoa'] ?? null;
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'] ?? null;
 
         $deDaDuyet = [];
         $deTuChoi = [];
 
-        // Kiểm tra dữ liệu lọc
         if (isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) {
             if (empty($maKhoi) || empty($maNienKhoa)) {
                 echo "<script>alert('Vui lòng chọn đầy đủ Khối học và Học kỳ trước khi lọc!');</script>";
             } else {
-                // Khi có đủ dữ liệu lọc thì mới lấy danh sách
-                $lichSu = $model->getLichSuDuyet($maKhoi, $maNienKhoa);
+                $lichSu = $model->getLichSuDuyet($maKhoi, $maNienKhoa, $maNguoiDung);
 
                 foreach ($lichSu as $row) {
                     if ($row['trangThai'] === 'DA_DUYET') {
@@ -133,7 +132,6 @@ class DuyetDeThiController
             }
         }
 
-        // Nếu có mã đề thì lấy chi tiết
         $examDetail = null;
         $questions = [];
         if (!empty($_GET['maDeThi'])) {

@@ -101,16 +101,46 @@ require_once 'views/layouts/sidebar/totruong.php';
         <h6>Chi tiết đề thi:</h6>
         <?php if ($examDetail): ?>
           <table class="table table-bordered">
-            <tr><th>Mã đề</th><td><?= $examDetail['maDeThi'] ?></td></tr>
-            <tr><th>Tiêu đề</th><td><?= $examDetail['tieuDe'] ?></td></tr>
-            <tr><th>Giáo viên ra đề</th><td><?= $examDetail['tenGiaoVien'] ?></td></tr>
-            <tr><th>Ngày nộp</th><td><?= $examDetail['ngayNop'] ?></td></tr>
-            <tr><th>Môn</th><td><?= $examDetail['monHoc'] ?></td></tr>
-            <tr><th>Học kỳ</th><td><?= $examDetail['hocKy'] ?></td></tr>
-            <tr><th>Năm học</th><td><?= $examDetail['namHoc'] ?></td></tr>
-            <tr><th>Trạng thái</th><td><?= $examDetail['trangThai'] ?></td></tr>
-            <tr><th>Tổng số câu</th><td><?= count($questions) ?></td></tr>
-            <tr><th>Tổng điểm</th><td>10</td></tr>
+            <tr>
+              <th>Mã đề</th>
+              <td><?= $examDetail['maDeThi'] ?></td>
+            </tr>
+            <tr>
+              <th>Tiêu đề</th>
+              <td><?= $examDetail['tieuDe'] ?></td>
+            </tr>
+            <tr>
+              <th>Giáo viên ra đề</th>
+              <td><?= $examDetail['tenGiaoVien'] ?></td>
+            </tr>
+            <tr>
+              <th>Ngày nộp</th>
+              <td><?= $examDetail['ngayNop'] ?></td>
+            </tr>
+            <tr>
+              <th>Môn</th>
+              <td><?= $examDetail['monHoc'] ?></td>
+            </tr>
+            <tr>
+              <th>Học kỳ</th>
+              <td><?= $examDetail['hocKy'] ?></td>
+            </tr>
+            <tr>
+              <th>Năm học</th>
+              <td><?= $examDetail['namHoc'] ?></td>
+            </tr>
+            <tr>
+              <th>Trạng thái</th>
+              <td><?= $examDetail['trangThai'] ?></td>
+            </tr>
+            <tr>
+              <th>Tổng số câu</th>
+              <td><?= count($questions) ?></td>
+            </tr>
+            <tr>
+              <th>Tổng điểm</th>
+              <td>10</td>
+            </tr>
           </table>
         <?php else: ?>
           <p class="text-center text-muted mb-0">Chưa chọn đề thi nào.</p>
@@ -140,7 +170,9 @@ require_once 'views/layouts/sidebar/totruong.php';
                 </tr>
               <?php endforeach; ?>
             <?php else: ?>
-              <tr><td colspan="2" class="text-center text-muted">Chưa có dữ liệu câu hỏi.</td></tr>
+              <tr>
+                <td colspan="2" class="text-center text-muted">Chưa có dữ liệu câu hỏi.</td>
+              </tr>
             <?php endif; ?>
           </tbody>
         </table>

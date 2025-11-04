@@ -117,7 +117,7 @@ class DethiModel
     }
 
     //Lấy trạng thái đề thi
-    public function getLichSuDuyet($maKhoi = null, $maNienKhoa = null)
+    public function getLichSuDuyet($maKhoi = null, $maNienKhoa = null, $maNguoiDung = null)
     {
         $conn = $this->db->getConnection();
 
@@ -134,20 +134,32 @@ class DethiModel
             giaovien g ON d.maGiaoVien = g.maGiaoVien
         JOIN 
             nguoidung nd ON g.maNguoiDung = nd.maNguoiDung
+        JOIN 
+            toTruongChuyenMon t ON t.maMonHoc = d.maMonHoc
+        JOIN 
+            nguoidung ndTT ON t.maNguoiDung = ndTT.maNguoiDung
         WHERE 
             (d.trangThai = 'DA_DUYET' OR d.trangThai = 'TU_CHOI')
     ";
 
         $params = [];
 
+        // Lọc khối
         if (!empty($maKhoi)) {
             $sql .= " AND d.maKhoi = :maKhoi";
             $params['maKhoi'] = $maKhoi;
         }
 
+        // Lọc niên khóa
         if (!empty($maNienKhoa)) {
             $sql .= " AND d.maNienKhoa = :maNienKhoa";
             $params['maNienKhoa'] = $maNienKhoa;
+        }
+
+        // Lọc theo tổ trưởng chuyên môn (theo người đăng nhập)
+        if (!empty($maNguoiDung)) {
+            $sql .= " AND t.maNguoiDung = :maNguoiDung";
+            $params['maNguoiDung'] = $maNguoiDung;
         }
 
         $stmt = $conn->prepare($sql);
