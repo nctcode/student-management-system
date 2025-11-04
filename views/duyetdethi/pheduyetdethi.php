@@ -1,8 +1,13 @@
 <?php
 require_once 'views/layouts/header.php';
 require_once 'views/layouts/sidebar/totruong.php';
+
+// Lấy message từ session (nếu có) để hiển thị popup
+$message = $_SESSION['message'] ?? '';
+$type = $_SESSION['type'] ?? '';
+unset($_SESSION['message'], $_SESSION['type']);
 ?>
-<!-- CSS riêng cho trang duyệt đề thi -->
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/duyetdethi.css">
@@ -10,20 +15,16 @@ require_once 'views/layouts/sidebar/totruong.php';
 <div class="container container-main">
   <h2 class="title">DUYỆT ĐỀ THI</h2>
 
-  <!-- Hiển thị alert khi có thông báo -->
-  <?php if (isset($_GET['msg'])): ?>
-    <script>
-      alert("<?= htmlspecialchars($_GET['msg']) ?>");
-      window.location.href = "index.php?controller=duyetdethi&action=duyet";
-    </script>
+  <?php if (!empty($message) && $type === 'error'): ?>
+    <div class="alert alert-danger text-center"><?= htmlspecialchars($message) ?></div>
   <?php endif; ?>
 
   <div class="row mb-4">
-    <!-- Lọc Khối & Học kỳ -->
+    <!-- Bộ lọc -->
     <div class="col-md-4">
       <div class="box">
         <h6>Chọn Khối học & Học kỳ:</h6>
-        <form method="GET" action="index.php">
+        <form method="GET" action="">
           <input type="hidden" name="controller" value="duyetdethi">
           <input type="hidden" name="action" value="duyet">
 
@@ -58,7 +59,7 @@ require_once 'views/layouts/sidebar/totruong.php';
           <thead>
             <tr>
               <th>Mã đề</th>
-              <th>Tên giáo viên ra đề</th>
+              <th>Giáo viên</th>
               <th>Tiêu đề</th>
               <th>Chọn</th>
             </tr>
@@ -68,23 +69,18 @@ require_once 'views/layouts/sidebar/totruong.php';
               <?php foreach ($exams as $exam): ?>
                 <tr>
                   <td><?= $exam['maDeThi'] ?></td>
-                  <td><?= $exam['tenGiaoVien'] ?></td>
-                  <td><?= $exam['tieuDe'] ?></td>
+                  <td><?= htmlspecialchars($exam['tenGiaoVien']) ?></td>
+                  <td><?= htmlspecialchars($exam['tieuDe']) ?></td>
                   <td>
-                    <a href="index.php?controller=duyetdethi&action=duyet&maKhoi=<?= $maKhoi ?>&maNienKhoa=<?= $maNienKhoa ?>&maDeThi=<?= $exam['maDeThi'] ?>" class="btn btn-sm btn-outline-primary">
-                      Xem chi tiết
-                    </a>
+                    <a href="?controller=duyetdethi&action=duyet&maKhoi=<?= $maKhoi ?>&maNienKhoa=<?= $maNienKhoa ?>&maDeThi=<?= $exam['maDeThi'] ?>"
+                      class="btn btn-sm btn-outline-primary">Xem</a>
                   </td>
                 </tr>
               <?php endforeach; ?>
             <?php else: ?>
               <tr>
-                <td colspan="4" class="text-center">
-                  <?php if ($maKhoi || $maNienKhoa): ?>
-                    Không có đề thi nào phù hợp
-                  <?php else: ?>
-                    Chưa có dữ liệu, vui lòng chọn Khối và Học kỳ
-                  <?php endif; ?>
+                <td colspan="4" class="text-center text-muted">
+                  <?= ($maKhoi || $maNienKhoa) ? 'Không có đề thi nào phù hợp' : 'Vui lòng chọn Khối và Học kỳ' ?>
                 </td>
               </tr>
             <?php endif; ?>
@@ -94,7 +90,7 @@ require_once 'views/layouts/sidebar/totruong.php';
     </div>
   </div>
 
-  <!-- Luôn hiển thị khung Chi tiết & Danh sách câu hỏi -->
+  <!-- Chi tiết đề thi -->
   <div class="row mt-4">
     <div class="col-md-4">
       <div class="box">
@@ -107,11 +103,11 @@ require_once 'views/layouts/sidebar/totruong.php';
             </tr>
             <tr>
               <th>Tiêu đề</th>
-              <td><?= $examDetail['tieuDe'] ?></td>
+              <td><?= htmlspecialchars($examDetail['tieuDe']) ?></td>
             </tr>
             <tr>
-              <th>Giáo viên ra đề</th>
-              <td><?= $examDetail['tenGiaoVien'] ?></td>
+              <th>Giáo viên</th>
+              <td><?= htmlspecialchars($examDetail['tenGiaoVien']) ?></td>
             </tr>
             <tr>
               <th>Ngày nộp</th>
@@ -119,15 +115,15 @@ require_once 'views/layouts/sidebar/totruong.php';
             </tr>
             <tr>
               <th>Môn</th>
-              <td><?= $examDetail['monHoc'] ?></td>
+              <td><?= htmlspecialchars($examDetail['monHoc']) ?></td>
             </tr>
             <tr>
               <th>Học kỳ</th>
-              <td><?= $examDetail['hocKy'] ?></td>
+              <td><?= htmlspecialchars($examDetail['hocKy']) ?></td>
             </tr>
             <tr>
               <th>Năm học</th>
-              <td><?= $examDetail['namHoc'] ?></td>
+              <td><?= htmlspecialchars($examDetail['namHoc']) ?></td>
             </tr>
             <tr>
               <th>Trạng thái</th>
@@ -148,6 +144,7 @@ require_once 'views/layouts/sidebar/totruong.php';
       </div>
     </div>
 
+    <!-- Danh sách câu hỏi -->
     <div class="col-md-8">
       <div class="box">
         <h6>Danh sách câu hỏi:</h6>
@@ -155,23 +152,23 @@ require_once 'views/layouts/sidebar/totruong.php';
           <thead>
             <tr>
               <th>Câu hỏi</th>
-              <th style="width:80px;">Mức điểm</th>
+              <th style="width: 90px;">Mức điểm</th>
             </tr>
           </thead>
           <tbody>
             <?php if (!empty($questions)): ?>
               <?php
-              $totalQuestions = count($questions);
-              $pointPerQuestion = $totalQuestions > 0 ? 10 / $totalQuestions : 0;
+              $total = count($questions);
+              $rounded = $total > 0 ? round((10 / $total) * 4) / 4 : 0;
               foreach ($questions as $i => $q): ?>
                 <tr>
-                  <td><strong><?= $i + 1 ?>:</strong> <?= htmlspecialchars($q['noiDungCauHoi'] ?? '') ?></td>
-                  <td><?= number_format($pointPerQuestion, 2) ?></td>
+                  <td><strong><?= $i + 1 ?>:</strong> <?= htmlspecialchars($q['noiDungCauHoi']) ?></td>
+                  <td><?= number_format($rounded, 2) ?></td>
                 </tr>
               <?php endforeach; ?>
             <?php else: ?>
               <tr>
-                <td colspan="2" class="text-center text-muted">Chưa có dữ liệu câu hỏi.</td>
+                <td colspan="2" class="text-center text-muted">Chưa có câu hỏi.</td>
               </tr>
             <?php endif; ?>
           </tbody>
@@ -180,17 +177,110 @@ require_once 'views/layouts/sidebar/totruong.php';
     </div>
   </div>
 
-  <!-- Form duyệt / từ chối -->
-  <form method="POST" action="index.php?controller=duyetdethi&action=capNhatTrangThai">
-    <input type="hidden" name="maDeThi" value="<?= $examDetail['maDeThi'] ?? '' ?>">
-    <div class="text-center mt-4">
-      <button type="submit" name="hanhDong" value="duyet" class="btn btn-success btn-action" <?= !$examDetail ? 'disabled' : '' ?>>Duyệt đề</button>
-      <button type="submit" name="hanhDong" value="tuchoi" class="btn btn-secondary btn-action" <?= !$examDetail ? 'disabled' : '' ?>>Từ chối</button>
+<!-- Form duyệt/từ chối -->
+<?php if ($examDetail): ?>
+<form id="formDuyet" method="POST" action="index.php?controller=duyetdethi&action=capNhatTrangThai">
+  <input type="hidden" name="maDeThi" value="<?= $examDetail['maDeThi'] ?>">
+  <input type="hidden" name="maKhoi" value="<?= $maKhoi ?>">
+  <input type="hidden" name="maNienKhoa" value="<?= $maNienKhoa ?>">
+  <input type="hidden" id="hanhDongInput" name="hanhDong" value="">
+
+  <!-- Khung ghi chú ẩn -->
+  <div class="mt-3" id="divGhiChu" style="display:none;">
+    <label for="ghiChu" class="form-label">Lý do từ chối:</label>
+    <textarea id="ghiChu" name="ghiChu" class="form-control" rows="3" placeholder="Nhập lý do nếu bạn từ chối..."></textarea>
+    <div id="errorMessage" class="text-danger mt-2" style="display:none;">
+      ❗ Vui lòng nhập lý do từ chối trước khi gửi!
     </div>
-  </form>
+  </div>
 
+  <!-- Nút hành động -->
+  <div class="text-center mt-3">
+    <button type="submit" id="btnDuyet" class="btn btn-success btn-action">Duyệt đề</button>
+    <button type="button" id="btnTuChoi" class="btn btn-danger btn-action">Từ chối</button>
+  </div>
+</form>
+<?php endif; ?>
+
+<!-- Popup thông báo -->
+<div class="modal fade" id="popupThongBao" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center p-3">
+      <h5 id="popupMessage"></h5>
+      <div class="mt-3">
+        <button class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
 </div>
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> -->
+ <script>
+document.addEventListener('DOMContentLoaded', function() {
+  const btnTuChoi = document.getElementById('btnTuChoi');
+  const btnDuyet = document.getElementById('btnDuyet');
+  const divGhiChu = document.getElementById('divGhiChu');
+  const ghiChu = document.getElementById('ghiChu');
+  const errorMsg = document.getElementById('errorMessage');
+  const form = document.getElementById('formDuyet');
+  const hanhDongInput = document.getElementById('hanhDongInput');
 
-<?php
-require_once 'views/layouts/footer.php';
-?>
+  if (btnTuChoi && btnDuyet && form && divGhiChu && ghiChu && errorMsg && hanhDongInput) {
+    // Nút Từ chối
+    btnTuChoi.addEventListener('click', () => {
+      if (divGhiChu.style.display === 'none') {
+        divGhiChu.style.display = 'block';
+        ghiChu.focus();
+        hanhDongInput.value = 'tuchoi';
+      } else {
+        if (ghiChu.value.trim() === '') {
+          errorMsg.style.display = 'block';
+          ghiChu.focus();
+        } else {
+          errorMsg.style.display = 'none';
+          hanhDongInput.value = 'tuchoi';
+          form.submit();
+        }
+      }
+    });
+
+    // Nút Duyệt
+    btnDuyet.addEventListener('click', () => {
+      hanhDongInput.value = 'duyet';
+      form.submit();
+    });
+
+    // Kiểm tra trước khi submit (chỉ cho Từ chối)
+    form.addEventListener('submit', (e) => {
+      if (hanhDongInput.value === 'tuchoi' && ghiChu.value.trim() === '') {
+        e.preventDefault();
+        errorMsg.style.display = 'block';
+        ghiChu.focus();
+        return false;
+      }
+      errorMsg.style.display = 'none';
+    });
+
+    // Vô hiệu hóa nút Duyệt khi textarea có nội dung
+    ghiChu.addEventListener('input', () => {
+      if (ghiChu.value.trim() !== '') {
+        btnDuyet.disabled = true;  // đã nhập lý do → disable Duyệt
+      } else {
+        btnDuyet.disabled = false; // xóa hết lý do → enable Duyệt
+      }
+    });
+  }
+
+  // Hiển thị popup nếu có message
+   <?php if (!empty($message) && $type !== 'error'): ?>
+    const modalEl = document.getElementById('popupThongBao');
+    if (modalEl) {
+      const modal = new bootstrap.Modal(modalEl);
+      document.getElementById('popupMessage').textContent = <?php echo json_encode($message); ?>;
+      modal.show();
+    }
+  <?php endif; ?>
+});
+</script>
+
+
+  <?php require_once 'views/layouts/footer.php'; ?>

@@ -27,19 +27,16 @@ class DuyetDeThiController
         $maNienKhoa = $_GET['maNienKhoa'] ?? null;
 
         //Kiểm tra dữ liệu lọc
-        if (isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) {
-            if (empty($maKhoi) || empty($maNienKhoa)) {
-                echo "<script>alert('Vui lòng chọn đầy đủ Khối học và Học kỳ trước khi lọc!');</script>";
-            }
+        if ((isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) && (empty($maKhoi) || empty($maNienKhoa))) {
+            $_SESSION['message'] = 'Vui lòng chọn đầy đủ Khối học và Học kỳ trước khi lọc!';
+            $_SESSION['type'] = 'error';
         }
-
         // Danh sách đề thi
         $exams = [];
         if ($maKhoi && $maNienKhoa) {
             $maNguoiDung = $_SESSION['user']['maNguoiDung'] ?? null;
             $exams = $this->model->getExams($maKhoi, $maNienKhoa, $maNguoiDung);
         }
-
 
         // Nếu user chọn một đề thi, lấy chi tiết và câu hỏi
         $maDeThi = $_GET['maDeThi'] ?? null;
@@ -60,45 +57,41 @@ class DuyetDeThiController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $maDeThi = $_POST['maDeThi'] ?? null;
-            $hanhDong = $_POST['hanhDong'] ?? null;
+            $hanhDong = $_POST['hanhDong'] ?? '';
+            $ghiChu = trim($_POST['ghiChu'] ?? '');
+            $maKhoi = $_POST['maKhoi'] ?? null;
+            $maNienKhoa = $_POST['maNienKhoa'] ?? null;
 
-            if ($maDeThi && $hanhDong) {
-                if ($hanhDong === 'duyet') {
-                    $trangThai = 'DA_DUYET';
-                } elseif ($hanhDong === 'tuchoi') {
-                    $trangThai = 'TU_CHOI';
-                } else {
-                    return;
-                }
-
-                // Kết nối CSDL
+            if (!$maKhoi || !$maNienKhoa) {
+                $_SESSION['message'] = '❗ Vui lòng chọn Khối và Niên khóa trước khi duyệt!';
+                $_SESSION['type'] = 'error';
+            } elseif ($hanhDong === 'tuchoi' && $ghiChu === '') {
+                $_SESSION['message'] = '❗ Vui lòng nhập lý do từ chối!';
+                $_SESSION['type'] = 'error';
+            } else {
+                $trangThai = $hanhDong === 'duyet' ? 'DA_DUYET' : 'TU_CHOI';
                 require_once 'models/Database.php';
                 $db = new Database();
                 $pdo = $db->getConnection();
-
-                // Cập nhật trạng thái
-                $sql = "UPDATE dethi SET trangThai = :trangThai WHERE maDeThi = :maDeThi";
+                $sql = "UPDATE dethi SET trangThai = :trangThai, ghiChu = :ghiChu WHERE maDeThi = :maDeThi";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
                     'trangThai' => $trangThai,
+                    'ghiChu' => $ghiChu,
                     'maDeThi' => $maDeThi
                 ]);
 
-                // Hiển thị thông báo
-                if ($trangThai === 'DA_DUYET') {
-                    echo "<script>
-                            alert('✅ Đã duyệt đề thi thành công!');
-                            window.location.href = 'index.php?controller=duyetdethi&action=duyet';
-                        </script>";
-                } elseif ($trangThai === 'TU_CHOI') {
-                    echo "<script>
-                            alert('❌ Đã từ chối đề thi!');
-                            window.location.href = 'index.php?controller=duyetdethi&action=duyet';
-                        </script>";
-                }
+                $msg = $trangThai === 'DA_DUYET' ? '✅ Đã duyệt đề thi thành công!' : '❌ Đã từ chối đề thi!';
+                $_SESSION['message'] = $msg;
+                $_SESSION['type'] = 'success';
             }
+
+            // **Redirect về trang duyệt nhưng bỏ maDeThi để ẩn chi tiết**
+            header("Location: index.php?controller=duyetdethi&action=duyet&maKhoi=$maKhoi&maNienKhoa=$maNienKhoa");
+            exit;
         }
     }
+
 
     // Trang lịch sử duyệt đề
     public function lichSuDuyetDeThi()
@@ -115,10 +108,14 @@ class DuyetDeThiController
 
         $deDaDuyet = [];
         $deTuChoi = [];
+        $message = '';
+        $type = '';
 
+        // Xử lý lọc
         if (isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) {
             if (empty($maKhoi) || empty($maNienKhoa)) {
-                echo "<script>alert('Vui lòng chọn đầy đủ Khối học và Học kỳ trước khi lọc!');</script>";
+                $message = 'Vui lòng chọn đầy đủ Khối học và Học kỳ trước khi lọc!';
+                $type = 'error';
             } else {
                 $lichSu = $model->getLichSuDuyet($maKhoi, $maNienKhoa, $maNguoiDung);
 
@@ -132,6 +129,7 @@ class DuyetDeThiController
             }
         }
 
+        // Xử lý chi tiết đề thi
         $examDetail = null;
         $questions = [];
         if (!empty($_GET['maDeThi'])) {
@@ -140,6 +138,7 @@ class DuyetDeThiController
             $questions = $model->getQuestions($maDeThi);
         }
 
+        // Gọi view, truyền đầy đủ biến
         require_once 'views/duyetdethi/lichsuduyetde.php';
     }
 }
