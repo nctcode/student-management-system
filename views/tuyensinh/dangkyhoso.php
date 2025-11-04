@@ -1,4 +1,131 @@
 <?php
+// Giả sử có các danh sách trường THCS và THPT
+$truongTHCS = ["THCS Trần Phú", "THCS Nguyễn Du", "THCS Lê Quý Đôn"];
+$truongNV = ["THPT Chuyên Lê Hồng Phong", "THPT Nguyễn Thị Minh Khai", "THPT Marie Curie"];
+?>
+
+<div class="container mt-4">
+    <h2 class="text-center text-primary">Hệ Thống Tuyển Sinh Trực Tuyến</h2>
+    <p class="text-center">Đăng ký hồ sơ tuyển sinh vào các trường Trung học cơ sở</p>
+
+    <form action="index.php?controller=tuyensinh&action=xulyhoso" method="POST" class="form border p-4 bg-light rounded">
+        <h4 class="mt-3">Thông tin học sinh</h4>
+
+        <div class="row">
+            <div class="col-md-6">
+                <label>Họ và tên *</label>
+                <input type="text" name="hoten" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label>Ngày sinh *</label>
+                <input type="date" name="ngaysinh" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <label>Giới tính *</label>
+                <select name="gioitinh" class="form-select" required>
+                    <option value="">Chọn giới tính</option>
+                    <option>Nam</option>
+                    <option>Nữ</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label>Số CMND/CCCD *</label>
+                <input type="text" name="cmnd" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <label>Số điện thoại</label>
+                <input type="text" name="sdt" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label>Email</label>
+                <input type="email" name="email" class="form-control">
+            </div>
+        </div>
+
+        <label class="mt-2">Địa chỉ</label>
+        <input type="text" name="diachi" class="form-control">
+
+        <h4 class="mt-4">Thông tin phụ huynh</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Họ và tên phụ huynh *</label>
+                <input type="text" name="hoten_ph" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label>Mối quan hệ *</label>
+                <select name="quanhe" class="form-select" required>
+                    <option value="">Chọn mối quan hệ</option>
+                    <option>Bố</option>
+                    <option>Mẹ</option>
+                    <option>Người giám hộ</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <label>Số điện thoại *</label>
+                <input type="text" name="sdt_ph" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label>Email</label>
+                <input type="email" name="email_ph" class="form-control">
+            </div>
+        </div>
+
+        <h4 class="mt-4">Thông tin trường và nguyện vọng</h4>
+        <label>Trường THCS hiện tại *</label>
+        <select name="truong_hientai" class="form-select" required>
+            <option value="">Chọn trường</option>
+            <?php foreach ($truongTHCS as $t): ?>
+                <option><?= $t ?></option>
+            <?php endforeach; ?>
+        </select>
+
+        <div class="row mt-2">
+            <div class="col-md-4">
+                <label>Nguyện vọng 1 *</label>
+                <select name="nv1" class="form-select" required>
+                    <option value="">Chọn trường</option>
+                    <?php foreach ($truongNV as $t): ?>
+                        <option><?= $t ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Nguyện vọng 2</label>
+                <select name="nv2" class="form-select">
+                    <option value="">Chọn trường</option>
+                    <?php foreach ($truongNV as $t): ?>
+                        <option><?= $t ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Nguyện vọng 3</label>
+                <select name="nv3" class="form-select">
+                    <option value="">Chọn trường</option>
+                    <?php foreach ($truongNV as $t): ?>
+                        <option><?= $t ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+
+        <div class="text-end mt-4">
+            <button type="reset" class="btn btn-secondary">Hủy</button>
+            <button type="submit" name="submit" class="btn btn-primary">Nộp hồ sơ</button>
+        </div>
+    </form>
+</div>
+
+<?php
 $title = "Đăng ký tuyển sinh";
 ?>
 

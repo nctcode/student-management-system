@@ -208,3 +208,43 @@ $thongKe = $this->tuyenSinhModel->getThongKeTuyenSinh();
         </div>
     </div>
 </div>
+=======
+$file = __DIR__ . '/../../data/hoso.json';
+$data = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
+?>
+
+<div class="container mt-4">
+    <h3 class="text-center text-primary mb-3">Danh sách hồ sơ đã nộp</h3>
+
+    <?php if (empty($data)): ?>
+        <p class="text-center text-muted">Chưa có hồ sơ nào được nộp.</p>
+    <?php else: ?>
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Ngày sinh</th>
+                    <th>Giới tính</th>
+                    <th>CMND/CCCD</th>
+                    <th>Nguyện vọng 1</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian nộp</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($data as $h): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($h['hoten']) ?></td>
+                        <td><?= htmlspecialchars($h['ngaysinh']) ?></td>
+                        <td><?= htmlspecialchars($h['gioitinh']) ?></td>
+                        <td><?= htmlspecialchars($h['cmnd']) ?></td>
+                        <td><?= htmlspecialchars($h['nv1']) ?></td>
+                        <td><?= htmlspecialchars($h['trangthai']) ?></td>
+                        <td><?= htmlspecialchars($h['thoigian_nop']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
+</div>
+

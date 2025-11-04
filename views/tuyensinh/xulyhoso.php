@@ -1,4 +1,5 @@
 <?php
+
 $title = "Xử lý hồ sơ tuyển sinh";
 ?>
 
@@ -97,3 +98,45 @@ $title = "Xử lý hồ sơ tuyển sinh";
         </div>
     </div>
 </div>
+=======
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $hoso = [
+        'hoten' => $_POST['hoten'],
+        'ngaysinh' => $_POST['ngaysinh'],
+        'gioitinh' => $_POST['gioitinh'],
+        'cmnd' => $_POST['cmnd'],
+        'sdt' => $_POST['sdt'],
+        'email' => $_POST['email'],
+        'diachi' => $_POST['diachi'],
+        'hoten_ph' => $_POST['hoten_ph'],
+        'quanhe' => $_POST['quanhe'],
+        'sdt_ph' => $_POST['sdt_ph'],
+        'email_ph' => $_POST['email_ph'],
+        'truong_hientai' => $_POST['truong_hientai'],
+        'nv1' => $_POST['nv1'],
+        'nv2' => $_POST['nv2'],
+        'nv3' => $_POST['nv3'],
+        'trangthai' => 'Chờ xét duyệt',
+        'thoigian_nop' => date('d/m/Y H:i:s')
+    ];
+
+    $file = __DIR__ . '/../../data/hoso.json';
+    if (!file_exists($file)) {
+        file_put_contents($file, '[]');
+    }
+
+    $data = json_decode(file_get_contents($file), true);
+    $data[] = $hoso;
+    file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+    echo "<div class='container mt-5 text-center'>
+            <h3 class='text-success'>Hồ sơ đã được nộp thành công!</h3>
+            <a href='index.php?controller=tuyensinh&action=dangkyhoso' class='btn btn-primary mt-3'>← Quay lại trang đăng ký</a>
+            <a href='index.php?controller=tuyensinh&action=danhsachhoso' class='btn btn-success mt-3'>Xem danh sách hồ sơ</a>
+          </div>";
+} else {
+    header("Location: index.php?controller=tuyensinh&action=dangkyhoso");
+    exit;
+}
+?>
+>>>>>>> 8382f08 (Fix kiểm tra mật khẩu cũ và cập nhật mật khẩu mới)

@@ -50,7 +50,11 @@ function getRoleName($role) {
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge">3</span>
                 </div>
-                
+                 <!-- Nút đổi mật khẩu -->
+    <a href="index.php?controller=auth&action=changePassword" class="logout-btn">
+        <i class="fas fa-key"></i>
+        <span>Đổi mật khẩu</span>
+    </a>
                 <!-- User info - chỉ hiển thị khi đã đăng nhập -->
                 <div class="user-info">
                     <div class="user-avatar">

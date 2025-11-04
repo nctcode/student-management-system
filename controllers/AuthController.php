@@ -31,7 +31,7 @@ class AuthController {
                 
                 // Kiểm tra mật khẩu (trong thực tế dùng password_verify)
                 // Demo: so sánh với mật khẩu cố định 123456
-                if ($password === '123456' || password_verify($password, $user['matKhau'])) {
+               if (password_verify($password, $user['matKhau'])) {
                     // Lưu thông tin người dùng vào session
                     $_SESSION['user'] = [
                         'maTaiKhoan' => $user['maTaiKhoan'],
@@ -52,7 +52,65 @@ class AuthController {
             exit;
         }
     }
-    
+    public function changePassword() {
+    // Đảm bảo chỉ start session 1 lần
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    // Kiểm tra người dùng đã đăng nhập chưa
+    if (!isset($_SESSION['user'])) {
+        header("Location: index.php?controller=auth&action=login");
+        exit;
+    }
+
+    // Khi người dùng submit form
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $old = $_POST['old_password'];
+        $new = $_POST['new_password'];
+        $confirm = $_POST['confirm_password'];
+
+        // Lấy username từ session (đúng với cấu trúc bảng taikhoan)
+        $username = $_SESSION['user']['tenDangNhap'];
+
+        // Gọi model xử lý
+        require_once __DIR__ . '/../models/TaiKhoanModel.php';
+        $userModel = new TaiKhoanModel();
+
+        // Lấy thông tin tài khoản theo tên đăng nhập
+        $user = $userModel->getUserByUsername($username);
+
+        // Kiểm tra mật khẩu cũ
+        if (!$user || !password_verify($old, $user['matKhau'])) {
+            $_SESSION['message'] = "❌ Mật khẩu cũ không đúng!";
+            header("Location: index.php?controller=auth&action=changePassword");
+            exit;
+        }
+
+        // Kiểm tra xác nhận mật khẩu mới
+        if ($new !== $confirm) {
+            $_SESSION['message'] = "⚠️ Mật khẩu xác nhận không khớp!";
+            header("Location: index.php?controller=auth&action=changePassword");
+            exit;
+        }
+
+        // Mã hoá và cập nhật mật khẩu
+        $hashed = password_hash($new, PASSWORD_DEFAULT);
+        $userModel->updatePassword($username, $hashed);
+
+        $_SESSION['message'] = "✅ Đổi mật khẩu thành công!";
+        header("Location: index.php?controller=auth&action=changePassword");
+        exit;
+    }
+
+    // Hiển thị form đổi mật khẩu
+    include 'views/auth/change_password.php';
+}
+
+        public function register() {
+        // Hiển thị form đăng ký
+        require_once 'views/auth/register.php';
+    }
     private function redirectByRole($role) {
         switch ($role) {
             case 'QTV':
