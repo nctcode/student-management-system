@@ -266,8 +266,12 @@ $title = "Đăng Nhập - QLHS";
                         <div>ph01 / 123456</div>
                     </div>
                     <div class="demo-item">
-                        <strong>Ban giám hiệu:</strong>
+                        <strong>Ban giám hiệu 1:</strong>
                         <div>bgh01 / 123456</div>
+                    </div>
+                    <div class="demo-item">
+                        <strong>Ban giám hiệu 2:</strong>
+                        <div>bgh02 / 123456</div>
                     </div>
                 </div>
             </div>

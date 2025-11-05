@@ -25,6 +25,20 @@ class HomeController {
         }
     }
     
+    // HÀM KIỂM TRA MÃ TRƯỜNG: CHỈ CHẠY ĐỐI VỚI BGH
+    private function checkSchoolAccess() {
+        $role = $_SESSION['user']['vaiTro'] ?? '';
+        
+        // Nếu là BGH mà không có maTruong, xóa session và chuyển hướng
+        if ($role === 'BGH' && (!isset($_SESSION['user']['maTruong']) || empty($_SESSION['user']['maTruong']))) {
+            // Hiển thị lỗi rõ ràng hơn
+            $_SESSION['error'] = "Không tìm thấy mã trường trong phiên đăng nhập. Vui lòng đăng nhập lại.";
+            unset($_SESSION['user']); 
+            header('Location: index.php?controller=auth&action=login&error=missing_school_id');
+            exit;
+        }
+    }
+    
     public function index() {
         $this->checkAuth();
         
@@ -162,9 +176,14 @@ class HomeController {
     
     public function principal() {
         $this->checkRole(['BGH']);
+        $this->checkSchoolAccess(); // GỌI HÀM KIỂM TRA MÃ TRƯỜNG
+        
+        // Lấy mã trường sau khi đã chắc chắn nó tồn tại
+        $maTruong = $_SESSION['user']['maTruong'];
+        
         $title = "Ban giám hiệu - QLHS";
         
-        // Lấy dữ liệu thống kê
+        // Lấy dữ liệu thống kê (cần truyền $maTruong vào HomeModel nếu cần lọc theo trường)
         $stats = $this->homeModel->getPrincipalStats();
         $systemOverview = $this->homeModel->getSystemOverview();
         $newNotifications = $this->homeModel->getNewNotifications('BGH');
@@ -202,4 +221,3 @@ class HomeController {
         require_once 'views/layouts/footer.php';
     }
 }
-?>

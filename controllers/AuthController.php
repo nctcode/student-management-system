@@ -16,8 +16,8 @@ class AuthController {
             $db = new Database();
             $conn = $db->getConnection();
             
-            // Kiểm tra thông tin đăng nhập - CẬP NHẬT TRUY VẤN
-            $sql = "SELECT tk.*, nd.maNguoiDung, nd.hoTen, nd.loaiNguoiDung,
+            // KHẮC PHỤC: Lấy nd.maTruong từ database
+            $sql = "SELECT tk.*, nd.maNguoiDung, nd.hoTen, nd.loaiNguoiDung, nd.maTruong,
                            hs.maHocSinh, l.tenLop, k.tenKhoi as khoi
                     FROM taikhoan tk 
                     JOIN nguoidung nd ON tk.maTaiKhoan = nd.maTaiKhoan 
@@ -28,30 +28,24 @@ class AuthController {
             
             $stmt = $conn->prepare($sql);
             $stmt->execute([$username]);
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if (count($result) > 0) {
-                $user = $result[0];
+            if ($user && password_verify($password, $user['matKhau'])) {
                 
-                // Kiểm tra mật khẩu (trong thực tế dùng password_verify)
-                // Demo: so sánh với mật khẩu cố định 123456
-                if ($password === '123456' || password_verify($password, $user['matKhau'])) {
-                    // Lưu thông tin người dùng vào session - CẬP NHẬT THÔNG TIN
-                    $_SESSION['user'] = [
-                        'maTaiKhoan' => $user['maTaiKhoan'],
-                        'maNguoiDung' => $user['maNguoiDung'],
-                        'tenDangNhap' => $user['tenDangNhap'],
-                        'hoTen' => $user['hoTen'],
-                        'vaiTro' => $user['loaiNguoiDung'],
-                        'maHocSinh' => $user['maHocSinh'] ?? null,
-                        'tenLop' => $user['tenLop'] ?? null,
-                        'khoi' => $user['khoi'] ?? null
-                    ];
-                    
-                    // Chuyển hướng theo vai trò
-                    $this->redirectByRole($user['loaiNguoiDung']);
-                    return;
-                }
+                // KHẮC PHỤC: Lưu maTruong vào session
+                $_SESSION['user'] = [
+                    'maNguoiDung' => $user['maNguoiDung'],
+                    'hoTen' => $user['hoTen'],
+                    'vaiTro' => $user['loaiNguoiDung'],
+                    'maHocSinh' => $user['maHocSinh'] ?? null,
+                    'tenLop' => $user['tenLop'] ?? null,
+                    'khoi' => $user['khoi'] ?? null,
+                    'maTruong' => $user['maTruong'] ?? null // DÒNG QUAN TRỌNG ĐÃ CÓ
+                ];
+                
+                // Chuyển hướng theo vai trò
+                $this->redirectByRole($user['loaiNguoiDung']);
+                return;
             }
             
             // Đăng nhập thất bại

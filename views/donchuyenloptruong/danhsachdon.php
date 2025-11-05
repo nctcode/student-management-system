@@ -2,7 +2,8 @@
 $title = "Phê duyệt chuyển lớp/trường";
 require_once __DIR__ . '/../layouts/header.php';
 
-$selectedSchool = $_SESSION['maTruong'] ?? ($_GET['school'] ?? null);
+// Trường được chọn chỉ lấy từ Session của người dùng hiện tại
+$selectedSchool = $_SESSION['user']['maTruong'] ?? null; // <--- Đã sửa
 $activeTab = $_GET['tab'] ?? 'cho_duyet'; // tab mặc định
 
 // Lấy giá trị từ URL: 'truong', 'lop', hoặc 'tat_ca'
@@ -64,12 +65,26 @@ $loaiDon = $loaiDonUrl === 'truong' ? 'chuyen_truong' : ($loaiDonUrl === 'lop' ?
 
     <div class="card">
         <h3 class="section-title"><i class="fas fa-list"></i> QUẢN LÝ ĐƠN CHUYỂN</h3>
+        
+        <?php 
+        // Hiển thị thông báo
+        if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success mt-2" role="alert">
+                <i class="fas fa-check-circle me-2"></i><?= $_SESSION['success']; unset($_SESSION['success']); ?>
+            </div>
+        <?php endif; 
+        if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger mt-2" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i><?= $_SESSION['error']; unset($_SESSION['error']); ?>
+            </div>
+        <?php endif; ?>
 
         <form id="typeForm" method="get" class="mb-3">
             <input type="hidden" name="controller" value="donchuyenloptruong">
             <input type="hidden" name="action" value="danhsach">
-            <input type="hidden" name="school" value="<?= htmlspecialchars($selectedSchool) ?>">
+            <input type="hidden" name="school" value="<?= htmlspecialchars($selectedSchool) ?>"> 
             <input type="hidden" name="tab" value="<?= htmlspecialchars($activeTab) ?>">
+            
             <select name="loaiDon" onchange="this.form.submit()" style="padding:8px;border-radius:6px;">
                 <option value="tat_ca" <?= $loaiDonUrl=='tat_ca'?'selected':'' ?>>Tất cả đơn</option>
                 <option value="truong" <?= $loaiDonUrl=='truong'?'selected':'' ?>>Đơn chuyển trường</option>
@@ -77,26 +92,9 @@ $loaiDon = $loaiDonUrl === 'truong' ? 'chuyen_truong' : ($loaiDonUrl === 'lop' ?
             </select>
         </form>
 
-        <form id="schoolForm" method="get" class="mb-3">
-            <input type="hidden" name="controller" value="donchuyenloptruong">
-            <input type="hidden" name="action" value="danhsach">
-            <input type="hidden" name="tab" value="<?= htmlspecialchars($activeTab) ?>">
-            <input type="hidden" name="loaiDon" value="<?= htmlspecialchars($loaiDonUrl) ?>">
-
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                <label style="min-width:110px;font-weight:600;">Chọn trường:</label>
-                <select name="school" id="schoolSelect" style="min-width:320px;padding:8px;border-radius:6px;border:1px solid #cfd8e3;">
-                    <option value="">-- Chọn trường --</option>
-                    <?php
-                    $schools = $schools ?? [];
-                    foreach ($schools as $s) {
-                        $sel = ($selectedSchool == $s['maTruong']) ? 'selected' : '';
-                        echo "<option value='{$s['maTruong']}' $sel>{$s['tenTruong']}</option>";
-                    }
-                    ?>
-                </select>
-            </div>
-        </form>
+        <?php if (!$selectedSchool): ?>
+            <div class="alert alert-danger">Lỗi: Không tìm thấy mã trường trong phiên đăng nhập. Vui lòng đăng nhập lại.</div>
+        <?php endif; ?>
 
         <div class="tabs">
             <?php
@@ -107,6 +105,7 @@ $loaiDon = $loaiDonUrl === 'truong' ? 'chuyen_truong' : ($loaiDonUrl === 'lop' ?
             ];
             foreach ($tabs as $key => $label) {
                 $active = ($key === $activeTab) ? 'active' : '';
+                // Giữ lại tham số school trong URL để controller có thể lọc dữ liệu
                 $url = "?controller=donchuyenloptruong&action=danhsach&school={$selectedSchool}&tab={$key}&loaiDon={$loaiDonUrl}";
                 echo "<a class='tab $active' href='$url'>$label</a>";
             }
@@ -132,14 +131,15 @@ $loaiDon = $loaiDonUrl === 'truong' ? 'chuyen_truong' : ($loaiDonUrl === 'lop' ?
         <div class="request-list" id="requestList">
             <?php
             $requests = $requests ?? [];
+            $currentSchoolId = $selectedSchool;
 
             // Lọc theo tab trạng thái
             $filteredRequests = array_filter($requests, function($don) use ($activeTab) {
                 $trangThaiTong = $don['trangThaiTong'] ?? 'Không xác định';
                 switch ($activeTab) {
                     case 'cho_duyet': return $trangThaiTong === 'Chờ duyệt';
-                    case 'da_duyet':  return $trangThaiTong === 'Hoàn tất';
-                    case 'tu_choi':   return $trangThaiTong === 'Bị từ chối';
+                    case 'da_duyet': return $trangThaiTong === 'Hoàn tất';
+                    case 'tu_choi': return $trangThaiTong === 'Bị từ chối';
                     default: return true;
                 }
             });
@@ -160,10 +160,11 @@ $loaiDon = $loaiDonUrl === 'truong' ? 'chuyen_truong' : ($loaiDonUrl === 'lop' ?
 
                         $role = '';
                         $roleDisplay = '';
+                        $actionType = $don['actionType'] ?? 'full'; // Lấy action type
 
                         if ($type === 'chuyen_truong') {
                             // Logic chuyển trường (dùng maTruong)
-                            $role = ($don['maTruongDen'] == $selectedSchool) ? 'truongden' : 'truongdi';
+                            $role = ($don['maTruongDen'] == $currentSchoolId) ? 'truongden' : 'truongdi';
                             $roleDisplay = ($role === 'truongden') ? 'Trường đến' : 'Trường đi';
                         } elseif ($type === 'chuyen_lop') {
                             // Logic chuyển lớp: Chỉ cần là 'lop'
@@ -171,7 +172,12 @@ $loaiDon = $loaiDonUrl === 'truong' ? 'chuyen_truong' : ($loaiDonUrl === 'lop' ?
                             $roleDisplay = 'Ban Giám Hiệu'; 
                         }
                     ?>
-                    <div class="request-item" data-id="<?= $don['maDon'] ?>" data-role="<?= $role ?>" data-type="<?= $type ?>">
+                    <div class="request-item" 
+                        data-id="<?= $don['maDon'] ?>" 
+                        data-role="<?= $role ?>" 
+                        data-type="<?= $type ?>"
+                        data-can-approve="<?= $don['canApprove'] ? 'true' : 'false' ?>"
+                        data-action-type="<?= $actionType ?>" >
                         <div class="request-info">
                             <div class="request-code">#<?= str_pad($don['maDon'], 3, '0', STR_PAD_LEFT) ?></div>
                             <div class="student-name"><?= htmlspecialchars($don['tenHS'] ?? 'N/A') ?></div>
@@ -183,6 +189,9 @@ $loaiDon = $loaiDonUrl === 'truong' ? 'chuyen_truong' : ($loaiDonUrl === 'lop' ?
                                 Loại đơn: <strong><?= $type === 'chuyen_lop' ? 'Chuyển lớp' : 'Chuyển trường' ?></strong>
                                 <?php if ($type === 'chuyen_truong'): ?>
                                     | Vai trò: <strong><?= $roleDisplay ?></strong>
+                                <?php endif; ?>
+                                <?php if ($don['canApprove'] && $status === 'Chờ duyệt'): ?>
+                                    <span class="badge" style="background-color: #007bff; color: white; margin-left: 10px; font-weight: normal;">Cần xử lý</span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -200,33 +209,66 @@ $loaiDon = $loaiDonUrl === 'truong' ? 'chuyen_truong' : ($loaiDonUrl === 'lop' ?
 </div>
 
 <script>
-document.getElementById('schoolSelect').addEventListener('change', () => {
-    document.getElementById('schoolForm').submit();
-});
+// Đã loại bỏ event listener cho 'schoolSelect'
+
+// **********************************************
+// LOGIC XỬ LÝ DUYỆT / TỪ CHỐI BẰNG JAVASCRIPT
+// **********************************************
+
+// Hàm xác nhận Duyệt
+function confirmApprove() {
+    return confirm('Bạn chắc chắn muốn DUYỆT đơn này? Thao tác này không thể hoàn tác.');
+}
+
+// Hàm xác nhận Từ chối và kiểm tra lý do
+function confirmReject(maDon) {
+    const reasonTextarea = document.getElementById(`note${maDon}`);
+    const reasonInput = document.getElementById(`reason${maDon}`);
+    
+    // Lấy nội dung ghi chú từ textarea
+    const reason = reasonTextarea.value.trim(); 
+    
+    if (reason === '') {
+        alert('Lý do từ chối là BẮT BUỘC. Vui lòng nhập ghi chú.');
+        reasonTextarea.focus();
+        return false;
+    }
+    
+    if (!confirm('Bạn chắc chắn muốn TỪ CHỐI đơn này? Thao tác này không thể hoàn tác.')) {
+        return false;
+    }
+
+    // Gán lý do vào input hidden để gửi lên server
+    reasonInput.value = reason;
+    return true;
+}
 
 document.querySelectorAll('.request-item').forEach(el => {
     el.addEventListener('click', async function() {
         document.querySelectorAll('.request-item').forEach(i => i.classList.remove('selected'));
         this.classList.add('selected');
+        
         const id = this.dataset.id;
         const role = this.dataset.role; // truongden, truongdi, lop
         const type = this.dataset.type; // chuyen_truong, chuyen_lop
+        const canApprove = this.dataset.canApprove === 'true'; // Lấy từ Controller
+        const actionType = this.dataset.actionType; // Lấy actionType từ data-attribute
 
         const box = document.getElementById('detailContainer');
         const content = document.getElementById('detailContent');
         box.style.display = 'block';
         content.innerHTML = '<i>Đang tải...</i>';
         
+        // Cuộn xuống phần chi tiết
+        box.scrollIntoView({ behavior: 'smooth' });
+        
         try {
             const res = await fetch(`index.php?controller=donchuyenloptruong&action=ajax_chitiet&id=${id}`);
             const d = await res.json();
 
-            // *** QUAN TRỌNG: BẮT LỖI JSON TỪ SERVER ***
             if (d.error) {
-                // Hiển thị lỗi chi tiết từ server để debug
                 return content.innerHTML = `<p style='color:red; font-weight:bold;'>Lỗi tải chi tiết: ${d.error}</p>`;
             }
-            // *****************************************
 
             const isTruong = type === 'chuyen_truong';
             const unitType = isTruong ? 'Trường' : 'Lớp';
@@ -254,31 +296,29 @@ document.querySelectorAll('.request-item').forEach(el => {
                 actionRole = 'lop'; 
             }
             
-            // LOGIC XÁC ĐỊNH HIỂN THỊ NÚT DUYỆT
-            let showActions = false;
-
-            if (isTruong) {
-                if (role === 'truongden' && statusDen === 'Chờ duyệt') {
-                    showActions = true;
-                }
-                if (role === 'truongdi' && statusDi === 'Chờ duyệt' && statusDen === 'Đã duyệt') {
-                    showActions = true;
-                }
-                if (statusDi === 'Từ chối' || statusDen === 'Từ chối') {
-                    showActions = false;
-                }
-            } else {
-                if (actionRole === 'lop' && statusDen === 'Chờ duyệt') {
-                    showActions = true;
-                }
-            }
+            // LOGIC HIỂN THỊ NÚT DUYỆT DỰA VÀO canApprove TỪ CONTROLLER
+            const showActions = canApprove && (currentStatus === 'Chờ duyệt' || destinationStatus === 'Chờ duyệt');
 
             // Hiển thị vai trò cho Action và Detail
             let displayRoleText = isTruong ? (role === 'truongden' ? 'Trường đến' : 'Trường đi') : 'Ban Giám Hiệu';
 
+            // ************************************************
+            // LOGIC SỬA ĐỔI: ẨN NÚT TỪ CHỐI KHI actionType = approve_only
+            // ************************************************
+            const rejectButtonHTML = (actionType === 'approve_only') ? '' : 
+                `
+                <form method="post" action="?controller=donchuyenloptruong&action=reject" onsubmit="return confirmReject(${d.maDon});">
+                    <input type="hidden" name="maDon" value="${d.maDon}">
+                    <input type="hidden" name="reason" id="reason${d.maDon}">
+                    <input type="hidden" name="side" value="${actionRole}">
+                    <button class="btn btn-reject" type="submit"><i class="fas fa-times"></i> Từ chối</button>
+                </form>
+                `;
+
             const actionButtonsHTML = showActions ? `
-                <div class="notes-section"><label>Ghi chú xử lý (bắt buộc khi từ chối):</label>
-                    <textarea id="note${d.maDon}"></textarea>
+                <div class="notes-section">
+                    <label>Ghi chú xử lý (bắt buộc khi từ chối):</label>
+                    <textarea id="note${d.maDon}" style="width:100%; height:80px; padding:10px; border:1px solid #ccc; border-radius:4px;"></textarea>
                 </div>
                 <div class="action-buttons">
                     <form method="post" action="?controller=donchuyenloptruong&action=approve" onsubmit="return confirmApprove();">
@@ -286,35 +326,33 @@ document.querySelectorAll('.request-item').forEach(el => {
                         <input type="hidden" name="side" value="${actionRole}">
                         <button class="btn btn-approve" type="submit"><i class="fas fa-check"></i> Duyệt</button>
                     </form>
-                    <form method="post" action="?controller=donchuyenloptruong&action=reject" onsubmit="return confirmReject(${d.maDon});">
-                        <input type="hidden" name="maDon" value="${d.maDon}">
-                        <input type="hidden" name="reason" id="reason${d.maDon}">
-                        <input type="hidden" name="side" value="${actionRole}">
-                        <button class="btn btn-reject" type="submit"><i class="fas fa-times"></i> Từ chối</button>
-                    </form>
-                    <button id="btnCloseDetail" class="btn btn-cancel" type="button"><i class="fas fa-times-circle"></i> Đóng</button>
+                    ${rejectButtonHTML} <button id="btnCloseDetail" class="btn btn-cancel" type="button"><i class="fas fa-times-circle"></i> Đóng</button>
                 </div>
             ` : `<p class="p-3 text-center text-muted">Đơn đã được xử lý hoặc chưa đến lượt bạn duyệt.</p>
-                  <div class="action-buttons-single">
+                <div class="action-buttons-single">
                     <button id="btnCloseDetail" class="btn btn-cancel" type="button"><i class="fas fa-times-circle"></i> Đóng</button>
-                  </div>`;
+                </div>`;
 
             // Hiển thị lý do từ chối
             let rejectionReasonHTML = '';
+            let hasRejection = false;
             if (isTruong) {
                 if (statusDi === 'Từ chối' && lyDoTuChoiDi) {
                     rejectionReasonHTML += `<div><span class="detail-label">${unitType} hiện tại từ chối:</span> ${lyDoTuChoiDi}</div>`;
+                    hasRejection = true;
                 }
                 if (statusDen === 'Từ chối' && lyDoTuChoiDen) {
                     rejectionReasonHTML += `<div><span class="detail-label">${unitType} đến từ chối:</span> ${lyDoTuChoiDen}</div>`;
+                    hasRejection = true;
                 }
             } else {
                 if (statusDi === 'Từ chối' && lyDoTuChoiDi) {
                     rejectionReasonHTML += `<div><span class="detail-label">Lý do từ chối:</span> ${lyDoTuChoiDi}</div>`;
+                    hasRejection = true;
                 }
             }
 
-            if (rejectionReasonHTML) {
+            if (hasRejection) {
                 rejectionReasonHTML = `<div class="p-3 status-rejected" style="border-radius:6px;margin-bottom:15px;color:#721c24;background:#f8d7da;border:1px solid #f5c6cb;">
                     <strong style="font-size:16px;"><i class="fas fa-exclamation-triangle"></i> Lý do từ chối:</strong>
                     ${rejectionReasonHTML}
@@ -374,31 +412,16 @@ document.querySelectorAll('.request-item').forEach(el => {
             
             // GÁN EVENT CHO NÚT ĐÓNG
             document.getElementById('btnCloseDetail').addEventListener('click', function() {
-                // Ẩn container chi tiết
                 document.getElementById('detailContainer').style.display = 'none';
-                // Bỏ highlight đơn đã chọn
                 document.querySelectorAll('.request-item').forEach(i => i.classList.remove('selected'));
             });
-
-        } catch(e) {
-            // Lỗi JavaScript phía client (ví dụ: không parse được JSON)
+            
+        } catch (e) {
             console.error(e);
-            content.innerHTML = `<p style='color:red;'>Lỗi tải chi tiết (Client-side): ${e.message}</p>`;
+            content.innerHTML = `<p style='color:red;'>Lỗi không xác định khi tải chi tiết: ${e.message}</p>`;
         }
     });
 });
-
-function confirmApprove() {
-    return confirm('Bạn có chắc muốn DUYỆT đơn này không? Thao tác này sẽ không thể hoàn tác.');
-}
-
-function confirmReject(id) {
-    const note = document.getElementById(`note${id}`).value.trim();
-    if(!note) {
-        alert('Bạn phải nhập lý do từ chối.');
-        return false;
-    }
-    document.getElementById(`reason${id}`).value = note;
-    return confirm('Bạn có chắc muốn TỪ CHỐI đơn này?');
-}
 </script>
+
+<?php require_once __DIR__ . '/../layouts/footer.php'; ?>

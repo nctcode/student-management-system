@@ -6,7 +6,43 @@ class DonChuyenLopTruongController {
 
     public function __construct() {
         $this->model = new DonChuyenLopTruongModel();
-        if (session_status() === PHP_SESSION_NONE) session_start();
+        
+        // ĐẢM BẢO SESSION ĐƯỢC KHỞI TẠO
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // DEBUG: Kiểm tra session trong constructor
+        error_log("DEBUG DonChuyenLopTruongController - Session: " . print_r($_SESSION, true));
+        
+        $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        
+        if (!in_array($userRole, ['QTV', 'BGH', 'GIAOVIEN'])) {
+            header('Location: index.php?controller=home&action=index');
+            exit;
+        }
+
+        // KIỂM TRA KỸ HƠN: Nếu là BGH mà không có maTruong
+        if ($userRole === 'BGH') {
+            if (!isset($_SESSION['user']['maTruong']) || empty($_SESSION['user']['maTruong'])) {
+                error_log("DEBUG: BGH user missing maTruong in session");
+                $_SESSION['error'] = "Không tìm thấy mã trường trong phiên đăng nhập. Vui lòng đăng nhập lại.";
+                header('Location: index.php?controller=auth&action=login');
+                exit;
+            } else {
+                error_log("DEBUG: BGH user maTruong = " . $_SESSION['user']['maTruong']);
+            }
+        }
+
+        // Đảm bảo BGH không bị lỗi truy cập trường khác
+        if ($userRole === 'BGH' && isset($_GET['school']) && is_numeric($_GET['school'])) {
+            $maTruongTam = intval($_GET['school']);
+            if ($maTruongTam !== ($_SESSION['user']['maTruong'] ?? 0)) {
+                // BGH chỉ được xem trường của mình, chuyển hướng nếu cố tình xem trường khác
+                header('Location: index.php?controller=home&action=principal&error=unauthorized_school');
+                exit;
+            }
+        }
     }
 
     public function index() {
@@ -15,59 +51,95 @@ class DonChuyenLopTruongController {
     }
 
     public function danhsach() {
-        if (isset($_GET['school']) && is_numeric($_GET['school'])) {
-            $_SESSION['maTruong'] = intval($_GET['school']);
-        }
+        $this->checkPermission(['QTV', 'BGH', 'GIAOVIEN']);
 
-        $maTruong = $_SESSION['maTruong'] ?? null;
+        // DEBUG: Kiểm tra session trong danhsach
+        error_log("DEBUG danhsach - Session user: " . print_r($_SESSION['user'] ?? 'NO SESSION', true));
+
+        $maTruong = $this->getMaTruongFilter();
+        $loaiDon = $_GET['loaiDon'] ?? 'tat_ca';
         $search = $_GET['search'] ?? '';
-        $loaiDonUrl = $_GET['loaiDon'] ?? 'tat_ca'; 
-        $loaiDon = $loaiDonUrl === 'truong' ? 'chuyen_truong' : ($loaiDonUrl === 'lop' ? 'chuyen_lop' : 'tat_ca');
+
+        // Giữ lại tham số school trong URL (cần thiết cho Model và View)
+        $selectedSchool = $this->getCurrentSchoolId();
         
-        if (!$maTruong) {
-            $requests = [];
+        $requests = $this->model->getAll($search, $maTruong, $loaiDon);
+        $schools = $this->model->getAllSchools();
+        
+        $currentSchoolId = $this->getCurrentSchoolId();
+        $currentSchoolName = $this->getSchoolName($schools, $currentSchoolId);
+
+        $title = "Danh sách Đơn chuyển lớp/trường";
+        $showSidebar = true;
+        
+        // KHẮC PHỤC LỖI: LOGIC TÌM TỆP SIDEBAR CHÍNH XÁC (từ bgh.php -> bangiamhieu.php)
+        $roleName = strtolower($_SESSION['user']['vaiTro']);
+        $sidebarPath = 'views/layouts/sidebar/';
+        
+        if ($roleName === 'bgh') {
+             $sidebarPath .= 'bangiamhieu.php'; 
         } else {
-            $requests = $this->model->getAll($search, $maTruong, $loaiDon);
-
-            // Xử lý trạng thái tổng hợp
-            foreach ($requests as &$r) {
-                $type = $r['loaiDon'] ?? 'chuyen_truong'; 
-
-                if ($type === 'chuyen_truong') {
-                    // Logic cho Chuyển trường (3 bước duyệt)
-                    $den = $r['trangThaiTruongDen'] ?? '';
-                    $di  = $r['trangThaiTruongDi'] ?? '';
-
-                    if ($den === 'Đã duyệt' && $di === 'Đã duyệt') {
-                        $r['trangThaiTong'] = 'Hoàn tất';
-                    } elseif ($den === 'Từ chối' || $di === 'Từ chối') {
-                        $r['trangThaiTong'] = 'Bị từ chối';
-                    } elseif ($den === 'Chờ duyệt' || ($den === 'Đã duyệt' && $di === 'Chờ duyệt')) {
-                        $r['trangThaiTong'] = 'Chờ duyệt';
-                    } else {
-                        $r['trangThaiTong'] = 'Không xác định';
-                    }
-                } else { // chuyen_lop (1 bước duyệt)
-                    $lopStatus = $r['trangThaiLop'] ?? ''; 
-
-                    if ($lopStatus === 'Đã duyệt') {
-                        $r['trangThaiTong'] = 'Hoàn tất';
-                    } elseif ($lopStatus === 'Từ chối') {
-                        $r['trangThaiTong'] = 'Bị từ chối';
-                    } elseif ($lopStatus === 'Chờ duyệt') {
-                        $r['trangThaiTong'] = 'Chờ duyệt';
-                    } else {
-                        $r['trangThaiTong'] = 'Không xác định';
-                    }
-                }
-            }
-            unset($r); 
+             $sidebarPath .= $roleName . '.php';
         }
 
-        $schools = $this->model->getAllSchools();
-        require_once __DIR__ . '/../views/donchuyenloptruong/danhsachdon.php';
+        require_once 'views/layouts/header.php';
+        require_once $sidebarPath; 
+        require_once 'views/donchuyenloptruong/danhsachdon.php'; 
+        require_once 'views/layouts/footer.php';
     }
 
+    // Lọc Mã trường dựa trên vai trò
+    private function getMaTruongFilter() {
+        $role = $_SESSION['user']['vaiTro'] ?? '';
+        $maTruongUser = $_SESSION['user']['maTruong'] ?? null;
+        
+        error_log("DEBUG getMaTruongFilter - Role: $role, maTruongUser: " . ($maTruongUser ?? 'NULL'));
+        
+        if ($role === 'BGH') {
+            return $maTruongUser;
+        } elseif ($role === 'QTV') {
+            return isset($_GET['school']) && is_numeric($_GET['school']) ? intval($_GET['school']) : null;
+        }
+        
+        return null;
+    }
+    
+    // Lấy ID trường hiện tại để highlight trên bộ lọc
+    private function getCurrentSchoolId() {
+        $role = $_SESSION['user']['vaiTro'] ?? '';
+        
+        error_log("DEBUG getCurrentSchoolId - Role: $role");
+        
+        if ($role === 'BGH') {
+            $maTruong = $_SESSION['user']['maTruong'] ?? null;
+            error_log("DEBUG getCurrentSchoolId - BGH maTruong: " . ($maTruong ?? 'NULL'));
+            return $maTruong;
+        }
+        
+        if ($role === 'QTV' && isset($_GET['school']) && is_numeric($_GET['school'])) {
+            return intval($_GET['school']);
+        }
+        
+        return null;
+    }
+
+    private function getSchoolName($schools, $id) {
+        if ($id === null) return "Tất cả các trường";
+        foreach ($schools as $school) {
+            if ($school['maTruong'] == $id) {
+                return $school['tenTruong'];
+            }
+        }
+        return "Tất cả các trường";
+    }
+
+    private function checkPermission($allowedRoles) {
+        if (!isset($_SESSION['user']) || !in_array($_SESSION['user']['vaiTro'], $allowedRoles)) {
+            header('Location: index.php?controller=home&action=index');
+            exit;
+        }
+    }
+    
     public function approve() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ?controller=donchuyenloptruong&action=danhsach'); 
@@ -75,15 +147,20 @@ class DonChuyenLopTruongController {
         }
 
         $maDon = intval($_POST['maDon'] ?? 0);
-        $side  = $_POST['side'] ?? ''; // truongden, truongdi, lop
-        $maTruong = $_SESSION['maTruong'] ?? null;
+        $side  = $_POST['side'] ?? ''; 
+        $maTruong = $this->getCurrentSchoolId(); // Lấy mã trường đang duyệt
 
-        if ($maDon <= 0 || !$side) {
+        if ($maDon <= 0 || !$side || !$maTruong) {
+             $_SESSION['error'] = "Lỗi: Dữ liệu không hợp lệ hoặc không xác định được trường.";
             header('Location: ?controller=donchuyenloptruong&action=danhsach'); 
             exit;
         }
 
-        $this->model->approve($maDon, $side);
+        if ($this->model->approve($maDon, $side)) {
+            $_SESSION['success'] = "Duyệt đơn #$maDon thành công.";
+        } else {
+            $_SESSION['error'] = "Lỗi khi duyệt đơn #$maDon.";
+        }
         
         $qs = $maTruong ? '&school=' . $maTruong : '';
         header("Location: ?controller=donchuyenloptruong&action=danhsach$qs");
@@ -97,16 +174,21 @@ class DonChuyenLopTruongController {
         }
 
         $maDon = intval($_POST['maDon'] ?? 0);
-        $side = $_POST['side'] ?? ''; // truongden, truongdi, lop
+        $side = $_POST['side'] ?? ''; 
         $reason = trim($_POST['reason'] ?? '');
-        $maTruong = $_SESSION['maTruong'] ?? null;
+        $maTruong = $this->getCurrentSchoolId(); // Lấy mã trường đang duyệt
 
-        if ($maDon <= 0 || !$side || $reason === '') {
+        if ($maDon <= 0 || !$side || $reason === '' || !$maTruong) {
+             $_SESSION['error'] = "Lỗi: Dữ liệu không hợp lệ, lý do từ chối là bắt buộc, hoặc không xác định được trường.";
             header("Location: ?controller=donchuyenloptruong&action=danhsach"); 
             exit;
         }
 
-        $this->model->reject($maDon, $side, $reason);
+        if ($this->model->reject($maDon, $side, $reason)) {
+            $_SESSION['success'] = "Từ chối đơn #$maDon thành công.";
+        } else {
+             $_SESSION['error'] = "Lỗi khi từ chối đơn #$maDon.";
+        }
         
         $qs = $maTruong ? '&school=' . $maTruong : '';
         header("Location: ?controller=donchuyenloptruong&action=danhsach$qs");
@@ -114,7 +196,6 @@ class DonChuyenLopTruongController {
     }
 
     public function ajax_chitiet() {
-        // Cố gắng bắt lỗi để trả về JSON thay vì HTML
         error_reporting(E_ALL);
         ini_set('display_errors', 0);
         
@@ -141,11 +222,9 @@ class DonChuyenLopTruongController {
             exit; 
             
         } catch (\PDOException $e) {
-            // Xử lý lỗi CSDL
             echo json_encode(['error' => 'Lỗi CSDL (PDO): ' . $e->getMessage()]);
             exit;
         } catch (\Exception $e) {
-            // Xử lý lỗi PHP chung
             echo json_encode(['error' => 'Lỗi máy chủ: ' . $e->getMessage()]);
             exit;
         }
