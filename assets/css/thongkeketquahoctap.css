@@ -1,0 +1,7 @@
+ .content {
+    margin-left: 250px; /* sidebar rộng 250px */
+    margin-right: auto;
+    padding: 20px;
+    min-height: calc(100vh - 60px);
+    background-color: #f0f2f5;
+  }

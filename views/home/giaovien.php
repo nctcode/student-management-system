@@ -76,6 +76,9 @@ $roleName = 'Giáo viên';
                                     <a href="index.php?controller=tinnhan&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-comments me-2"></i>Tin nhắn
                                     </a>
+                                    <a href="index.php?controller=ketquahoctap&action=thongke" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-history me-2"></i>Thống kê kết quả học tập
+                                    </a>
                                 </div>
                             </div>
                         </div>
