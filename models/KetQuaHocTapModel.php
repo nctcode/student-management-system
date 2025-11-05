@@ -15,15 +15,15 @@ class KetQuaHocTapModel
     public function getHocSinhByGiaoVien($maNguoiDung)
     {
         $sql = "
-        SELECT hs.maHocSinh, nd.hoTen
+        SELECT hs.maHocSinh, nd.hoTen, l.tenLop
         FROM hocsinh hs
         INNER JOIN nguoidung nd ON hs.maNguoiDung = nd.maNguoiDung
         INNER JOIN lophoc l ON hs.maLop = l.maLop
         INNER JOIN giaovien gv ON l.maGiaoVien = gv.maGiaoVien
         INNER JOIN nguoidung ndgv ON gv.maNguoiDung = ndgv.maNguoiDung
         WHERE ndgv.maNguoiDung = ?
-        ORDER BY nd.hoTen ASC
-    ";
+        ORDER BY nd.hoTen ASC";
+        
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$maNguoiDung]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -112,7 +112,7 @@ class KetQuaHocTapModel
         ];
     }
 
-     // Lấy chi tiết điểm tất cả loại điểm của học sinh theo học kỳ
+    // Lấy chi tiết điểm tất cả loại điểm của học sinh theo học kỳ
     public function getChiTietDiem($maHocSinh, $hocKy)
     {
         $sql = "
@@ -137,35 +137,49 @@ class KetQuaHocTapModel
         return $chiTiet;
     }
 
-    // Lấy thông tin học sinh theo maHocSinh
-    public function getHocSinhById($maHocSinh)
+    //thống kê học lực, hạnh kiểm
+    public function getThongKeTheoHocLucHanhKiem($maNguoiDung, $hocKy, $tieuChi)
     {
         $sql = "
-            SELECT hs.maHocSinh, nd.hoTen
-            FROM hocsinh hs
-            INNER JOIN nguoidung nd ON hs.maNguoiDung = nd.maNguoiDung
-            WHERE hs.maHocSinh = :maHocSinh
-        ";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute(['maHocSinh' => $maHocSinh]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
+    SELECT hs.maHocSinh, nd.hoTen, l.tenLop, kq.hocLuc, kq.hanhKiem, kq.xepLoai, kq.diemTrungBinh
+    FROM ketquahoctap kq
+    INNER JOIN hocsinh hs ON kq.maHocSinh = hs.maHocSinh
+    INNER JOIN nguoidung nd ON hs.maNguoiDung = nd.maNguoiDung
+    INNER JOIN lophoc l ON hs.maLop = l.maLop
+    INNER JOIN giaovien gv ON l.maGiaoVien = gv.maGiaoVien
+    INNER JOIN nguoidung ndgv ON gv.maNguoiDung = ndgv.maNguoiDung
+    WHERE ndgv.maNguoiDung = :maNguoiDung
+      AND kq.hocKy = :hocKy
+    ORDER BY nd.hoTen ASC
+    ";
 
-    // Lấy danh sách môn học mà học sinh đã có điểm
-    public function getMonHocByHocSinh($maHocSinh, $hocKy)
-    {
-        $sql = "
-            SELECT DISTINCT m.maMonHoc, m.tenMonHoc
-            FROM monhoc m
-            INNER JOIN diem d ON m.maMonHoc = d.maMonHoc
-            WHERE d.maHocSinh = :maHocSinh AND d.hocKy = :hocKy
-            ORDER BY m.maMonHoc
-        ";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([
-            'maHocSinh' => $maHocSinh,
+            'maNguoiDung' => $maNguoiDung,
             'hocKy' => $hocKy
         ]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Đếm tổng theo học lực và hạnh kiểm
+        $thongKeHocLuc = [];
+        $thongKeHanhKiem = [];
+
+        foreach ($data as $row) {
+            $hl = $row['hocLuc'];
+            $hk = $row['hanhKiem'];
+
+            if (!isset($thongKeHocLuc[$hl])) $thongKeHocLuc[$hl] = 0;
+            if (!isset($thongKeHanhKiem[$hk])) $thongKeHanhKiem[$hk] = 0;
+
+            $thongKeHocLuc[$hl]++;
+            $thongKeHanhKiem[$hk]++;
+        }
+
+        return [
+            'data' => $data, // danh sách học sinh
+            'thongKeHocLuc' => $thongKeHocLuc,
+            'thongKeHanhKiem' => $thongKeHanhKiem
+        ];
     }
 }
