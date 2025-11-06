@@ -89,6 +89,13 @@ $roleName = 'Ban giám hiệu';
                                     <a href="index.php?controller=hocphi&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-money-bill-wave me-2"></i>Tài chính & Học phí
                                     </a>
+                                    <!-- Thêm mục mới cho phân công giáo viên -->
+                                    <a href="index.php?controller=PhanCongGVBMCN&action=index" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-chalkboard-teacher me-2"></i>Phân công giáo viên
+                                    </a>
+                                    <a href="index.php?controller=PhanCongGVBMCN&action=viewCurrentAssignments" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-list-alt me-2"></i>Xem phân công hiện tại
+                                    </a>
                                     <!-- Thêm mục mới cho phê duyệt chuyển lớp/trường -->
                                     <a href="index.php?controller=donchuyenloptruong&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-exchange-alt me-2"></i>Phê duyệt chuyển lớp/trường
