@@ -8,6 +8,26 @@ class GiaoVienModel {
         $this->db = new Database();
     }
 
+    /**
+     * Lấy mã Giáo viên (maGiaoVien) từ mã Người dùng (maNguoiDung) - ĐÃ CẬP NHẬT
+     */
+    public function getMaGiaoVien($maNguoiDung) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT gv.maGiaoVien 
+                FROM giaovien gv
+                JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                WHERE nd.maNguoiDung = :maNguoiDung AND nd.loaiNguoiDung = 'GIAOVIEN'";
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([':maNguoiDung' => $maNguoiDung]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['maGiaoVien'] ?? null;
+        } catch (PDOException $e) {
+            error_log("Lỗi lấy mã giáo viên: " . $e->getMessage());
+            return null;
+        }
+    }
+
     // *******************************************************
     // CÁC HÀM GỐC - LOẠI BỎ MATRUONG
     // *******************************************************

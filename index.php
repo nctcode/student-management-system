@@ -156,8 +156,7 @@ if (file_exists($controllerFile)) {
                         default:
                             $controllerInstance->index();
                     }
-                    break;
-                    
+                    break;                    
                 default:
                     $controllerInstance->$action();
             }
