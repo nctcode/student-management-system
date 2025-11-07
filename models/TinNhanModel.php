@@ -63,7 +63,14 @@ class TinNhanModel {
                        (SELECT COUNT(*) FROM tinnhan tn2 
                         WHERE tn2.maHoiThoai = cht.maHoiThoai 
                         AND tn2.trangThai = 0 
-                        AND tn2.maNguoiDung != ?) as soTinChuaDoc
+                        AND tn2.maNguoiDung != ?) as soTinChuaDoc,
+                       
+                       (SELECT GROUP_CONCAT(nd_tv.hoTen SEPARATOR ', ') 
+                        FROM thanhviengoi tv_sub
+                        JOIN nguoidung nd_tv ON tv_sub.maNguoiDung = nd_tv.maNguoiDung
+                        WHERE tv_sub.maHoiThoai = cht.maHoiThoai
+                       ) as danhSachThanhVien
+                       
                 FROM cuochoithoai cht
                 JOIN thanhviengoi tv ON cht.maHoiThoai = tv.maHoiThoai
                 JOIN tinnhan tn ON cht.maHoiThoai = tn.maHoiThoai
@@ -93,7 +100,7 @@ class TinNhanModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Lấy tin nhắn theo hội thoại - ĐÃ SỬA LỖI
+    // Lấy tin nhắn theo hội thoại
     public function getTinNhanByHoiThoai($maHoiThoai) {
         $conn = $this->db->getConnection();
         

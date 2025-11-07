@@ -141,6 +141,43 @@ if (file_exists($controllerFile)) {
                             $controller->index();
                     }
                     break;
+
+                case 'thongbao':
+                     $thongBaoController = new ThongBaoController();
+                    switch ($action) {
+                         case 'dangthongbao':
+                            $thongBaoController->dangthongbao();
+                            break;
+                        case 'xulydangthongbao':
+                            $thongBaoController->xulydangthongbao();
+                             break;
+                        case 'danhsach':
+                           $thongBaoController->danhsach();
+                               break;
+                        default:
+                             $thongBaoController->dangthongbao();
+                    }
+                     break;
+
+                case 'thongbao':
+    $thongBaoController = new ThongBaoController();
+    switch ($action) {
+        case 'dangthongbao':
+            $thongBaoController->dangthongbao();
+            break;
+        case 'xulydangthongbao':
+            $thongBaoController->xulydangthongbao();
+            break;
+        case 'danhsach':
+            $thongBaoController->danhsach();
+            break;
+        case 'xoathongbao': // THÊM CASE NÀY
+            $thongBaoController->xoathongbao();
+            break;
+        default:
+            $thongBaoController->dangthongbao();
+    }
+    break;
                     
                 default:
                     $controllerInstance->$action();

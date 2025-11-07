@@ -1,5 +1,5 @@
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Tin nhắn</h1>
+    <h1 class="h3 mb-4 text-gray-800"><strong>Tin nhắn</strong></h1>
     
     <?php if (isset($_SESSION['error'])): ?>
         <div class="alert alert-danger"><?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
@@ -13,7 +13,7 @@
         <div class="col-md-12">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Danh sách tin nhắn</h6>
+                    <h3 class="m-0 font-weight-bold text-primary">Danh sách tin nhắn</h3>
                     <?php if (in_array($_SESSION['user']['vaiTro'], ['QTV', 'BGH', 'GIAOVIEN'])): ?>
                     <a href="index.php?controller=tinnhan&action=guitinnhan" class="btn btn-primary btn-sm">
                         <i class="fas fa-paper-plane"></i> Gửi tin nhắn mới
@@ -51,16 +51,48 @@
                                         </div>
                                         <p class="mb-1 text-truncate"><?= htmlspecialchars($tn['noiDung']) ?></p>
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <small class="text-muted">
-                                                <i class="fas fa-user"></i> <?= htmlspecialchars($tn['nguoiGui']) ?>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user"></i> <strong>Từ:</strong> <?= htmlspecialchars($tn['nguoiGui']) ?>
+                                                </small>
+                                                
+                                                <small class="text-muted d-block text-truncate" title="<?= htmlspecialchars($tn['danhSachThanhVien']) ?>">
+                                                    <i class="fas fa-users"></i> <strong>Đến:</strong> <?= htmlspecialchars($tn['danhSachThanhVien']) ?>
+                                                </small>
+                                                </div>
+
+                                            <?php 
+                                            if (!empty($tn['fileDinhKem'])): 
+                                                $filesInfo = json_decode($tn['fileDinhKem'], true);
+                                                $displayName = null;
+                                                $extraFiles = 0;
+                                            
+                                                if (is_array($filesInfo)) {
+                                                    // Xử lý mảng file
+                                                    if (isset($filesInfo[0]['tenFile'])) {
+                                                        $displayName = $filesInfo[0]['tenFile'];
+                                                        if (count($filesInfo) > 1) {
+                                                            $extraFiles = count($filesInfo) - 1;
+                                                        }
+                                                    } 
+                                                    // Xử lý 1 file
+                                                    elseif (isset($filesInfo['tenFile'])) {
+                                                        $displayName = $filesInfo['tenFile'];
+                                                    }
+                                                }
+                                            
+                                                if ($displayName): 
+                                            ?>
+                                            <small class="text-primary ml-2">
+                                                <i class="fas fa-paperclip"></i> <?= htmlspecialchars($displayName) ?>
+                                                <?php if ($extraFiles > 0): ?>
+                                                    <span class="badge badge-pill badge-secondary ml-1">+<?= $extraFiles ?></span>
+                                                <?php endif; ?>
                                             </small>
-                                            <?php if (!empty($tn['fileDinhKem'])): 
-                                                $fileInfo = json_decode($tn['fileDinhKem'], true);
-                                                if ($fileInfo): ?>
-                                            <small class="text-primary">
-                                                <i class="fas fa-paperclip"></i> <?= htmlspecialchars($fileInfo['tenFile']) ?>
-                                            </small>
-                                            <?php endif; endif; ?>
+                                            <?php 
+                                                endif; 
+                                            endif; 
+                                            ?>
                                         </div>
                                     </div>
                                 </div>
@@ -74,23 +106,3 @@
     </div>
 </div>
 
-<style>
-.list-group-item:hover {
-    background-color: #f8f9fa;
-    transform: translateY(-1px);
-    transition: all 0.2s;
-}
-
-.list-group-item {
-    border-left: 4px solid transparent;
-    margin-bottom: 5px;
-}
-
-.list-group-item:hover {
-    border-left-color: #007bff;
-}
-
-.text-truncate {
-    max-width: 600px;
-}
-</style>

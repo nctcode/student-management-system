@@ -42,7 +42,10 @@ class TinNhanController {
         
         require_once 'views/layouts/header.php';
         
+<<<<<<< HEAD
         // Sửa lỗi: sửa 'role' thành 'vaiTro'
+=======
+>>>>>>> 46c2e5f1d6ecc1d75a3f56268018887d44357403
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
         if ($userRole === 'GIAOVIEN') {
             require_once 'views/layouts/sidebar/giaovien.php';
@@ -122,7 +125,11 @@ class TinNhanController {
 
         // Xử lý upload file
         $fileDinhKem = $this->xuLyUploadFile();
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 46c2e5f1d6ecc1d75a3f56268018887d44357403
         // Tạo cuộc hội thoại và gửi tin nhắn
         $result = $this->tinNhanModel->taoTinNhan(
             $maNguoiGui,
@@ -143,6 +150,7 @@ class TinNhanController {
     }
 
     private function xuLyUploadFile() {
+<<<<<<< HEAD
         if (!isset($_FILES['fileDinhKem']) || $_FILES['fileDinhKem']['error'] === UPLOAD_ERR_NO_FILE) {
             return null;
         }
@@ -166,10 +174,25 @@ class TinNhanController {
 
         // Tạo thư mục upload nếu chưa tồn tại
         $uploadDir = 'uploads/tinnhan/';
+=======
+        // Kiểm tra xem có file nào được tải lên không
+        if (!isset($_FILES['fileDinhKem']) || empty($_FILES['fileDinhKem']['name'][0])) {
+            return null; // Không có file nào
+        }
+
+        $files = $_FILES['fileDinhKem'];
+        $allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls'];
+        $maxSize = 10 * 1024 * 1024; // 10MB
+        $uploadDir = 'uploads/tinnhan/';
+        
+        $uploadedFilesInfo = []; // Mảng để lưu thông tin các file đã upload thành công
+
+>>>>>>> 46c2e5f1d6ecc1d75a3f56268018887d44357403
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
 
+<<<<<<< HEAD
         // Tạo tên file mới
         $fileName = uniqid() . '_' . time() . '.' . $fileExtension;
         $filePath = $uploadDir . $fileName;
@@ -183,6 +206,52 @@ class TinNhanController {
         }
 
         return null;
+=======
+        // Lặp qua từng file được tải lên
+        // (files['name'] là một mảng)
+        foreach ($files['name'] as $key => $name) {
+            if ($files['error'][$key] !== UPLOAD_ERR_OK) {
+                continue; 
+            }
+
+            $fileSize = $files['size'][$key];
+            $fileTmpName = $files['tmp_name'][$key];
+            
+            // Kiểm tra kích thước file
+            if ($fileSize > $maxSize) {
+                $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' vượt quá 10MB!";
+                // Khi 1 file lỗi, dừng toàn bộ việc upload
+                return null; 
+            }
+
+            // Kiểm tra loại file
+            $fileExtension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            if (!in_array($fileExtension, $allowedTypes)) {
+                $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' có định dạng không hỗ trợ!";
+                return null;
+            }
+
+            // Tạo tên file mới
+            $fileName = uniqid() . '_' . time() . '_' . $key . '.' . $fileExtension;
+            $filePath = $uploadDir . $fileName;
+
+            if (move_uploaded_file($fileTmpName, $filePath)) {
+                // Nếu thành công, thêm thông tin file vào mảng
+                $uploadedFilesInfo[] = [
+                    'tenFile' => $name,
+                    'duongDan' => $filePath,
+                    'kichThuoc' => $fileSize
+                ];
+            } else {
+                // Nếu di chuyển file thất bại
+                $_SESSION['error'] = "Có lỗi khi lưu file '" . htmlspecialchars($name) . "'.";
+                return null;
+            }
+        }
+
+        // Trả về mảng chứa thông tin của TẤT CẢ các file đã upload
+        return $uploadedFilesInfo;
+>>>>>>> 46c2e5f1d6ecc1d75a3f56268018887d44357403
     }
 
     // Trong phương thức chitiettinnhan, thêm kiểm tra quyền truy cập:
@@ -207,6 +276,11 @@ class TinNhanController {
         $chiTietHoiThoai = $this->tinNhanModel->getChiTietHoiThoai($maHoiThoai, $maNguoiDung);
         $tinNhan = $this->tinNhanModel->getTinNhanByHoiThoai($maHoiThoai);
 
+<<<<<<< HEAD
+=======
+        $danhSachThanhVien = $this->tinNhanModel->getThanhVienHoiThoai($maHoiThoai);
+
+>>>>>>> 46c2e5f1d6ecc1d75a3f56268018887d44357403
         if (!$chiTietHoiThoai) {
             $_SESSION['error'] = "Không tìm thấy hội thoại!";
             header('Location: index.php?controller=tinnhan&action=index');

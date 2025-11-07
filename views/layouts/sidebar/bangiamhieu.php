@@ -72,6 +72,21 @@
                     <span>Tuyển sinh</span>
                 </a>
             </li>
+            <!-- Đăng thông báo -->
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=thongbao&action=dangthongbao">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Đăng thông báo</span>
+                </a>
+            </li>
+
+            <!-- Danh sách thông báo -->
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=thongbao&action=danhsach">
+                    <i class="fas fa-list"></i>
+                    <span>Danh sách thông báo</span>
+                </a>
+            </li>
         </ul>
     </div>
 </nav>

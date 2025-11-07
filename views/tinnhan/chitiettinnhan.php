@@ -1,5 +1,5 @@
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Chi tiết tin nhắn</h1>
+    <h1 class="h3 mb-4 text-gray-800"><strong>Chi tiết tin nhắn</strong></h1>
     
     <?php if (isset($_SESSION['error'])): ?>
         <div class="alert alert-danger"><?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
@@ -13,9 +13,9 @@
         <div class="col-md-12">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h3 class="m-0 font-weight-bold text-primary">
                         <?= htmlspecialchars($chiTietHoiThoai['tenHoiThoai'] ?? 'Tin nhắn') ?>
-                    </h6>
+                    </h3>
                     <a href="index.php?controller=tinnhan&action=index" class="btn btn-secondary btn-sm">
                         <i class="fas fa-arrow-left"></i> Quay lại
                     </a>
@@ -35,11 +35,15 @@
                                     <div class="message-bubble <?= $tn['maNguoiDung'] == $_SESSION['user']['maNguoiDung'] ? 'bg-primary text-white' : 'bg-light' ?>" 
                                          style="max-width: 70%; padding: 12px 16px; border-radius: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                         
-                                        <!-- Thông tin người gửi (chỉ hiển thị với tin nhắn của người khác) -->
+                                        <!-- Thông tin người gửi -->
                                         <?php if ($tn['maNguoiDung'] != $_SESSION['user']['maNguoiDung']): ?>
                                         <div class="font-weight-bold mb-1" style="font-size: 0.9em;">
                                             <?= htmlspecialchars($tn['nguoiGui']) ?>
                                             <small class="text-muted ml-2">(<?= $tn['vaiTro'] ?>)</small>
+                                        </div>
+                                        <?php else: ?>
+                                        <div class="font-weight-bold mb-1 text-right" style="font-size: 0.9em;">
+                                            Bạn (<?= htmlspecialchars($tn['nguoiGui']) ?>)
                                         </div>
                                         <?php endif; ?>
 
@@ -47,24 +51,35 @@
                                         <div class="mb-2"><?= nl2br(htmlspecialchars($tn['noiDung'])) ?></div>
 
                                         <!-- File đính kèm -->
-                                        <?php if (!empty($tn['fileDinhKem'])): 
-                                            $fileInfo = json_decode($tn['fileDinhKem'], true);
-                                            if ($fileInfo): ?>
-                                        <div class="file-attachment mt-2 p-2 border rounded" style="background: rgba(255,255,255,0.1);">
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-paperclip mr-2"></i>
-                                                <div class="flex-grow-1">
-                                                    <div class="font-weight-bold"><?= htmlspecialchars($fileInfo['tenFile']) ?></div>
-                                                    <small class="text-muted">
-                                                        <?= round($fileInfo['kichThuoc'] / 1024 / 1024, 2) ?> MB
-                                                    </small>
+                                        <?php 
+                                            if (!empty($tn['fileDinhKem'])): 
+                                                $filesInfo = json_decode($tn['fileDinhKem'], true);
+                                                if (isset($filesInfo['duongDan'])) {
+                                                    $filesInfo = [$filesInfo];
+                                                }
+                                                if (is_array($filesInfo)):
+                                                    foreach ($filesInfo as $fileInfo): // Lặp qua từng file
+                                                        if (empty($fileInfo['duongDan'])) continue; // Bỏ qua nếu file không hợp lệ
+                                            ?>
+                                            <div class="file-attachment mt-2 p-2 border rounded" style="background: rgba(255,255,255,0.1);">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-paperclip mr-2"></i>
+                                                    <div class="flex-grow-1">
+                                                        <div class="font-weight-bold"><?= htmlspecialchars($fileInfo['tenFile']) ?></div>
+                                                        <small class="text-muted">
+                                                            <?= round($fileInfo['kichThuoc'] / 1024 / 1024, 2) ?> MB
+                                                        </small>
+                                                    </div>
+                                                    <a href="<?= htmlspecialchars($fileInfo['duongDan']) ?>" download class="btn btn-sm <?= $tn['maNguoiDung'] == $_SESSION['user']['maNguoiDung'] ? 'btn-light' : 'btn-primary' ?> ml-2">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
                                                 </div>
-                                                <a href="<?= $fileInfo['duongDan'] ?>" download class="btn btn-sm <?= $tn['maNguoiDung'] == $_SESSION['user']['maNguoiDung'] ? 'btn-light' : 'btn-primary' ?> ml-2">
-                                                    <i class="fas fa-download"></i>
-                                                </a>
                                             </div>
-                                        </div>
-                                        <?php endif; endif; ?>
+                                            <?php 
+                                                    endforeach; // Kết thúc vòng lặp file
+                                                endif; 
+                                            endif; 
+                                            ?>
 
                                         <!-- Thời gian -->
                                         <div class="text-end" style="font-size: 0.8em; margin-top: 5px;">
@@ -96,19 +111,21 @@
                             <div id="danhSachFile" class="mb-2">
                                 <!-- Danh sách file sẽ hiển thị ở đây -->
                             </div>
-                            <input type="file" name="fileDinhKem" id="fileDinhKem" class="form-control-file" 
-                                   onchange="hienThiFile()">
+                            <input type="file" name="fileDinhKem[]" id="fileDinhKem" class="form-control-file" 
+                                onchange="hienThiFile()" multiple>
+                            <br>
                             <small class="form-text text-muted">
                                 • File đính kèm tối đa 10MB<br>
-                                • Định dạng hỗ trợ: PDF, DOC, JPG, PNG, XLSX
+                                • Định dạng hỗ trợ: PDF, DOC, JPG, PNG, XLSX<br>
+                                • Không gửi nội dung không phù hợp
                             </small>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-secondary" onclick="history.back()">
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-danger btn-lg" onclick="history.back()">
                                 <i class="fas fa-times"></i> Hủy
                             </button>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-success btn-lg ms-2">
                                 <i class="fas fa-paper-plane"></i> Gửi tin nhắn
                             </button>
                         </div>
@@ -203,58 +220,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Auto-refresh tin nhắn mỗi 30 giây (tùy chọn)
 setInterval(function() {
-    // Có thể thêm AJAX để load tin nhắn mới
 }, 30000);
 </script>
 
 <style>
-.message-bubble {
-    word-wrap: break-word;
-    position: relative;
+    .message-bubble.bg-primary {
+    background-color: #cfe2ff !important; 
+    color: #000 !important; 
+}
+
+.message-bubble.bg-primary small.text-light {
+    color: #495057 !important; 
 }
 
 .message-bubble.bg-primary:after {
-    content: '';
-    position: absolute;
-    right: -8px;
-    top: 10px;
-    border: 8px solid transparent;
-    border-left-color: #007bff;
+    border-left-color: #cfe2ff !important; 
 }
 
-.message-bubble.bg-light:after {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 10px;
-    border: 8px solid transparent;
-    border-right-color: #f8f9fa;
+.message-bubble.bg-primary .file-attachment {
+    background: rgba(255,255,255,0.4) !important;
 }
 
-.file-attachment {
-    transition: all 0.2s;
-}
-
-.file-attachment:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-#khungTinNhan::-webkit-scrollbar {
-    width: 6px;
-}
-
-#khungTinNhan::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-#khungTinNhan::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-#khungTinNhan::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+.message-bubble.bg-primary .file-attachment a.btn-light {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: #fff;
 }
 </style>
