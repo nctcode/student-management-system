@@ -343,5 +343,44 @@ class GiaoVienModel {
             return ['hoTen' => 'Giáo viên #' . $maGiaoVien];
         }
     }
+    /**
+     * Lấy danh sách tất cả Khối
+     */
+    public function getAllKhoi() {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT maKhoi, tenKhoi FROM khoi ORDER BY tenKhoi ASC";
+        try {
+            $stmt = $conn->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) { 
+            error_log("Lỗi lấy danh sách khối: " . $e->getMessage());
+            return []; 
+        }
+    }
+    
+    /**
+     * Lấy danh sách Lớp, có thể lọc theo Khối
+     */
+    public function getAllClassesByKhoi($maKhoi = null) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT maLop, tenLop, maGiaoVien FROM lophoc WHERE 1=1";
+        $params = [];
+        
+        if ($maKhoi && $maKhoi !== 'all') {
+            $sql .= " AND maKhoi = :maKhoi";
+            $params[':maKhoi'] = $maKhoi;
+        }
+        
+        $sql .= " ORDER BY tenLop ASC";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) { 
+            error_log("Lỗi lấy danh sách lớp theo khối: " . $e->getMessage());
+            return []; 
+        }
+    }
 }
 ?>

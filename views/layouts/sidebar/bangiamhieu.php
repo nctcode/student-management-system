@@ -13,7 +13,7 @@
             <li>
                 <a href="index.php?controller=thongke&action=index">
                     <i class="fas fa-chart-bar"></i>
-                    <span>Báo cáo thống kê</span>
+                    <span>Thống kê báo cáo</span>
                 </a>
             </li>
             <li>
@@ -38,12 +38,6 @@
                 <a href="index.php?controller=thongbao&action=index">
                     <i class="fas fa-bullhorn"></i>
                     <span>Thông báo</span>
-                </a>
-            </li>
-            <li>
-                <a href="index.php?controller=baocao&action=index">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Báo cáo học tập</span>
                 </a>
             </li>
         </ul>

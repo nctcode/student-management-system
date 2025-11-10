@@ -114,7 +114,7 @@ $roleName = 'Ban giám hiệu';
                             </div>
                             <div class="card-body">
                                 <div class="list-group">
-                                    <a href="#" class="list-group-item list-group-item-action">
+                                    <a href="index.php?controller=ThongKe&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-chart-bar me-2"></i>Báo cáo học tập
                                     </a>
                                     <a href="#" class="list-group-item list-group-item-action">
