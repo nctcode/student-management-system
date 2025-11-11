@@ -23,7 +23,14 @@ window.hienThiFile = function() {
     for (let i = 0; i < fileInput.files.length; i++) {
         const file = fileInput.files.item(i);
         if (file) {
-            const fileSize = (file.size / (1024 * 1024)).toFixed(1);
+            let fileSize = (file.size / (1024 * 1024));
+            let fileSizeText = fileSize.toFixed(1);
+            if (fileSize < 0.1) { // Nếu quá nhỏ, hiển thị KB
+                fileSize = (file.size / 1024);
+                fileSizeText = fileSize.toFixed(0) + " KB";
+            } else {
+                fileSizeText = fileSize.toFixed(1) + " MB";
+            }
             
             const fileItem = document.createElement('div');
             fileItem.className = 'd-flex justify-content-between align-items-center border rounded p-2 mb-2 bg-light';
@@ -62,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (hanNopDate <= now) {
                 event.preventDefault();
-                alert('Hạn nộp phải ở trong tương lai.\nVui lòng chọn lại ngày và giờ.');
+                alert('Hạn nộp phải ở trong tương lai.\nVui lòng chọn lại ngày và giờ!');
                 hanNopInput.focus();
             }
         }

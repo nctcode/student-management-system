@@ -4,6 +4,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 // Simple router
 $controller = $_GET['controller'] ?? 'home';
 $action = $_GET['action'] ?? 'index';
@@ -142,7 +144,19 @@ if (file_exists($controllerFile)) {
                     break;
                 
                 case 'diem':
-                    $controllerInstance->$action();
+                    switch ($action) {
+                        case 'xemdiem':
+                            $controllerInstance->xemdiem();
+                            break;
+                        case 'nhapdiem':
+                            $controllerInstance->nhapdiem();
+                            break;
+                        case 'taibangdiem':
+                            $controllerInstance->taibangdiem();
+                            break;
+                        default:
+                            $controllerInstance->$action();
+                    }
                     break;
 
                 case 'chuyencan':
@@ -160,6 +174,23 @@ if (file_exists($controllerFile)) {
                         case 'chitiet':
                             $maBaiTap = $_GET['maBaiTap'] ?? 0;
                             $controllerInstance->chitiet($maBaiTap);
+                            break;
+                        case 'taiTatCaBaiNop':
+                            $maBaiTap = $_GET['maBaiTap'] ?? 0;
+                            $controllerInstance->taiTatCaBaiNop($maBaiTap);
+                            break;
+                        case 'danhsach_hs': 
+                            $controllerInstance->danhsach_hs();
+                            break;
+                        case 'chitiet_hs':
+                            $maBaiTap = $_GET['maBaiTap'] ?? 0;
+                            $controllerInstance->chitiet_hs($maBaiTap);
+                            break;
+                        case 'nopbai':
+                            $controllerInstance->nopbai();
+                            break;
+                        case 'xoaFileNop':
+                            $controllerInstance->xoaFileNop();
                             break;
                         default:
                             $controllerInstance->index();

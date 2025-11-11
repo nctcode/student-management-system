@@ -1,0 +1,11 @@
+#dataTable tbody a { 
+    text-decoration: none; 
+    color: black; 
+    font-weight: 500; 
+}
+#dataTable tbody a:hover { 
+    text-decoration: underline; 
+}
+#dataTable tbody tr:hover { 
+    background-color: #f8f9fa; 
+}
