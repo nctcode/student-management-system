@@ -98,11 +98,11 @@ foreach ($danhSachTietHoc as $tiet) {
                 </div>
 
                 <div class="mt-3 d-flex justify-content-end">
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="fas fa-save"></i> Lưu chuyên cần
-                    </button>
-                    <button type="button" id="btnHuy" class="btn btn-danger btn-lg ms-2">
+                    <button type="button" id="btnHuy" class="btn btn-danger btn-lg">
                         <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-success btn-lg ms-2">
+                        <i class="fas fa-save"></i> Lưu chuyên cần
                     </button>
                 </div>
             </form>
