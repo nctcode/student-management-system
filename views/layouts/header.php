@@ -26,6 +26,7 @@ function getRoleName($role) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="assets/css/header.css" rel="stylesheet">
+    <script src="https://cdn.tiny.cloud/1/phzgc5fpe6tw4kpsx3qymxa2vd9r6rgbdipsroc4ufsscz71/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 </head>
 <body>
     <!-- HEADER -->

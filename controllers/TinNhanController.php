@@ -38,7 +38,9 @@ class TinNhanController {
         
         // Lấy danh sách tin nhắn
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
-        $tinNhan = $this->tinNhanModel->getTinNhanByNguoiDung($maNguoiDung);
+        $filter = $_GET['filter'] ?? 'all'; 
+
+        $tinNhan = $this->tinNhanModel->getTinNhanByNguoiDung($maNguoiDung, $filter);
         
         require_once 'views/layouts/header.php';
         
@@ -104,7 +106,6 @@ class TinNhanController {
         $loaiNguoiNhan = $_POST['loaiNguoiNhan'] ?? '';
         $danhSachNguoiNhan = $_POST['nguoiNhan'] ?? [];
 
-        // Kiểm tra nếu danhSachNguoiNhan là string (từ hidden input) thì chuyển thành array
         if (is_string($danhSachNguoiNhan) && !empty($danhSachNguoiNhan)) {
             $danhSachNguoiNhan = explode(',', $danhSachNguoiNhan);
         }
@@ -142,24 +143,22 @@ class TinNhanController {
     }
 
     private function xuLyUploadFile() {
-        // Kiểm tra xem có file nào được tải lên không
         if (!isset($_FILES['fileDinhKem']) || empty($_FILES['fileDinhKem']['name'][0])) {
-            return null; // Không có file nào
+            return null;
         }
 
         $files = $_FILES['fileDinhKem'];
         $allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls'];
-        $maxSize = 10 * 1024 * 1024; // 10MB
+        $maxSize = 10 * 1024 * 1024;
         $uploadDir = 'uploads/tinnhan/';
         
-        $uploadedFilesInfo = []; // Mảng để lưu thông tin các file đã upload thành công
+        $uploadedFilesInfo = [];
 
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
 
         // Lặp qua từng file được tải lên
-        // (files['name'] là một mảng)
         foreach ($files['name'] as $key => $name) {
             if ($files['error'][$key] !== UPLOAD_ERR_OK) {
                 continue; 
@@ -168,43 +167,34 @@ class TinNhanController {
             $fileSize = $files['size'][$key];
             $fileTmpName = $files['tmp_name'][$key];
             
-            // Kiểm tra kích thước file
             if ($fileSize > $maxSize) {
                 $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' vượt quá 10MB!";
-                // Khi 1 file lỗi, dừng toàn bộ việc upload
                 return null; 
             }
 
-            // Kiểm tra loại file
             $fileExtension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
             if (!in_array($fileExtension, $allowedTypes)) {
                 $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' có định dạng không hỗ trợ!";
                 return null;
             }
 
-            // Tạo tên file mới
             $fileName = uniqid() . '_' . time() . '_' . $key . '.' . $fileExtension;
             $filePath = $uploadDir . $fileName;
 
             if (move_uploaded_file($fileTmpName, $filePath)) {
-                // Nếu thành công, thêm thông tin file vào mảng
                 $uploadedFilesInfo[] = [
                     'tenFile' => $name,
                     'duongDan' => $filePath,
                     'kichThuoc' => $fileSize
                 ];
             } else {
-                // Nếu di chuyển file thất bại
                 $_SESSION['error'] = "Có lỗi khi lưu file '" . htmlspecialchars($name) . "'.";
                 return null;
             }
         }
 
-        // Trả về mảng chứa thông tin của TẤT CẢ các file đã upload
         return $uploadedFilesInfo;
     }
-
-    // Trong phương thức chitiettinnhan, thêm kiểm tra quyền truy cập:
 
     public function chitiettinnhan($maHoiThoai) {
         $this->checkAuth();
@@ -261,9 +251,14 @@ class TinNhanController {
 
     private function xuLyGuiTinNhanTrongHoiThoai($maHoiThoai) {
         $maNguoiGui = $_SESSION['user']['maNguoiDung'];
-        $noiDung = $_POST['noiDung'] ?? '';
+        $config = HTMLPurifier_Config::createDefault();
+        $purifier = new HTMLPurifier($config);
 
-        if (empty($noiDung)) {
+        $noiDungChuaLoc = $_POST['noiDung'] ?? '';
+        $noiDung = $purifier->purify($noiDungChuaLoc);
+        
+
+        if (empty(trim(strip_tags($noiDung)))) {
             $_SESSION['error'] = "Vui lòng nhập nội dung tin nhắn!";
             return;
         }

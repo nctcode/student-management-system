@@ -13,14 +13,27 @@
         <div class="col-md-10 offset-md-1">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h4 class="m-0 font-weight-bold text-primary">Danh sách tin nhắn</h4>
+                    <h5 class="m-0 font-weight-bold text-primary">Danh sách tin nhắn</h5>
                     <?php if (in_array($_SESSION['user']['vaiTro'], ['QTV', 'BGH', 'GIAOVIEN'])): ?>
                     <a href="index.php?controller=tinnhan&action=guitinnhan" class="btn btn-primary btn-sm">
                         <i class="fas fa-paper-plane"></i> Gửi tin nhắn mới
                     </a>
                     <?php endif; ?>
                 </div>
+                
                 <div class="card-body">
+                    <div class="mb-3 d-flex justify-content-start border-bottom pb-3">
+                        <?php $currentFilter = $_GET['filter'] ?? 'all'; ?>
+                        
+                        <a href="index.php?controller=tinnhan&action=index&filter=all" 
+                           class="btn btn-sm <?= $currentFilter == 'all' ? 'btn-primary' : 'btn-outline-secondary' ?> mr-2">
+                           Tất cả
+                        </a>
+                        <a href="index.php?controller=tinnhan&action=index&filter=unread" 
+                           class="btn btn-sm <?= $currentFilter == 'unread' ? 'btn-danger' : 'btn-outline-secondary' ?> ms-2">
+                           Chưa đọc
+                        </a>
+                    </div>
                     <?php if (empty($tinNhan)): ?>
                         <div class="text-center py-4">
                             <i class="fas fa-comments fa-3x text-muted mb-3"></i>
@@ -49,7 +62,7 @@
                                                 <?= date('H:i d/m/Y', strtotime($tn['thoiGianGui'])) ?>
                                             </small>
                                         </div>
-                                        <p class="mb-1 text-truncate"><?= htmlspecialchars($tn['noiDung']) ?></p>
+                                        <p class="mb-1 text-truncate"><?= $tn['noiDung'] ?></p>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div class="flex-grow-1">
                                                 <small class="text-muted">

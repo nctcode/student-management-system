@@ -26,7 +26,7 @@
                             <label class="form-check-label" for="checkPhuHuynh">Phụ huynh</label>
                         </div>
                     </div>
-                    
+                    <br>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
@@ -101,25 +101,41 @@
                 <div class="card-body">
                     <form method="POST" enctype="multipart/form-data" id="formGuiTinNhan">
                         <div class="form-group">
-                            <label><strong>Người nhận</strong></label>
+                            <label><strong>Người nhận (*)</strong></label>
                             <div class="border rounded p-2 bg-light" id="danhSachNguoiNhan" style="min-height: 40px;">
                                 </div>
                             <input type="hidden" name="nguoiNhan" id="hiddenNguoiNhan">
                         </div>
                         <br>
                         <div class="form-group">
-                            <label><strong>Tiêu đề</strong></label>
+                            <label><strong>Tiêu đề (*)</strong></label>
                             <input type="text" name="tieuDe" class="form-control" required placeholder="Nhập tiêu đề tin nhắn">
                         </div>
-
-                        <div class="form-group">
-                            <label><strong>Nội dung tin nhắn</strong></label>
-                            <textarea name="noiDung" class="form-control" rows="6" required 
+                        <br>
+                        <div class="form-group position-relative">
+                            <label><strong>Nội dung tin nhắn (*)</strong></label>
+                            <emoji-picker style="display: none; position: absolute; z-index: 1050; right: 20px; bottom: 150px;"></emoji-picker>
+                            <textarea name="noiDung"  id="noiDungTinNhan" class="form-control" rows="6" required 
                                       placeholder="Nhập nội dung tin nhắn..." 
-                                      onkeyup="demKyTu(this)"></textarea>
-                            <small class="form-text text-muted">
-                                <span id="soKyTu">0</span>/1000 ký tự
-                            </small>
+                                      onkeyup="demKyTu(this)">
+                            </textarea>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <small class="form-text text-muted">
+                                    <span id="soKyTu">0</span>/1000 ký tự
+                                </small>
+                                <button type="button" id="emojiBtn" class="btn btn-light btn-sm" title="Chèn biểu tượng">😊</button>
+                            </div>
+                            <script>
+                                tinymce.init({
+                                    selector: 'textarea[name="noiDung"]',
+                                    plugins: 'autolink lists link image charmap preview anchor pagebreak',
+                                    toolbar: 'undo redo | bold italic underline | ' + 
+                                            'alignleft aligncenter alignright | ' +
+                                            'bullist numlist outdent indent | link',
+                                    menubar: false,
+                                    height: 250
+                                });
+                            </script>
                         </div>
                         <br>
                         <div class="form-group">
@@ -135,7 +151,7 @@
                                 • Không gửi nội dung không phù hợp
                             </small>
                         </div>
-
+                        <br>
                         <div class="d-flex justify-content-end">
                             <button type="button" class="btn btn-danger btn-lg" onclick="history.back()">
                                 <i class="fas fa-times"></i> Hủy
@@ -150,6 +166,45 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const picker = document.querySelector('emoji-picker');
+    const emojiBtn = document.getElementById('emojiBtn');
+    const textarea = document.querySelector('textarea[name="noiDung"]');
+
+    if(textarea) {
+        if (!window.tinymce || !tinymce.get(textarea.id)) {
+            textarea.focus();
+        }
+    }
+
+    if (picker && emojiBtn && textarea) {
+        picker.addEventListener('emoji-click', event => {
+            if (window.tinymce && tinymce.get(textarea.id)) {
+                tinymce.get(textarea.id).insertContent(event.detail.unicode);
+            } else {
+                textarea.value += event.detail.unicode;
+            }
+            picker.style.display = 'none';
+        });
+
+        emojiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = picker.style.display === 'none';
+            picker.style.display = isHidden ? 'block' : 'none';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (picker.style.display === 'block') {
+                if (!picker.contains(e.target) && e.target !== emojiBtn) {
+                    picker.style.display = 'none';
+                }
+            }
+        });
+    }
+});
+</script>
 
 <link rel="stylesheet" href="assets/css/tinnhan.css">
 <script src="assets/js/tinnhan.js"></script>

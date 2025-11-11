@@ -15,29 +15,24 @@ class TinNhanModel {
         try {
             $conn->beginTransaction();
 
-            // Tạo cuộc hội thoại mới
             $sqlHoiThoai = "INSERT INTO cuochoithoai (tenHoiThoai, loaiHoiThoai, maNguoiDung, ngayTao) 
                            VALUES (?, 'NHOM', ?, NOW())";
             $stmtHoiThoai = $conn->prepare($sqlHoiThoai);
             $stmtHoiThoai->execute([$tieuDe, $maNguoiGui]);
             $maHoiThoai = $conn->lastInsertId();
 
-            // Thêm người tham gia hội thoại
             $sqlThamGia = "INSERT INTO thanhviengoi (maHoiThoai, maNguoiDung, ngayThamGia) 
                           VALUES (?, ?, NOW())";
             $stmtThamGia = $conn->prepare($sqlThamGia);
             
-            // Thêm người gửi
             $stmtThamGia->execute([$maHoiThoai, $maNguoiGui]);
             
-            // Thêm người nhận
             foreach ($danhSachNguoiNhan as $maNguoiNhan) {
                 $stmtThamGia->execute([$maHoiThoai, $maNguoiNhan]);
             }
 
-            // Tạo tin nhắn đầu tiên
             $sqlTinNhan = "INSERT INTO tinnhan (maHoiThoai, tieuDe, noiDung, fileDinhKem, thoiGianGui, maNguoiDung, trangThai) 
-                          VALUES (?, ?, ?, ?, NOW(), ?, 1)";
+                          VALUES (?, ?, ?, ?, NOW(), ?, 0)";
             $stmtTinNhan = $conn->prepare($sqlTinNhan);
             
             $filePath = $fileDinhKem ? json_encode($fileDinhKem) : null;
@@ -53,34 +48,60 @@ class TinNhanModel {
     }
 
     // Lấy tin nhắn theo người dùng
-    public function getTinNhanByNguoiDung($maNguoiDung) {
+    public function getTinNhanByNguoiDung($maNguoiDung, $filter = 'all') {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT DISTINCT cht.maHoiThoai, cht.tenHoiThoai, cht.loaiHoiThoai, 
-                       tn.tieuDe, tn.noiDung, tn.thoiGianGui, tn.fileDinhKem,
-                       nd.hoTen as nguoiGui,
-                       tk.vaiTro,
-                       (SELECT COUNT(*) FROM tinnhan tn2 
-                        WHERE tn2.maHoiThoai = cht.maHoiThoai 
-                        AND tn2.trangThai = 0 
-                        AND tn2.maNguoiDung != ?) as soTinChuaDoc,
-                       
-                       (SELECT GROUP_CONCAT(nd_tv.hoTen SEPARATOR ', ') 
-                        FROM thanhviengoi tv_sub
-                        JOIN nguoidung nd_tv ON tv_sub.maNguoiDung = nd_tv.maNguoiDung
-                        WHERE tv_sub.maHoiThoai = cht.maHoiThoai
-                       ) as danhSachThanhVien
-                       
-                FROM cuochoithoai cht
-                JOIN thanhviengoi tv ON cht.maHoiThoai = tv.maHoiThoai
-                JOIN tinnhan tn ON cht.maHoiThoai = tn.maHoiThoai
-                JOIN nguoidung nd ON tn.maNguoiDung = nd.maNguoiDung
-                JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan
-                WHERE tv.maNguoiDung = ?
-                ORDER BY tn.thoiGianGui DESC";
+        $sql = "
+            SELECT 
+                cht.maHoiThoai, cht.tenHoiThoai, cht.loaiHoiThoai,
+                tn.tieuDe, tn.noiDung, tn.thoiGianGui, tn.fileDinhKem, tn.trangThai,
+                nd.hoTen as nguoiGui,
+                tk.vaiTro,
+                
+                -- Đếm số tin nhắn chưa đọc trong hội thoại này (mà không phải của mình)
+                (SELECT COUNT(*) FROM tinnhan tn2 
+                 WHERE tn2.maHoiThoai = cht.maHoiThoai 
+                 AND tn2.trangThai = 0 
+                 AND tn2.maNguoiDung != ?) as soTinChuaDoc, 
+                 
+                -- Lấy danh sách thành viên
+                (SELECT GROUP_CONCAT(nd_tv.hoTen SEPARATOR ', ') 
+                 FROM thanhviengoi tv_sub
+                 JOIN nguoidung nd_tv ON tv_sub.maNguoiDung = nd_tv.maNguoiDung
+                 WHERE tv_sub.maHoiThoai = cht.maHoiThoai
+                ) as danhSachThanhVien
+            
+            FROM cuochoithoai cht
+            
+            -- Join để đảm bảo người dùng này có trong hội thoại
+            JOIN thanhviengoi tv ON cht.maHoiThoai = tv.maHoiThoai
+            
+            -- Join CHỈ tin nhắn MỚI NHẤT (dựa vào maTinNhan lớn nhất)
+            JOIN tinnhan tn ON tn.maTinNhan = (
+                SELECT MAX(maTinNhan) 
+                FROM tinnhan 
+                WHERE maHoiThoai = cht.maHoiThoai
+            )
+            
+            -- Join thông tin người gửi của tin nhắn mới nhất đó
+            JOIN nguoidung nd ON tn.maNguoiDung = nd.maNguoiDung
+            JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan
+            
+            -- Điều kiện WHERE chính
+            WHERE tv.maNguoiDung = ?
+        ";
+        
+        $params = [$maNguoiDung, $maNguoiDung];
+        
+        if ($filter === 'unread') {
+            $sql .= " HAVING soTinChuaDoc > 0";
+        }
+
+        // Sắp xếp theo thời gian của tin nhắn mới nhất
+        $sql .= " ORDER BY tn.thoiGianGui DESC";
         
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$maNguoiDung, $maNguoiDung]);
+        $stmt->execute($params);
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -122,7 +143,7 @@ class TinNhanModel {
         $conn = $this->db->getConnection();
         
         $sql = "INSERT INTO tinnhan (maHoiThoai, noiDung, fileDinhKem, thoiGianGui, maNguoiDung, trangThai) 
-                VALUES (?, ?, ?, NOW(), ?, 1)";
+                VALUES (?, ?, ?, NOW(), ?, 0)";
         
         $stmt = $conn->prepare($sql);
         $filePath = $fileDinhKem ? json_encode($fileDinhKem) : null;
