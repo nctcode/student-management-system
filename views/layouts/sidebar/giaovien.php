@@ -17,7 +17,7 @@
                 </a>
             </li>
             <li>
-                <a href="index.php?controller=diem&action=index">
+                <a href="index.php?controller=diem&action=nhapdiem">
                     <i class="fas fa-fw fa-pen-to-square"></i>
                     <span>Nhập điểm</span>
                 </a>

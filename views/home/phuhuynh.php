@@ -80,7 +80,7 @@ $roleName = 'Phụ huynh';
                             </div>
                             <div class="card-body">
                                 <div class="list-group">
-                                    <a href="#" class="list-group-item list-group-item-action">
+                                    <a href="index.php?controller=diem&action=xemdiem" class="list-group-item list-group-item-action">
                                         <i class="fas fa-chart-bar me-2"></i>Xem điểm số chi tiết
                                     </a>
                                     <a href="#" class="list-group-item list-group-item-action">

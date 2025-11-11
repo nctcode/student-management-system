@@ -112,10 +112,10 @@ $roleName = 'Học sinh';
                                     <a href="index.php?controller=hocphi&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-money-bill-wave me-2"></i>Học phí
                                     </a>
-                                    <a href="#" class="list-group-item list-group-item-action">
+                                    <a href="index.php?controller=diem&action=xemdiem" class="list-group-item list-group-item-action">
                                         <i class="fas fa-clipboard-list me-2"></i>Xem điểm số
                                     </a>
-                                    <a href="#" class="list-group-item list-group-item-action">
+                                    <a href="index.php?controller=baitap&action=danhsach_hs" class="list-group-item list-group-item-action">
                                         <i class="fas fa-book me-2"></i>Bài tập
                                     </a>
                                 </div>
