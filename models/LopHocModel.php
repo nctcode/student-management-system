@@ -43,5 +43,10 @@ class LopHocModel {
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    public function getTatCaLop() {
+        $conn = $this->db->getConnection();
+        $stmt = $this->$conn->query("SELECT maLop, tenLop FROM lophoc ORDER BY tenLop");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
