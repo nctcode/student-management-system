@@ -43,7 +43,7 @@ $tieuChi = $_GET['tieuChi'] ?? '';
     </div>
 
     <!-- Cột nút xuất Excel -->
-    <div class="col-md-3">
+    <div class="col-md-3" >
       <?php if ($hocKy && $tieuChi): ?>
         <a href="?controller=ketquahoctap&action=xuatCSV&hocKy=<?= $hocKy ?>&tieuChi=<?= $tieuChi ?>" class="btn btn-success">
           <i class="bi bi-file-earmark-excel"></i> Xuất CSV

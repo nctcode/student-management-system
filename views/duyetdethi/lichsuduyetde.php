@@ -8,6 +8,19 @@ if (isset($_SESSION['message'])) {
     $type = $_SESSION['type'] ?? 'success';
     unset($_SESSION['message'], $_SESSION['type']);
 }
+
+
+function hienThiTrangThai($trangThai)
+{
+  switch ($trangThai) {
+    case 'CHO_DUYET':
+      return 'Chờ duyệt';
+    case 'DA_DUYET':
+      return 'Đã duyệt';
+    case 'TU_CHOI':
+      return 'Từ chối';
+  }
+}
 ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -53,7 +66,7 @@ if (isset($_SESSION['message'])) {
         <div class="alert alert-danger text-center"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>
 
-    
+
     <!-- Hai bảng ngang -->
     <div class="row">
         <!-- Đã duyệt -->
@@ -80,12 +93,14 @@ if (isset($_SESSION['message'])) {
                                     <td><?= htmlspecialchars($row['ngayNop'] ?? '-') ?></td>
                                     <td>
                                         <a href="index.php?controller=duyetdethi&action=lichSuDuyetDeThi&maDeThi=<?= $row['maDeThi'] ?>&maKhoi=<?= $_GET['maKhoi'] ?? '' ?>&maNienKhoa=<?= $_GET['maNienKhoa'] ?? '' ?>"
-                                           class="btn btn-sm btn-outline-primary">Xem chi tiết</a>
+                                            class="btn btn-sm btn-outline-primary">Xem chi tiết</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="5" class="text-muted">Chưa có dữ liệu</td></tr>
+                            <tr>
+                                <td colspan="5" class="text-muted">Chưa có dữ liệu</td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -116,12 +131,14 @@ if (isset($_SESSION['message'])) {
                                     <td><?= htmlspecialchars($row['ngayNop'] ?? '-') ?></td>
                                     <td>
                                         <a href="index.php?controller=duyetdethi&action=lichSuDuyetDeThi&maDeThi=<?= $row['maDeThi'] ?>&maKhoi=<?= $_GET['maKhoi'] ?? '' ?>&maNienKhoa=<?= $_GET['maNienKhoa'] ?? '' ?>"
-                                           class="btn btn-sm btn-outline-primary">Xem chi tiết</a>
+                                            class="btn btn-sm btn-outline-primary">Xem chi tiết</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="5" class="text-muted">Chưa có dữ liệu</td></tr>
+                            <tr>
+                                <td colspan="5" class="text-muted">Chưa có dữ liệu</td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -136,16 +153,50 @@ if (isset($_SESSION['message'])) {
                 <h6>Chi tiết đề thi:</h6>
                 <?php if ($examDetail): ?>
                     <table class="table table-bordered">
-                        <tr><th>Mã đề</th><td><?= $examDetail['maDeThi'] ?></td></tr>
-                        <tr><th>Tiêu đề</th><td><?= htmlspecialchars($examDetail['tieuDe']) ?></td></tr>
-                        <tr><th>Giáo viên ra đề</th><td><?= htmlspecialchars($examDetail['tenGiaoVien']) ?></td></tr>
-                        <tr><th>Ngày nộp</th><td><?= $examDetail['ngayNop'] ?></td></tr>
-                        <tr><th>Môn</th><td><?= htmlspecialchars($examDetail['monHoc']) ?></td></tr>
-                        <tr><th>Học kỳ</th><td><?= htmlspecialchars($examDetail['hocKy']) ?></td></tr>
-                        <tr><th>Năm học</th><td><?= htmlspecialchars($examDetail['namHoc']) ?></td></tr>
-                        <tr><th>Trạng thái</th><td><?= $examDetail['trangThai'] ?></td></tr>
-                        <tr><th>Tổng số câu</th><td><?= count($questions) ?></td></tr>
-                        <tr><th>Tổng điểm</th><td>10</td></tr>
+                        <tr>
+                            <th>Mã đề</th>
+                            <td><?= $examDetail['maDeThi'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Tiêu đề</th>
+                            <td><?= htmlspecialchars($examDetail['tieuDe']) ?></td>
+                        </tr>
+                        <tr>
+                            <th>Giáo viên ra đề</th>
+                            <td><?= htmlspecialchars($examDetail['tenGiaoVien']) ?></td>
+                        </tr>
+                        <tr>
+                            <th>Ngày nộp</th>
+                            <td><?= $examDetail['ngayNop'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Môn</th>
+                            <td><?= htmlspecialchars($examDetail['monHoc']) ?></td>
+                        </tr>
+                        <tr>
+                            <th>Học kỳ</th>
+                            <td><?= htmlspecialchars($examDetail['hocKy']) ?></td>
+                        </tr>
+                        <tr>
+                            <th>Năm học</th>
+                            <td><?= htmlspecialchars($examDetail['namHoc']) ?></td>
+                        </tr>
+                        <tr>
+                            <th>Trạng thái</th>
+                            <td><?= htmlspecialchars(hienThiTrangThai($examDetail['trangThai'])) ?></td>
+                        </tr>
+                        <tr>
+                            <th>Tổng số câu</th>
+                            <td><?= count($questions) ?></td>
+                        </tr>
+                        <tr>
+                            <th>Tổng điểm</th>
+                            <td>10</td>
+                        </tr>
+                        <tr>
+                            <th>Lý do từ chối</th>
+                            <td><?= $examDetail['ghiChu'] ?></td>
+                        </tr>
                     </table>
                 <?php else: ?>
                     <p class="text-center text-muted mb-0">Chưa chọn đề thi nào.</p>
@@ -173,7 +224,9 @@ if (isset($_SESSION['message'])) {
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="2" class="text-center text-muted">Chưa có dữ liệu câu hỏi.</td></tr>
+                            <tr>
+                                <td colspan="2" class="text-center text-muted">Chưa có dữ liệu câu hỏi.</td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

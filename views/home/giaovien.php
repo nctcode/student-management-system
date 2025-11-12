@@ -16,7 +16,7 @@ $roleName = 'Giáo viên';
                         <small class="text-muted">Đăng nhập lúc: <?php echo date('H:i d/m/Y'); ?></small>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <div class="card bg-primary text-white h-100">
@@ -58,7 +58,7 @@ $roleName = 'Giáo viên';
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row mt-4">
                     <div class="col-md-6">
                         <div class="card">
@@ -77,7 +77,7 @@ $roleName = 'Giáo viên';
                                         <i class="fas fa-comments me-2"></i>Tin nhắn
                                     </a>
                                     <a href="index.php?controller=ketquahoctap&action=thongke" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-history me-2"></i>Thống kê kết quả học tập
+                                        <i class="fas fa-chart-line me-2"></i>Thống kê kết quả học tập
                                     </a>
                                 </div>
                             </div>

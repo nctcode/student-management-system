@@ -58,34 +58,36 @@ class HomeController
                 $this->showDefaultHome();
         }
     }
-    
 
-    public function leader() {
-    $this->checkRole(['TOTRUONG']); // Kiểm tra vai trò tổ trưởng
-    $title = "Tổ trưởng chuyên môn - QLHS";
 
-    // Lấy mã người dùng từ session
-    $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+    public function leader()
+    {
+        $this->checkRole(['TOTRUONG']); // Kiểm tra vai trò tổ trưởng
+        $title = "Tổ trưởng chuyên môn - QLHS";
 
-    // Lấy mã tổ trưởng từ bảng totruongchuyenmon
-    $maToTruong = $this->homeModel->getMaToTruong($maNguoiDung);
 
-    if (!$maToTruong) {
-        $_SESSION['error'] = "Không tìm thấy thông tin tổ trưởng!";
-        header('Location: index.php?controller=auth&action=login');
-        exit;
+        // Lấy mã người dùng từ session
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+
+        // Lấy mã tổ trưởng từ bảng totruongchuyenmon
+        $maToTruong = $this->homeModel->getMaToTruong($maNguoiDung);
+
+        if (!$maToTruong) {
+            $_SESSION['error'] = "Không tìm thấy thông tin tổ trưởng!";
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+
+        // Lấy dữ liệu thống kê đề thi
+        $stats = $this->homeModel->getLeaderStats($maNguoiDung);
+
+        $showSidebar = true;
+
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/totruong.php';
+        require_once 'views/home/totruong.php';
+        require_once 'views/layouts/footer.php';
     }
-
-    // Lấy dữ liệu thống kê đề thi
-    $stats = $this->homeModel->getLeaderStats($maToTruong);
-
-    $showSidebar = true;
-
-    require_once 'views/layouts/header.php';
-    require_once 'views/layouts/sidebar/totruong.php';
-    require_once 'views/home/totruong.php';
-    require_once 'views/layouts/footer.php';
-}
 
 
 

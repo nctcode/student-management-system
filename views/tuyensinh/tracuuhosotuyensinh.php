@@ -16,8 +16,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['maHoSo'])) {
     if (isset($_POST['action']) && $_POST['action'] === 'xemchitiet') {
       $showDetail = true;
     }
-  }    
+  }
 }
+
+
+function hienThiTrangThai($trangThai)
+{
+  switch ($trangThai) {
+    case 'CHO_DUYET':
+      return 'Chờ duyệt';
+    case 'DA_DUYET':
+      return 'Đã duyệt';
+    case 'TU_CHOI':
+      return 'Từ chối';
+  }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -117,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['maHoSo'])) {
                   <td><?= htmlspecialchars($hoSo['hoTen']) ?></td>
                   <td><?= htmlspecialchars($hoSo['ngayDangKy']) ?></td>
                   <td><?= htmlspecialchars($hoSo['nguyenVong']) ?></td>
-                  <td><?= htmlspecialchars($hoSo['trangThai']) ?></td>
+                  <td><?= htmlspecialchars(hienThiTrangThai($hoSo['trangThai'])) ?></td>
                   <td>
                     <form method="post" style="display:inline;">
                       <input type="hidden" name="maHoSo" value="<?= htmlspecialchars($hoSo['maHoSo']) ?>">
@@ -192,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['maHoSo'])) {
 
               <div class="col-md-6">
                 <label class="form-label fw-semibold">Trạng thái</label>
-                <input type="text" class="form-control" value="<?= htmlspecialchars($hoSo['trangThai']) ?>" readonly>
+                <input type="text" class="form-control" value="<?= htmlspecialchars(hienThiTrangThai($hoSo['trangThai']))  ?>" readonly>
               </div>
 
               <!-- Ô kết quả nổi bật -->
@@ -203,9 +217,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['maHoSo'])) {
                 ?>
                 <label class="form-label fw-semibold">Kết quả</label>
                 <input type="text"
-                       class="form-control highlight-result <?= $classKetQua ?>"
-                       value="<?= htmlspecialchars($hoSo['ketQua']) ?>"
-                       readonly>
+                  class="form-control highlight-result <?= $classKetQua ?>"
+                  value="<?= htmlspecialchars($hoSo['ketQua']) ?>"
+                  readonly>
               </div>
             </div>
           </div>

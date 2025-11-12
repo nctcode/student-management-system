@@ -6,6 +6,20 @@ require_once 'views/layouts/sidebar/totruong.php';
 $message = $_SESSION['message'] ?? '';
 $type = $_SESSION['type'] ?? '';
 unset($_SESSION['message'], $_SESSION['type']);
+
+
+function hienThiTrangThai($trangThai)
+{
+  switch ($trangThai) {
+    case 'CHO_DUYET':
+      return 'Chờ duyệt';
+    case 'DA_DUYET':
+      return 'Đã duyệt';
+    case 'TU_CHOI':
+      return 'Từ chối';
+  }
+}
+
 ?>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -127,8 +141,9 @@ unset($_SESSION['message'], $_SESSION['type']);
             </tr>
             <tr>
               <th>Trạng thái</th>
-              <td><?= $examDetail['trangThai'] ?></td>
+              <td><?= htmlspecialchars(hienThiTrangThai($examDetail['trangThai']) )?></td>
             </tr>
+
             <tr>
               <th>Tổng số câu</th>
               <td><?= count($questions) ?></td>
@@ -177,110 +192,110 @@ unset($_SESSION['message'], $_SESSION['type']);
     </div>
   </div>
 
-<!-- Form duyệt/từ chối -->
-<?php if ($examDetail): ?>
-<form id="formDuyet" method="POST" action="index.php?controller=duyetdethi&action=capNhatTrangThai">
-  <input type="hidden" name="maDeThi" value="<?= $examDetail['maDeThi'] ?>">
-  <input type="hidden" name="maKhoi" value="<?= $maKhoi ?>">
-  <input type="hidden" name="maNienKhoa" value="<?= $maNienKhoa ?>">
-  <input type="hidden" id="hanhDongInput" name="hanhDong" value="">
+  <!-- Form duyệt/từ chối -->
+  <?php if ($examDetail): ?>
+    <form id="formDuyet" method="POST" action="index.php?controller=duyetdethi&action=capNhatTrangThai">
+      <input type="hidden" name="maDeThi" value="<?= $examDetail['maDeThi'] ?>">
+      <input type="hidden" name="maKhoi" value="<?= $maKhoi ?>">
+      <input type="hidden" name="maNienKhoa" value="<?= $maNienKhoa ?>">
+      <input type="hidden" id="hanhDongInput" name="hanhDong" value="">
 
-  <!-- Khung ghi chú ẩn -->
-  <div class="mt-3" id="divGhiChu" style="display:none;">
-    <label for="ghiChu" class="form-label">Lý do từ chối:</label>
-    <textarea id="ghiChu" name="ghiChu" class="form-control" rows="3" placeholder="Nhập lý do nếu bạn từ chối..."></textarea>
-    <div id="errorMessage" class="text-danger mt-2" style="display:none;">
-      ❗ Vui lòng nhập lý do từ chối trước khi gửi!
-    </div>
-  </div>
+      <!-- Khung ghi chú ẩn -->
+      <div class="mt-3" id="divGhiChu" style="display:none;">
+        <label for="ghiChu" class="form-label">Lý do từ chối:</label>
+        <textarea id="ghiChu" name="ghiChu" class="form-control" rows="3" placeholder="Nhập lý do nếu bạn từ chối..."></textarea>
+        <div id="errorMessage" class="text-danger mt-2" style="display:none;">
+          ❗ Vui lòng nhập lý do từ chối trước khi gửi!
+        </div>
+      </div>
 
-  <!-- Nút hành động -->
-  <div class="text-center mt-3">
-    <button type="submit" id="btnDuyet" class="btn btn-success btn-action">Duyệt đề</button>
-    <button type="button" id="btnTuChoi" class="btn btn-danger btn-action">Từ chối</button>
-  </div>
-</form>
-<?php endif; ?>
+      <!-- Nút hành động -->
+      <div class="text-center mt-3">
+        <button type="submit" id="btnDuyet" class="btn btn-success btn-action">Duyệt đề</button>
+        <button type="button" id="btnTuChoi" class="btn btn-danger btn-action">Từ chối</button>
+      </div>
+    </form>
+  <?php endif; ?>
 
-<!-- Popup thông báo -->
-<div class="modal fade" id="popupThongBao" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content text-center p-3">
-      <h5 id="popupMessage"></h5>
-      <div class="mt-3">
-        <button class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+  <!-- Popup thông báo -->
+  <div class="modal fade" id="popupThongBao" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center p-3">
+        <h5 id="popupMessage"></h5>
+        <div class="mt-3">
+          <button class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> -->
- <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const btnTuChoi = document.getElementById('btnTuChoi');
-  const btnDuyet = document.getElementById('btnDuyet');
-  const divGhiChu = document.getElementById('divGhiChu');
-  const ghiChu = document.getElementById('ghiChu');
-  const errorMsg = document.getElementById('errorMessage');
-  const form = document.getElementById('formDuyet');
-  const hanhDongInput = document.getElementById('hanhDongInput');
+  <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const btnTuChoi = document.getElementById('btnTuChoi');
+      const btnDuyet = document.getElementById('btnDuyet');
+      const divGhiChu = document.getElementById('divGhiChu');
+      const ghiChu = document.getElementById('ghiChu');
+      const errorMsg = document.getElementById('errorMessage');
+      const form = document.getElementById('formDuyet');
+      const hanhDongInput = document.getElementById('hanhDongInput');
 
-  if (btnTuChoi && btnDuyet && form && divGhiChu && ghiChu && errorMsg && hanhDongInput) {
-    // Nút Từ chối
-    btnTuChoi.addEventListener('click', () => {
-      if (divGhiChu.style.display === 'none') {
-        divGhiChu.style.display = 'block';
-        ghiChu.focus();
-        hanhDongInput.value = 'tuchoi';
-      } else {
-        if (ghiChu.value.trim() === '') {
-          errorMsg.style.display = 'block';
-          ghiChu.focus();
-        } else {
-          errorMsg.style.display = 'none';
-          hanhDongInput.value = 'tuchoi';
+      if (btnTuChoi && btnDuyet && form && divGhiChu && ghiChu && errorMsg && hanhDongInput) {
+        // Nút Từ chối
+        btnTuChoi.addEventListener('click', () => {
+          if (divGhiChu.style.display === 'none') {
+            divGhiChu.style.display = 'block';
+            ghiChu.focus();
+            hanhDongInput.value = 'tuchoi';
+          } else {
+            if (ghiChu.value.trim() === '') {
+              errorMsg.style.display = 'block';
+              ghiChu.focus();
+            } else {
+              errorMsg.style.display = 'none';
+              hanhDongInput.value = 'tuchoi';
+              form.submit();
+            }
+          }
+        });
+
+        // Nút Duyệt
+        btnDuyet.addEventListener('click', () => {
+          hanhDongInput.value = 'duyet';
           form.submit();
+        });
+
+        // Kiểm tra trước khi submit (chỉ cho Từ chối)
+        form.addEventListener('submit', (e) => {
+          if (hanhDongInput.value === 'tuchoi' && ghiChu.value.trim() === '') {
+            e.preventDefault();
+            errorMsg.style.display = 'block';
+            ghiChu.focus();
+            return false;
+          }
+          errorMsg.style.display = 'none';
+        });
+
+        // Vô hiệu hóa nút Duyệt khi textarea có nội dung
+        ghiChu.addEventListener('input', () => {
+          if (ghiChu.value.trim() !== '') {
+            btnDuyet.disabled = true; // đã nhập lý do → disable Duyệt
+          } else {
+            btnDuyet.disabled = false; // xóa hết lý do → enable Duyệt
+          }
+        });
+      }
+
+      // Hiển thị popup nếu có message
+      <?php if (!empty($message) && $type !== 'error'): ?>
+        const modalEl = document.getElementById('popupThongBao');
+        if (modalEl) {
+          const modal = new bootstrap.Modal(modalEl);
+          document.getElementById('popupMessage').textContent = <?php echo json_encode($message); ?>;
+          modal.show();
         }
-      }
+      <?php endif; ?>
     });
-
-    // Nút Duyệt
-    btnDuyet.addEventListener('click', () => {
-      hanhDongInput.value = 'duyet';
-      form.submit();
-    });
-
-    // Kiểm tra trước khi submit (chỉ cho Từ chối)
-    form.addEventListener('submit', (e) => {
-      if (hanhDongInput.value === 'tuchoi' && ghiChu.value.trim() === '') {
-        e.preventDefault();
-        errorMsg.style.display = 'block';
-        ghiChu.focus();
-        return false;
-      }
-      errorMsg.style.display = 'none';
-    });
-
-    // Vô hiệu hóa nút Duyệt khi textarea có nội dung
-    ghiChu.addEventListener('input', () => {
-      if (ghiChu.value.trim() !== '') {
-        btnDuyet.disabled = true;  // đã nhập lý do → disable Duyệt
-      } else {
-        btnDuyet.disabled = false; // xóa hết lý do → enable Duyệt
-      }
-    });
-  }
-
-  // Hiển thị popup nếu có message
-   <?php if (!empty($message) && $type !== 'error'): ?>
-    const modalEl = document.getElementById('popupThongBao');
-    if (modalEl) {
-      const modal = new bootstrap.Modal(modalEl);
-      document.getElementById('popupMessage').textContent = <?php echo json_encode($message); ?>;
-      modal.show();
-    }
-  <?php endif; ?>
-});
-</script>
+  </script>
 
 
   <?php require_once 'views/layouts/footer.php'; ?>
