@@ -1,4 +1,8 @@
 <?php
+// BẬT HIỂN THỊ LỖI - Thêm vào đầu file
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -142,42 +146,7 @@ if (file_exists($controllerFile)) {
                     }
                     break;
 
-                case 'thongbao':
-                     $thongBaoController = new ThongBaoController();
-                    switch ($action) {
-                         case 'dangthongbao':
-                            $thongBaoController->dangthongbao();
-                            break;
-                        case 'xulydangthongbao':
-                            $thongBaoController->xulydangthongbao();
-                             break;
-                        case 'danhsach':
-                           $thongBaoController->danhsach();
-                               break;
-                        default:
-                             $thongBaoController->dangthongbao();
-                    }
-                     break;
-
-                case 'thongbao':
-    $thongBaoController = new ThongBaoController();
-    switch ($action) {
-        case 'dangthongbao':
-            $thongBaoController->dangthongbao();
-            break;
-        case 'xulydangthongbao':
-            $thongBaoController->xulydangthongbao();
-            break;
-        case 'danhsach':
-            $thongBaoController->danhsach();
-            break;
-        case 'xoathongbao': // THÊM CASE NÀY
-            $thongBaoController->xoathongbao();
-            break;
-        default:
-            $thongBaoController->dangthongbao();
-    }
-    break;
+                
                     
                 default:
                     $controllerInstance->$action();

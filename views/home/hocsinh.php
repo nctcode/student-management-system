@@ -71,6 +71,26 @@ $roleName = 'Học sinh';
                         </div>
                     </div>
                 </div>
+
+                <!-- THÊM CARD ĐĂNG KÝ BAN HỌC VÀO ĐÂY -->
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-gradient-purple text-white h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4>🎓</h4>
+                                        <p>Đăng ký ban học</p>
+                                    </div>
+                                    <i class="fas fa-graduation-cap fa-2x"></i>
+                                </div>
+                                <a href="index.php?controller=banhoc&action=dangkyban" class="btn btn-light btn-sm mt-2 w-100">
+                                    Đăng ký ngay
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="row mt-4">
                     <div class="col-md-6">
@@ -112,6 +132,7 @@ $roleName = 'Học sinh';
                                     <a href="index.php?controller=hocphi&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-money-bill-wave me-2"></i>Học phí
                                     </a>
+                                   
                                     <a href="#" class="list-group-item list-group-item-action">
                                         <i class="fas fa-clipboard-list me-2"></i>Xem điểm số
                                     </a>
@@ -147,6 +168,7 @@ $roleName = 'Học sinh';
                                         </div>
                                         <p class="mb-1">Đăng ký tham gia câu lạc bộ thể thao</p>
                                     </a>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -156,3 +178,9 @@ $roleName = 'Học sinh';
         </div>
     </div>
 </div>
+
+<style>
+.bg-gradient-purple {
+    background: linear-gradient(135deg, #6f42c1, #e83e8c);
+}
+</style>

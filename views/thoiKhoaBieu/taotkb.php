@@ -128,6 +128,111 @@
                         </div>
                     </div>
 
+                    <!-- Bảng thống kê môn học (PHẦN MỚI THÊM) -->
+                    <?php if (!empty($maLop) && !empty($chiTietLop) && !empty($thongKeMonHoc)): ?>
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold text-primary">Thống kê môn học</h6>
+                            <small class="text-muted">Tổng quan số tiết đã xếp và còn lại</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm table-hover">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th width="25%">Môn học</th>
+                                            <th width="15%" class="text-center">Số tiết quy định</th>
+                                            <th width="15%" class="text-center">Đã xếp</th>
+                                            <th width="15%" class="text-center">Còn lại</th>
+                                            <th width="20%" class="text-center">Tiến độ</th>
+                                            <th width="10%" class="text-center">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php 
+                                        $tongTietQuyDinh = 0;
+                                        $tongTietDaXep = 0;
+                                        foreach ($thongKeMonHoc as $maMon => $mon): 
+                                            $tongTietQuyDinh += $mon['soTietQuyDinh'];
+                                            $tongTietDaXep += $mon['soTietDaXep'];
+                                            $phanTram = $mon['soTietQuyDinh'] > 0 ? round(($mon['soTietDaXep'] / $mon['soTietQuyDinh']) * 100) : 0;
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?= $mon['tenMonHoc'] ?></strong>
+                                                <?php if ($mon['soTietConLai'] < 0): ?>
+                                                    <br><small class="text-danger">⚠ Vượt <?= abs($mon['soTietConLai']) ?> tiết</small>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-center font-weight-bold"><?= $mon['soTietQuyDinh'] ?></td>
+                                            <td class="text-center">
+                                                <span class="badge badge-info"><?= $mon['soTietDaXep'] ?> tiết</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge badge-<?= 
+                                                    $mon['soTietConLai'] == 0 ? 'success' : 
+                                                    ($mon['soTietConLai'] > 0 ? 'warning' : 'danger')
+                                                ?>">
+                                                    <?= $mon['soTietConLai'] ?> tiết
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar 
+                                                        <?= $phanTram == 100 ? 'bg-success' : 
+                                                           ($phanTram >= 50 ? 'bg-warning' : 'bg-danger') ?>" 
+                                                        role="progressbar" 
+                                                        style="width: <?= min($phanTram, 100) ?>%;" 
+                                                        aria-valuenow="<?= $phanTram ?>" 
+                                                        aria-valuemin="0" 
+                                                        aria-valuemax="100">
+                                                        <?= $phanTram ?>%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <?php if ($mon['soTietConLai'] == 0): ?>
+                                                    <span class="badge badge-success"><i class="fas fa-check"></i> Đã đủ</span>
+                                                <?php elseif ($mon['soTietConLai'] > 0): ?>
+                                                    <span class="badge badge-warning"><i class="fas fa-clock"></i> Thiếu</span>
+                                                <?php else: ?>
+                                                    <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Vượt</span>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                    <tfoot class="thead-dark">
+                                        <tr>
+                                            <th class="text-right">TỔNG CỘNG:</th>
+                                            <th class="text-center"><?= $tongTietQuyDinh ?></th>
+                                            <th class="text-center"><?= $tongTietDaXep ?></th>
+                                            <th class="text-center"><?= $tongTietQuyDinh - $tongTietDaXep ?></th>
+                                            <th colspan="2">
+                                                <?php 
+                                                $tongPhanTram = $tongTietQuyDinh > 0 ? round(($tongTietDaXep / $tongTietQuyDinh) * 100) : 0;
+                                                ?>
+                                                <div class="progress" style="height: 25px;">
+                                                    <div class="progress-bar 
+                                                        <?= $tongPhanTram == 100 ? 'bg-success' : 
+                                                           ($tongPhanTram >= 50 ? 'bg-warning' : 'bg-danger') ?>" 
+                                                        role="progressbar" 
+                                                        style="width: <?= min($tongPhanTram, 100) ?>%; font-weight: bold;" 
+                                                        aria-valuenow="<?= $tongPhanTram ?>" 
+                                                        aria-valuemin="0" 
+                                                        aria-valuemax="100">
+                                                        Tổng tiến độ: <?= $tongPhanTram ?>%
+                                                    </div>
+                                                </div>
+                                            </th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Bảng thời khóa biểu chi tiết -->
                     <?php if (!empty($maLop) && !empty($chiTietLop)): ?>
                     <div class="card shadow mb-4">
@@ -196,120 +301,132 @@
                         </div>
                     </div>
 
-                    
-                
-              <!-- Form thêm chi tiết tiết học -->
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Chi tiết tiết học</h6>
-    </div>
-    <div class="card-body">
-        <form method="POST" action="index.php?controller=thoikhoabieu&action=luutiet" id="tietHocForm">
-            <input type="hidden" name="maLop" value="<?= $maLop ?>">
-            
-            <div class="row">
-                <!-- Môn học -->
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label><strong>Môn học</strong></label>
-                        <select name="maMonHoc" class="form-control" required id="maMonHoc">
-                            <option value="">-- Chọn môn học --</option>
-                            <option value="1">Toán</option>
-                            <option value="2">Ngữ Văn</option>
-                            <option value="3">Tiếng Anh</option>
-                            <option value="4">Vật Lý</option>
-                            <option value="5">Hóa Học</option>
-                            <option value="6">Lịch Sử</option>
-                            <option value="7">Địa Lý</option>
-                            <option value="8">Sinh Học</option>
-                            <option value="9">Tin Học</option>
-                            <option value="10">Thể Dục</option>
-                            <option value="11">GD Quốc Phòng</option>
-                            <option value="12">GD Công Dân</option>
-                            <option value="13">Công Nghệ</option>
-                            <option value="14">Mỹ Thuật</option>
-                            <option value="15">Âm Nhạc</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Phòng học -->
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label><strong>Phòng học (Tùy chọn)</strong></label>
-                        <input type="text" name="phongHoc" class="form-control" 
-                               placeholder="Để trống nếu học tại lớp" id="phongHoc">
-                        <small class="form-text text-muted">
-                            Chỉ cần nhập cho các môn đặc biệt như Tin học, Tiếng Anh
-                        </small>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <!-- Thứ -->
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label><strong>Thứ</strong></label>
-                        <select name="loaiLich" class="form-control" required id="loaiLich">
-                            <option value="">-- Chọn thứ --</option>
-                            <option value="THU_2">Thứ 2</option>
-                            <option value="THU_3">Thứ 3</option>
-                            <option value="THU_4">Thứ 4</option>
-                            <option value="THU_5">Thứ 5</option>
-                            <option value="THU_6">Thứ 6</option>
-                            <option value="THU_7">Thứ 7</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Tiết bắt đầu -->
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label><strong>Tiết bắt đầu</strong></label>
-                        <select name="tietBatDau" class="form-control" required id="tietBatDau">
-                            <option value="">-- Chọn --</option>
-                            <?php for ($i = 1; $i <= 10; $i++): ?>
-                                <option value="<?= $i ?>">Tiết <?= $i ?></option>
-                            <?php endfor; ?>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Tiết kết thúc -->
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label><strong>Tiết kết thúc</strong></label>
-                        <select name="tietKetThuc" class="form-control" required id="tietKetThuc">
-                            <option value="">-- Chọn --</option>
-                            <?php for ($i = 1; $i <= 10; $i++): ?>
-                                <option value="<?= $i ?>">Tiết <?= $i ?></option>
-                            <?php endfor; ?>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Nút hành động -->
-                <div class="col-md-5">
-                    <div class="form-group">
-                        <label>&nbsp;</label>
-                        <div class="d-flex gap-2 mt-2">
-                            <button type="submit" name="actionType" value="save" class="btn btn-success btn-block">
-                                <i class="fas fa-save"></i> Lưu tiết học
-                            </button>
-                            <button type="submit" name="actionType" value="delete" class="btn btn-danger btn-block" 
-                                    onclick="return confirmDelete()">
-                                <i class="fas fa-trash"></i> Xóa tiết học
-                            </button>
+                    <!-- Form thêm chi tiết tiết học -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Chi tiết tiết học</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="index.php?controller=thoikhoabieu&action=luutiet" id="tietHocForm">
+                                <input type="hidden" name="maLop" value="<?= $maLop ?>">
+                                
+                                <div class="row">
+                                    <!-- Môn học (ĐÃ CẬP NHẬT) -->
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label><strong>Môn học</strong></label>
+                                            <select name="maMonHoc" class="form-control" required id="maMonHoc" onchange="showSubjectInfo(this.value)">
+                                                <option value="">-- Chọn môn học --</option>
+                                                <?php if (!empty($thongKeMonHoc)): ?>
+                                                    <?php foreach ($thongKeMonHoc as $maMon => $mon): ?>
+                                                        <option value="<?= $maMon ?>" 
+                                                                data-tiet-quy-dinh="<?= $mon['soTietQuyDinh'] ?>"
+                                                                data-tiet-da-xep="<?= $mon['soTietDaXep'] ?>"
+                                                                data-tiet-con-lai="<?= $mon['soTietConLai'] ?>">
+                                                            <?= $mon['tenMonHoc'] ?> 
+                                                            (<?= $mon['soTietDaXep'] ?>/<?= $mon['soTietQuyDinh'] ?>)
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <!-- Fallback nếu không có thống kê -->
+                                                    <option value="1">Toán</option>
+                                                    <option value="2">Ngữ Văn</option>
+                                                    <option value="3">Tiếng Anh</option>
+                                                    <option value="4">Vật Lý</option>
+                                                    <option value="5">Hóa Học</option>
+                                                    <option value="6">Lịch Sử</option>
+                                                    <option value="7">Địa Lý</option>
+                                                    <option value="8">Sinh Học</option>
+                                                    <option value="9">Tin Học</option>
+                                                    <option value="10">Thể Dục</option>
+                                                    <option value="11">GD Quốc Phòng</option>
+                                                    <option value="12">GD Công Dân</option>
+                                                    <option value="13">Công Nghệ</option>
+                                                    <option value="14">Mỹ Thuật</option>
+                                                    <option value="15">Âm Nhạc</option>
+                                                <?php endif; ?>
+                                            </select>
+                                            <small id="subjectInfo" class="form-text text-muted">
+                                                Chọn môn học để xem thông tin số tiết
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Phòng học -->
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label><strong>Phòng học (Tùy chọn)</strong></label>
+                                            <input type="text" name="phongHoc" class="form-control" 
+                                                   placeholder="Để trống nếu học tại lớp" id="phongHoc">
+                                            <small class="form-text text-muted">
+                                                Chỉ cần nhập cho các môn đặc biệt như Tin học, Tiếng Anh
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <!-- Thứ -->
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label><strong>Thứ</strong></label>
+                                            <select name="loaiLich" class="form-control" required id="loaiLich">
+                                                <option value="">-- Chọn thứ --</option>
+                                                <option value="THU_2">Thứ 2</option>
+                                                <option value="THU_3">Thứ 3</option>
+                                                <option value="THU_4">Thứ 4</option>
+                                                <option value="THU_5">Thứ 5</option>
+                                                <option value="THU_6">Thứ 6</option>
+                                                <option value="THU_7">Thứ 7</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Tiết bắt đầu -->
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label><strong>Tiết bắt đầu</strong></label>
+                                            <select name="tietBatDau" class="form-control" required id="tietBatDau">
+                                                <option value="">-- Chọn --</option>
+                                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                                    <option value="<?= $i ?>">Tiết <?= $i ?></option>
+                                                <?php endfor; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Tiết kết thúc -->
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label><strong>Tiết kết thúc</strong></label>
+                                            <select name="tietKetThuc" class="form-control" required id="tietKetThuc">
+                                                <option value="">-- Chọn --</option>
+                                                <?php for ($i = 1; $i <= 10; $i++): ?>
+                                                    <option value="<?= $i ?>">Tiết <?= $i ?></option>
+                                                <?php endfor; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Nút hành động -->
+                                    <div class="col-md-5">
+                                        <div class="form-group">
+                                            <label>&nbsp;</label>
+                                            <div class="d-flex gap-2 mt-2">
+                                                <button type="submit" name="actionType" value="save" class="btn btn-success btn-block">
+                                                    <i class="fas fa-save"></i> Lưu tiết học
+                                                </button>
+                                                <button type="submit" name="actionType" value="delete" class="btn btn-danger btn-block" 
+                                                        onclick="return confirmDelete()">
+                                                    <i class="fas fa-trash"></i> Xóa tiết học
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-                      
 
                     <!-- Nút xác nhận cuối cùng -->
                     <div class="row">
@@ -332,7 +449,6 @@
 </div>
 
 <script>
-
 function resetForm() {
     document.getElementById('tietHocForm').reset();
 }
@@ -350,13 +466,52 @@ function confirmDelete() {
     return confirm(`Bạn có chắc muốn xóa tiết học:\nThứ: ${loaiLich.replace('THU_', '')}\nTiết: ${tietBatDau} - ${tietKetThuc}?`);
 }
 
+// HÀM MỚI: Hiển thị thông tin môn học
+function showSubjectInfo(maMonHoc) {
+    const selectedOption = document.querySelector(`#maMonHoc option[value="${maMonHoc}"]`);
+    const infoElement = document.getElementById('subjectInfo');
+    
+    if (selectedOption && maMonHoc) {
+        const tietQuyDinh = selectedOption.getAttribute('data-tiet-quy-dinh');
+        const tietDaXep = selectedOption.getAttribute('data-tiet-da-xep');
+        const tietConLai = selectedOption.getAttribute('data-tiet-con-lai');
+        
+        let statusClass = 'text-success';
+        let statusIcon = '✅';
+        
+        if (tietConLai > 0) {
+            statusClass = 'text-warning';
+            statusIcon = '⏳';
+        } else if (tietConLai < 0) {
+            statusClass = 'text-danger';
+            statusIcon = '⚠️';
+        }
+        
+        infoElement.innerHTML = `
+            <span class="text-primary">📚 Quy định: ${tietQuyDinh} tiết/tuần</span> | 
+            <span class="text-info">📊 Đã xếp: ${tietDaXep} tiết</span> | 
+            <span class="${statusClass}">${statusIcon} Còn lại: ${tietConLai} tiết</span>
+        `;
+        
+        // Highlight nếu môn đã đủ tiết
+        if (tietConLai == 0) {
+            infoElement.innerHTML += ' <span class="badge badge-success">ĐÃ ĐỦ TIẾT</span>';
+        }
+    } else {
+        infoElement.innerHTML = '📝 Chọn môn học để xem thông tin số tiết';
+    }
+}
 
-
-// Khởi tạo khi trang load
+// Tự động cập nhật khi trang load
 document.addEventListener('DOMContentLoaded', function() {
-    const maMonHoc = document.getElementById('maMonHoc').value;
-    if (maMonHoc) {
-        loadGiaoVienTheoMon(maMonHoc);
+    const maMonHocSelect = document.getElementById('maMonHoc');
+    if (maMonHocSelect) {
+        showSubjectInfo(maMonHocSelect.value);
+        
+        // Cập nhật real-time khi thay đổi selection
+        maMonHocSelect.addEventListener('change', function() {
+            showSubjectInfo(this.value);
+        });
     }
 });
 </script>

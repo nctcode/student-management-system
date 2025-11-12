@@ -9,30 +9,29 @@ class ThoiKhoaBieuModel {
     }
 
     // Tạo thời khóa biểu mới (PHIÊN BẢN ĐƠN GIẢN)
-public function taoThoiKhoaBieu($data) {
-    $conn = $this->db->getConnection();
-    
-    // Kiểm tra xem môn học có tồn tại không, nếu không thì tạo mới
-    $maMonHoc = $data['maMonHoc'];
-    if ($maMonHoc > 5) {
-        $this->themMonHocMoi($maMonHoc, $data['maKhoi']);
+    public function taoThoiKhoaBieu($data) {
+        $conn = $this->db->getConnection();
+        // Kiểm tra xem môn học có tồn tại không, nếu không thì tạo mới
+        $maMonHoc = $data['maMonHoc'];
+        if ($maMonHoc > 5) {
+            $this->themMonHocMoi($maMonHoc, $data['maKhoi']);
+        }
+        
+        $sql = "INSERT INTO thoikhoabieu 
+                (ngayApDung, maMonHoc, tietBatDau, tietKetThuc, phongHoc, loaiLich, maGiaoVien) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
+        $stmt = $conn->prepare($sql);
+        return $stmt->execute([
+            $data['ngayApDung'],
+            $maMonHoc,
+            $data['tietBatDau'],
+            $data['tietKetThuc'],
+            $data['phongHoc'],
+            $data['loaiLich'],
+            1 // Mã giáo viên mặc định
+        ]);
     }
-    
-    $sql = "INSERT INTO thoikhoabieu 
-            (ngayApDung, maMonHoc, tietBatDau, tietKetThuc, phongHoc, loaiLich, maGiaoVien) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)";
-    
-    $stmt = $conn->prepare($sql);
-    return $stmt->execute([
-        $data['ngayApDung'],
-        $maMonHoc,
-        $data['tietBatDau'],
-        $data['tietKetThuc'],
-        $data['phongHoc'],
-        $data['loaiLich'],
-        1 // Mã giáo viên mặc định
-    ]);
-}
 
     // Thêm phương thức để tạo môn học mới
     private function themMonHocMoi($maMonHoc, $maKhoi) {
@@ -211,6 +210,106 @@ public function taoThoiKhoaBieu($data) {
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // THÊM PHƯƠNG THỨC MỚI CHO THỐNG KÊ
+    public function getSubjectStatistics($maLop) {
+        $conn = $this->db->getConnection();
+        
+        // Lấy mã khối từ lớp
+        $sqlKhoi = "SELECT maKhoi FROM lophoc WHERE maLop = ?";
+        $stmtKhoi = $conn->prepare($sqlKhoi);
+        $stmtKhoi->execute([$maLop]);
+        $khoi = $stmtKhoi->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$khoi) {
+            return [];
+        }
+        
+        $maKhoi = $khoi['maKhoi'];
+        
+        $sql = "SELECT 
+                    tkb.maMonHoc,
+                    mh.tenMonHoc,
+                    mh.soTiet as soTietQuyDinh,
+                    SUM(tkb.tietKetThuc - tkb.tietBatDau + 1) as soTietDaXep
+                FROM thoikhoabieu tkb
+                JOIN monhoc mh ON tkb.maMonHoc = mh.maMonHoc
+                WHERE mh.maKhoi = ?
+                GROUP BY tkb.maMonHoc, mh.tenMonHoc, mh.soTiet";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maKhoi]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy tất cả môn học (cho dropdown)
+    public function getAllMonHoc() {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT * FROM monhoc ORDER BY tenMonHoc";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy thống kê chi tiết cho từng môn học
+    public function getDetailedSubjectStatistics($maLop) {
+        $conn = $this->db->getConnection();
+        
+        // Lấy mã khối từ lớp
+        $sqlKhoi = "SELECT maKhoi FROM lophoc WHERE maLop = ?";
+        $stmtKhoi = $conn->prepare($sqlKhoi);
+        $stmtKhoi->execute([$maLop]);
+        $khoi = $stmtKhoi->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$khoi) {
+            return [];
+        }
+        
+        $maKhoi = $khoi['maKhoi'];
+        
+        // Lấy tất cả môn học của khối
+        $allMonHoc = $this->getMonHocByKhoi($maKhoi);
+        
+        // Lấy số tiết đã xếp cho từng môn
+        $sqlTietDaXep = "SELECT 
+                            maMonHoc,
+                            SUM(tietKetThuc - tietBatDau + 1) as soTietDaXep
+                         FROM thoikhoabieu tkb
+                         JOIN monhoc mh ON tkb.maMonHoc = mh.maMonHoc
+                         WHERE mh.maKhoi = ?
+                         GROUP BY maMonHoc";
+        
+        $stmtTiet = $conn->prepare($sqlTietDaXep);
+        $stmtTiet->execute([$maKhoi]);
+        $tietDaXep = $stmtTiet->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Tạo mảng kết quả
+        $result = [];
+        foreach ($allMonHoc as $mon) {
+            $maMonHoc = $mon['maMonHoc'];
+            $soTietDaXep = 0;
+            
+            // Tìm số tiết đã xếp
+            foreach ($tietDaXep as $tiet) {
+                if ($tiet['maMonHoc'] == $maMonHoc) {
+                    $soTietDaXep = $tiet['soTietDaXep'];
+                    break;
+                }
+            }
+            
+            $result[$maMonHoc] = [
+                'tenMonHoc' => $mon['tenMonHoc'],
+                'soTietQuyDinh' => $mon['soTiet'],
+                'soTietDaXep' => $soTietDaXep,
+                'soTietConLai' => max(0, $mon['soTiet'] - $soTietDaXep)
+            ];
+        }
+        
+        return $result;
     }
 
     // Xóa thời khóa biểu

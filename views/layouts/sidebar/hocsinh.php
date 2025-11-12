@@ -4,7 +4,7 @@
             <h5>Menu Học Sinh</h5>
         </div>
         <ul class="sidebar-menu">
-            <li class="nav-item" class="nav-item">
+            <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=home&action=student" class="active">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
@@ -40,6 +40,9 @@
                     <span>Học phí</span>
                 </a>
             </li>
+            
+    
+            
             <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="fas fa-chart-line"></i>

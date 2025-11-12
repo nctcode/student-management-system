@@ -75,9 +75,18 @@ class ThoiKhoaBieuController {
         // Lấy chi tiết lớp và TKB nếu có mã lớp
         $chiTietLop = null;
         $thoiKhoaBieu = [];
+        $thongKeMonHoc = [];
+        $danhSachMonHoc = [];
+        
         if (!empty($maLop)) {
             $chiTietLop = $this->tkbModel->getChiTietLop($maLop);
             $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop);
+            
+            // Lấy thống kê môn học
+            $thongKeMonHoc = $this->calculateSubjectStatistics($maLop);
+            
+            // Lấy danh sách môn học cho dropdown
+            $danhSachMonHoc = $this->tkbModel->getAllMonHoc();
         }
 
         $showSidebar = true;
@@ -85,6 +94,38 @@ class ThoiKhoaBieuController {
         require_once 'views/layouts/sidebar/admin.php';
         require_once 'views/thoikhoabieu/taotkb.php';
         require_once 'views/layouts/footer.php';
+    }
+
+    // Thêm phương thức tính thống kê môn học
+    private function calculateSubjectStatistics($maLop) {
+        // Lấy tất cả môn học
+        $allMonHoc = $this->tkbModel->getAllMonHoc();
+        
+        // Lấy thời khóa biểu của lớp
+        $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop);
+        
+        $thongKe = [];
+        
+        foreach ($allMonHoc as $mon) {
+            $maMonHoc = $mon['maMonHoc'];
+            $soTietDaXep = 0;
+            
+            // Tính số tiết đã xếp cho môn này
+            foreach ($thoiKhoaBieu as $tkb) {
+                if ($tkb['maMonHoc'] == $maMonHoc) {
+                    $soTietDaXep += ($tkb['tietKetThuc'] - $tkb['tietBatDau'] + 1);
+                }
+            }
+            
+            $thongKe[$maMonHoc] = [
+                'tenMonHoc' => $mon['tenMonHoc'],
+                'soTietQuyDinh' => $mon['soTiet'] ?? 0, // Sử dụng field 'soTiet' từ bảng
+                'soTietDaXep' => $soTietDaXep,
+                'soTietConLai' => max(0, ($mon['soTiet'] ?? 0) - $soTietDaXep)
+            ];
+        }
+        
+        return $thongKe;
     }
 
     // Quản lý TKB (QTV) - CHỈ CÓ 1 PHƯƠNG THỨC NÀY
