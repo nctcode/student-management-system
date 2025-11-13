@@ -69,24 +69,6 @@
                     </div>
                 </div>
             </li>
-
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" 
-                   data-bs-toggle="collapse" 
-                   data-bs-target="#collapseBaiTap"
-                   aria-expanded="false" 
-                   aria-controls="collapseBaiTap">
-                    <i class="fas fa-fw fa-book"></i>
-                    <span>Bài tập</span>
-                    <i class="fas fa-fw fa-angle-right sidebar-arrow"></i>
-                </a>
-                <div id="collapseBaiTap" class="collapse" aria-labelledby="headingBaiTap" data-bs-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="index.php?controller=baitap&action=index">Giao bài tập</a>
-                        <a class="collapse-item" href="index.php?controller=baitap&action=danhsach">Danh sách đã giao</a>
-                    </div>
-                </div>
-            </li>
             <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="fas fa-chalkboard-teacher"></i>
