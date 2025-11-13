@@ -62,14 +62,14 @@
                                                 <?= date('H:i d/m/Y', strtotime($tn['thoiGianGui'])) ?>
                                             </small>
                                         </div>
-                                        <p class="mb-1 text-truncate"><?= $tn['noiDung'] ?></p>
+                                        <p class="mb-1 text-truncate" style="white-space: normal;overflow-wrap: break-word;word-wrap: break-word;word-break: break-all;"><?= $tn['noiDung'] ?></p>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div class="flex-grow-1 min-width-0">
                                                 <small class="text-muted">
                                                     <i class="fas fa-user"></i> <strong>Từ:</strong> <?= htmlspecialchars($tn['nguoiGui']) ?>
                                                 </small>
                                                 
-                                                <small class="text-muted d-block text-truncate" title="<?= htmlspecialchars($tn['danhSachThanhVien']) ?>">
+                                                <small class="text-muted d-block text-truncate" style="white-space: normal;overflow-wrap: break-word;word-wrap: break-word;word-break: break-all;" title="<?= htmlspecialchars($tn['danhSachThanhVien']) ?>">
                                                     <i class="fas fa-users"></i> <strong>Đến:</strong> <?= htmlspecialchars($tn['danhSachThanhVien']) ?>
                                                 </small>
                                             </div>

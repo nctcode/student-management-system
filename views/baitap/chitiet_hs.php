@@ -177,6 +177,16 @@
 </div>
 
 <script>
+const MAX_FILE_SIZE_HS = 20 * 1024 * 1024;
+const ALLOWED_EXTENSIONS_HS = [
+    'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls', 
+    'mp4', 'mov', 'avi', 'mp3', 'zip', 'rar', 'txt', 'ppt', 'pptx'
+];
+
+function getFileExtensionHs(filename) {
+    return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2).toLowerCase();
+}
+
 window.xoaFileTam = function(index) {
      const fileInput = document.getElementById('fileDinhKem');
      if (!fileInput) return;
@@ -197,49 +207,55 @@ window.hienThiFile = function() {
     const fileList = document.getElementById('danhSachFile');
     if (!fileInput || !fileList) return;
     
-    const maxSize = 20 * 1024 * 1024; 
     const files = fileInput.files;
-    const dt = new DataTransfer(); 
+    const dt = new DataTransfer();
     
     fileList.innerHTML = '';
 
     for (let i = 0; i < files.length; i++) {
         const file = files.item(i);
         const fileSize = file.size;
-        
+        const fileExt = getFileExtensionHs(file.name);
+
         let fileItem = document.createElement('div');
         fileItem.className = 'd-flex justify-content-between align-items-center border rounded p-2 mb-2';
 
+        let isValid = true;
+        let errorMessage = '';
+
         if (fileSize === 0) {
-            fileItem.classList.add('bg-light');
-            fileItem.innerHTML = `
-                <div><i class="fas fa-exclamation-triangle text-danger mr-2"></i> 
-                     <strong>${file.name}</strong> (File rỗng!)</div>
-                <small class="text-danger">File bị lỗi, sẽ bị loại bỏ!</small>
-            `;
+            isValid = false;
+            errorMessage = 'File rỗng, sẽ bị loại bỏ!';
         } 
-        else if (fileSize > maxSize) {
+        else if (fileSize > MAX_FILE_SIZE_HS) {
+            isValid = false;
             const sizeMB = (fileSize / (1024 * 1024)).toFixed(1);
+            errorMessage = `File quá 20MB (${sizeMB} MB), sẽ bị loại bỏ!`;
+        }
+        else if (!ALLOWED_EXTENSIONS_HS.includes(fileExt)) {
+            isValid = false;
+            errorMessage = `Định dạng .${fileExt} không hỗ trợ, sẽ bị loại bỏ!`;
+        }
+
+        if (isValid) {
             fileItem.classList.add('bg-light');
-            fileItem.innerHTML = `
-                <div><i class="fas fa-exclamation-triangle text-danger mr-2"></i> 
-                     <strong>${file.name}</strong> (${sizeMB} MB)</div>
-                <small class="text-danger">File quá 20MB, sẽ bị loại bỏ!</small>
-            `;
-        } 
-        else {
-            fileItem.classList.add('bg-light');
-            
             let fileSizeText = (fileSize / (1024 * 1024)).toFixed(1) + " MB";
             if (fileSize < (1024 * 1024)) { 
                 fileSizeText = (fileSize / 1024).toFixed(0) + " KB";
             }
-
             fileItem.innerHTML = `
                 <div><i class="fas fa-file mr-2"></i> <strong>${file.name}</strong> (${fileSizeText})</div>
                 <button type="button" class="btn btn-sm btn-danger" onclick="xoaFileTam(${i})">×</button>
             `;
             dt.items.add(file); 
+        } 
+        else {
+            fileItem.classList.add('bg-danger-light');
+            fileItem.innerHTML = `
+                <div><i class="fas fa-exclamation-triangle text-danger mr-2"></i> 
+                     <strong>${file.name}</strong></div>
+                <small class="text-danger">${errorMessage}</small>
+            `;
         }
         fileList.appendChild(fileItem);
     }

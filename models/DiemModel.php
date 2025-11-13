@@ -146,8 +146,76 @@ class DiemModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Lấy TBM Lớp cho các môn
+    private function getTbmLop($maLop, $namHoc, $hocKy, $cacMonHoc) {
+        $conn = $this->db->getConnection();
+        $TBM_Lop_Final = [];
+
+        try {
+            $sqlHSCuaLop = "SELECT maHocSinh FROM hocsinh WHERE maLop = ?";
+            $stmtHSCuaLop = $conn->prepare($sqlHSCuaLop);
+            $stmtHSCuaLop->execute([$maLop]);
+            $dsHocSinhLop = $stmtHSCuaLop->fetchAll(PDO::FETCH_COLUMN);
+
+            if (empty($dsHocSinhLop)) {
+                return [];
+            }
+
+            $placeholders = implode(',', array_fill(0, count($dsHocSinhLop), '?'));
+            $sqlAllDiem = "SELECT maHocSinh, maMonHoc, loaiDiem, diemSo
+                           FROM diem
+                           WHERE maHocSinh IN ($placeholders)
+                             AND namHoc = ? AND hocKy = ?";
+            $params = array_merge($dsHocSinhLop, [$namHoc, $hocKy]);
+            $stmtAllDiem = $conn->prepare($sqlAllDiem);
+            $stmtAllDiem->execute($params);
+            $allDiemRaw = $stmtAllDiem->fetchAll(PDO::FETCH_ASSOC);
+
+            $allDiemMap = [];
+            foreach ($allDiemRaw as $diem) {
+                $allDiemMap[$diem['maHocSinh']][$diem['maMonHoc']][$diem['loaiDiem']][] = $diem['diemSo'];
+            }
+
+            $TBMs_Lop_TheoMon = []; 
+            foreach ($allDiemMap as $maHS => $monHocDiem) {
+                foreach ($monHocDiem as $maMon => $loaiDiemDiem) {
+                    
+                    if (!isset($cacMonHoc[$maMon])) continue;
+
+                    $diem_MIENG = $loaiDiemDiem['MIENG'] ?? [];
+                    $diem_15_PHUT = $loaiDiemDiem['15_PHUT'] ?? [];
+                    $diem_1_TIET = $loaiDiemDiem['1_TIET'] ?? [];
+                    $diem_CUOI_KY = $loaiDiemDiem['CUOI_KY'] ?? [];
+
+                    if (!empty($diem_MIENG) && !empty($diem_15_PHUT) && !empty($diem_1_TIET) && !empty($diem_CUOI_KY)) {
+                        $tongDiem = 0; $tongHeSo = 0;
+                        foreach ($diem_MIENG as $d) { $tongDiem += $d * 1; $tongHeSo += 1; }
+                        foreach ($diem_15_PHUT as $d) { $tongDiem += $d * 1; $tongHeSo += 1; }
+                        foreach ($diem_1_TIET as $d) { $tongDiem += $d * 2; $tongHeSo += 2; }
+                        foreach ($diem_CUOI_KY as $d) { $tongDiem += $d * 3; $tongHeSo += 3; }
+
+                        if ($tongHeSo > 0) {
+                            $TBMs_Lop_TheoMon[$maMon][] = $tongDiem / $tongHeSo;
+                        }
+                    }
+                }
+            }
+
+            foreach ($TBMs_Lop_TheoMon as $maMon => $tbmArray) {
+                if (count($tbmArray) > 0) {
+                    $TBM_Lop_Final[$maMon] = round(array_sum($tbmArray) / count($tbmArray), 2);
+                }
+            }
+        
+        } catch (Exception $e) {
+            error_log("Lỗi tính TBM Lớp: " . $e->getMessage());
+        }
+        
+        return $TBM_Lop_Final;
+    }
+
     // Lấy bảng điểm chi tiết của MỘT học sinh
-    public function getBangDiemHocSinh($maHocSinh, $namHoc, $hocKy) {
+    public function getBangDiemHocSinh($maHocSinh, $maLop, $namHoc, $hocKy) {
         $conn = $this->db->getConnection();
         
         $sqlMonHoc = "SELECT DISTINCT mh.maMonHoc, mh.tenMonHoc
@@ -156,9 +224,19 @@ class DiemModel {
                      WHERE d.maHocSinh = ? AND d.namHoc = ? AND d.hocKy = ?";
         $stmtMonHoc = $conn->prepare($sqlMonHoc);
         $stmtMonHoc->execute([$maHocSinh, $namHoc, $hocKy]);
-        $cacMonHoc = $stmtMonHoc->fetchAll(PDO::FETCH_ASSOC);
+        $cacMonHocRaw = $stmtMonHoc->fetchAll(PDO::FETCH_ASSOC);
 
-        if (empty($cacMonHoc)) return [];
+        if (empty($cacMonHocRaw)) return ['bangDiem' => [], 'TBM_HocKy' => null];
+
+        $cacMonHocMap = [];
+        foreach ($cacMonHocRaw as $mon) {
+            $cacMonHocMap[$mon['maMonHoc']] = $mon['tenMonHoc'];
+        }
+
+        $TBM_Lop_Final = [];
+        if ($maLop) {
+            $TBM_Lop_Final = $this->getTbmLop($maLop, $namHoc, $hocKy, $cacMonHocMap);
+        }
 
         $sqlDiem = "SELECT maMonHoc, loaiDiem, diemSo
                     FROM diem
@@ -175,7 +253,7 @@ class DiemModel {
         $ketQua = [];
         $tongTBM_CacMon = 0;
         $soMonTinhTBM = 0;
-        foreach ($cacMonHoc as $mon) {
+        foreach ($cacMonHocRaw as $mon) { 
             $maMon = $mon['maMonHoc'];
             $diemMonNay = $diemMap[$maMon] ?? [];
 
@@ -206,13 +284,16 @@ class DiemModel {
                 $soMonTinhTBM++;
             }
 
+            $TBM_Lop = $TBM_Lop_Final[$maMon] ?? null;
+
             $ketQua[] = [
                 'tenMonHoc' => $mon['tenMonHoc'],
                 'MIENG' => $diem_MIENG,
                 '15_PHUT' => $diem_15_PHUT,
                 '1_TIET' => $diem_1_TIET,
                 'CUOI_KY' => $diem_CUOI_KY,
-                'TBM' => $TBM 
+                'TBM' => $TBM,
+                'TBM_Lop' => $TBM_Lop 
             ];
 
             $TBM_HocKy = null;

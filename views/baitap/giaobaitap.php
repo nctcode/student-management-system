@@ -79,7 +79,19 @@ foreach ($danhSachPhanCong as $pc) {
                                     'alignleft aligncenter alignright | ' +
                                     'bullist numlist outdent indent | link',
                             menubar: false,
-                            height: 250
+                            height: 250,
+                            setup: function(editor) {
+                                editor.on('keyup', function(e) {
+                                    var content = editor.getContent({ format: 'text' });
+                                    var fakeTextarea = { value: content };
+                                    window.demKyTu(fakeTextarea);
+                                });
+                                editor.on('Change', function(e) {
+                                    var content = editor.getContent({ format: 'text' });
+                                    var fakeTextarea = { value: content };
+                                    window.demKyTu(fakeTextarea);
+                                });
+                            }
                         });
                     </script>
                 </div>

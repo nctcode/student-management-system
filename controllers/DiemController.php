@@ -149,11 +149,13 @@ class DiemController {
         $danhSachCon = []; 
         $maHocSinhChon = null; 
         $hocSinhInfo = null;
+        $maLopChon = null; 
 
         if ($userRole === 'HOCSINH') {
             $hocSinhInfo = $this->hocSinhModel->getHocSinhByNguoiDung($maNguoiDung);
             if ($hocSinhInfo) {
                 $maHocSinhChon = $hocSinhInfo['maHocSinh'];
+                $maLopChon = $hocSinhInfo['maLop']; 
             }
         } elseif ($userRole === 'PHUHUYNH') {
             $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maNguoiDung);
@@ -173,6 +175,7 @@ class DiemController {
                         $valid = true;
                         $hocSinhInfo = $con;
                         $maHocSinhChon = $con['maHocSinh'];
+                        $maLopChon = $con['maLop']; 
                         break;
                     }
                 }
@@ -184,6 +187,7 @@ class DiemController {
             } else if (count($danhSachCon) === 1) {
                 $hocSinhInfo = $danhSachCon[0];
                 $maHocSinhChon = $hocSinhInfo['maHocSinh'];
+                $maLopChon = $hocSinhInfo['maLop'];
             }
         }
 
@@ -206,12 +210,12 @@ class DiemController {
             if ($namHocChon === 'all') {
                 $viewMode = 'all';
                 foreach ($danhSachKyHoc as $ky) {
-                    $result = $this->diemModel->getBangDiemHocSinh($maHocSinhChon, $ky['namHoc'], $ky['hocKy']);
+                    $result = $this->diemModel->getBangDiemHocSinh($maHocSinhChon, $maLopChon, $ky['namHoc'], $ky['hocKy']);
                     $bangDiemData[ $ky['namHoc'] . '|' . $ky['hocKy'] ] = $result;
                 }
             } else if ($namHocChon && $hocKyChon) {
                 $viewMode = 'single';
-                $result = $this->diemModel->getBangDiemHocSinh($maHocSinhChon, $namHocChon, $hocKyChon);
+                $result = $this->diemModel->getBangDiemHocSinh($maHocSinhChon, $maLopChon, $namHocChon, $hocKyChon);
                 $bangDiemData['single'] = $result;
             }
         }
@@ -245,11 +249,13 @@ class DiemController {
 
         $hocSinhInfo = null;
         $maHocSinhChon = null;
+        $maLopChon = null; 
 
         if ($userRole === 'HOCSINH') {
             $hocSinhInfo = $this->hocSinhModel->getHocSinhByNguoiDung($maNguoiDung);
             if ($hocSinhInfo) {
                 $maHocSinhChon = $hocSinhInfo['maHocSinh'];
+                $maLopChon = $hocSinhInfo['maLop'];
             }
         } elseif ($userRole === 'PHUHUYNH') {
             $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maNguoiDung);
@@ -262,6 +268,7 @@ class DiemController {
                         $valid = true;
                         $hocSinhInfo = $con; 
                         $maHocSinhChon = $con['maHocSinh'];
+                        $maLopChon = $con['maLop'];
                         break;
                     }
                 }
@@ -269,6 +276,7 @@ class DiemController {
             } else if (count($danhSachCon) === 1) {
                 $hocSinhInfo = $danhSachCon[0];
                 $maHocSinhChon = $hocSinhInfo['maHocSinh'];
+                $maLopChon = $hocSinhInfo['maLop'];
             }
         }
 
@@ -286,12 +294,12 @@ class DiemController {
                 $viewMode = 'all';
                 $danhSachKyHoc = $this->diemModel->getNamHocHocKyCuaHS($maHocSinhChon);
                 foreach ($danhSachKyHoc as $ky) {
-                    $result = $this->diemModel->getBangDiemHocSinh($maHocSinhChon, $ky['namHoc'], $ky['hocKy']);
+                    $result = $this->diemModel->getBangDiemHocSinh($maHocSinhChon, $maLopChon, $ky['namHoc'], $ky['hocKy']);
                     $bangDiemData[ $ky['namHoc'] . '|' . $ky['hocKy'] ] = $result;
                 }
             } else if ($namHocChon && $hocKyChon) {
                 $viewMode = 'single';
-                $result = $this->diemModel->getBangDiemHocSinh($maHocSinhChon, $namHocChon, $hocKyChon);
+                $result = $this->diemModel->getBangDiemHocSinh($maHocSinhChon, $maLopChon, $namHocChon, $hocKyChon);
                 $bangDiemData['single'] = $result;
             }
         }

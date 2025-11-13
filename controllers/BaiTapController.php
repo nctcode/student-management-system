@@ -145,8 +145,8 @@ class BaiTapController {
         }
 
         $files = $_FILES['fileDinhKem'];
-        $allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls', 'mp4', 'mov', 'avi', 'mp3', 'zip', 'rar'];
-        $maxSize = 20 * 1024 * 1024; 
+        $allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls', 'mp4', 'mov', 'avi', 'mp3', 'zip', 'rar', 'txt', 'ppt', 'pptx'];
+        $maxSize = 20 * 1024 * 1024;
         $uploadDir = 'uploads/baitap/';
         
         $uploadedFilesInfo = []; 
@@ -163,6 +163,11 @@ class BaiTapController {
             $fileSize = $files['size'][$key];
             $fileTmpName = $files['tmp_name'][$key];
             
+            if ($fileSize == 0) {
+                $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' bị rỗng (0 byte) và sẽ không được tải lên!";
+                return null;
+            }
+            
             if ($fileSize > $maxSize) {
                 $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' vượt quá 20MB!";
                 return null; 
@@ -170,7 +175,7 @@ class BaiTapController {
 
             $fileExtension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
             if (!in_array($fileExtension, $allowedTypes)) {
-                $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' có định dạng không hỗ trợ!";
+                $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' có định dạng (." . $fileExtension . ") không hỗ trợ!";
                 return null;
             }
 

@@ -147,7 +147,7 @@
 
                 <hr>
                 <h6 class="font-weight-bold text-primary">Biểu đồ TBM các môn</h6>
-                <div style="max-height: 400px;">
+                <div style="height: 600px;">
                     <canvas id="myGradeChart"></canvas>
                 </div>
             </div>
@@ -264,51 +264,79 @@ document.addEventListener('DOMContentLoaded', function() {
 if ($viewMode === 'single' && !empty($bangDiemData['single']['bangDiem'])): 
     
     $bangDiemJS = $bangDiemData['single']['bangDiem'];
+    
     $labels = [];
     $dataTBM = [];
+    $dataTBM_Lop = []; 
+    
     foreach ($bangDiemJS as $mon) {
-        $labels[] = $mon['tenMonHoc'];
-        $dataTBM[] = $mon['TBM'] ?? 0; 
+        if ($mon['TBM'] !== null) { 
+            $labels[] = $mon['tenMonHoc'];
+            $dataTBM[] = $mon['TBM']; 
+            $dataTBM_Lop[] = $mon['TBM_Lop'] ?? null;
+        }
     }
 ?>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('myGradeChart');
-        if (!ctx) return;
-        
-        const labels = <?= json_encode($labels) ?>;
-        const dataTBM = <?= json_encode($dataTBM) ?>;
+        if (<?= count($labels) ?> > 0) {
+            const ctx = document.getElementById('myGradeChart');
+            if (!ctx) return;
+            
+            const labels = <?= json_encode($labels) ?>;
+            const dataTBM = <?= json_encode($dataTBM) ?>;
+            const dataTBM_Lop = <?= json_encode($dataTBM_Lop) ?>; 
 
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Điểm Trung bình môn (TBM)',
-                    data: dataTBM,
-                    backgroundColor: 'rgba(78, 115, 223, 0.8)',
-                    borderColor: 'rgba(78, 115, 223, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 10 
+            new Chart(ctx, {
+                type: 'bar', 
+                data: {
+                    labels: labels,
+                    datasets: [
+                    {
+                        label: 'Điểm của bạn',
+                        data: dataTBM,
+                        backgroundColor: 'rgba(231, 76, 60, 0.8)', 
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        borderWidth: 1,
+                        type: 'bar', 
+                        order: 2 
+                    },
+                    {
+                        label: 'Điểm TB của lớp',
+                        data: dataTBM_Lop,
+                        borderColor: 'rgba(241, 196, 15, 1)', 
+                        backgroundColor: 'rgba(241, 196, 15, 1)',
+                        borderWidth: 3,
+                        type: 'line', 
+                        fill: false,
+                        tension: 0.1, 
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        order: 1 
                     }
+                ]
                 },
-                plugins: {
-                    legend: {
-                        display: false
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10 
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     });
     </script>
 <?php endif; ?>
+<?php ?>
