@@ -87,20 +87,18 @@ $roleName = 'Giáo viên';
                                             <small class="d-block text-muted">Xem thông tin lớp và học sinh</small>
                                         </div>
                                     </a>
-<<<<<<< HEAD
                                     <a href="index.php?controller=diem&action=nhapdiem" class="list-group-item list-group-item-action">
                                         <i class="fas fa-edit me-2"></i>Nhập điểm
                                     </a>
                                     <a href="index.php?controller=chuyencan&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-user-check me-2"></i>Ghi nhận chuyên cần
-=======
+                                    </a>
                                     <a href="index.php?controller=thoikhoabieu&action=index" class="list-group-item list-group-item-action d-flex align-items-center">
                                         <i class="fas fa-calendar-alt me-3 text-success"></i>
                                         <div>
                                             <strong>Thời Khóa Biểu</strong>
                                             <small class="d-block text-muted">Xem lịch dạy và lịch học</small>
                                         </div>
->>>>>>> origin/main
                                     </a>
                                     <a href="index.php?controller=phancongdethi&action=index" class="list-group-item list-group-item-action d-flex align-items-center">
                                         <i class="fas fa-tasks me-3 text-warning"></i>

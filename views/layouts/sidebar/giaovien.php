@@ -22,32 +22,18 @@
                     <span>Thời khóa biểu</span>
                 </a>
             </li>
-<<<<<<< HEAD
             <li>
                 <a href="index.php?controller=diem&action=nhapdiem">
-=======
-            <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=diem&action=index">
->>>>>>> origin/main
                     <i class="fas fa-fw fa-pen-to-square"></i>
                     <span>Nhập điểm</span>
                 </a>
             </li>
-<<<<<<< HEAD
             <li>
                 <a href="index.php?controller=chuyencan&action=index">
                     <i class="fas fa-user-check"></i>
                     <span>Chuyên cần</span>
                 </a>
-=======
-            <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=chuyencan&action=index">
-                    <i class="fas fa-user-check"></i>
-                    <span>Chuyên cần</span>
-                </a>
             </li>
-            
->>>>>>> origin/main
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" 
                    data-bs-toggle="collapse" 
@@ -64,7 +50,6 @@
                         <a class="collapse-item" href="index.php?controller=tinnhan&action=index">Danh sách tin nhắn</a>
                     </div>
                 </div>
-<<<<<<< HEAD
             </li>
 
             <li class="nav-item">
@@ -83,8 +68,6 @@
                         <a class="collapse-item" href="index.php?controller=baitap&action=danhsach">Danh sách đã giao</a>
                     </div>
                 </div>
-=======
->>>>>>> origin/main
             </li>
 
             <li class="nav-item">

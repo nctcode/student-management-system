@@ -16,24 +16,14 @@
                     <span>Xem thời khóa biểu</span>
                 </a>
             </li>
-<<<<<<< HEAD
             <li>
                 <a href="index.php?controller=diem&action=xemdiem">
-=======
-            <li class="nav-item">
-                <a class="nav-link" href="#">
->>>>>>> origin/main
                     <i class="fas fa-clipboard-list"></i>
                     <span>Xem điểm</span>
                 </a>
             </li>
-<<<<<<< HEAD
             <li>
                 <a href="index.php?controller=baitap&action=danhsach_hs">
-=======
-            <li class="nav-item">
-                <a class="nav-link" href="#">
->>>>>>> origin/main
                     <i class="fas fa-book"></i>
                     <span>Bài tập</span>
                 </a>
