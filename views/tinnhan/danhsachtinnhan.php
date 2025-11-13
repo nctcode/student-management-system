@@ -50,7 +50,7 @@
                             <a href="index.php?controller=tinnhan&action=chitiettinnhan&maHoiThoai=<?= $tn['maHoiThoai'] ?>" 
                                class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
+                                    <div class="flex-grow-1 min-width-0">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <h6 class="mb-1 font-weight-bold">
                                                 <?= htmlspecialchars($tn['tenHoiThoai']) ?>
@@ -64,7 +64,7 @@
                                         </div>
                                         <p class="mb-1 text-truncate"><?= $tn['noiDung'] ?></p>
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <div class="flex-grow-1">
+                                            <div class="flex-grow-1 min-width-0">
                                                 <small class="text-muted">
                                                     <i class="fas fa-user"></i> <strong>Từ:</strong> <?= htmlspecialchars($tn['nguoiGui']) ?>
                                                 </small>
@@ -72,7 +72,7 @@
                                                 <small class="text-muted d-block text-truncate" title="<?= htmlspecialchars($tn['danhSachThanhVien']) ?>">
                                                     <i class="fas fa-users"></i> <strong>Đến:</strong> <?= htmlspecialchars($tn['danhSachThanhVien']) ?>
                                                 </small>
-                                                </div>
+                                            </div>
 
                                             <?php 
                                             if (!empty($tn['fileDinhKem'])): 

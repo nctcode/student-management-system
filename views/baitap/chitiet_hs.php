@@ -116,13 +116,11 @@
                                 <small class="text-muted">(<?= $fileSizeMB ?> MB)</small>
                             </div>
                             
-                            <?php if (!$hetHan): ?>
                             <a href="index.php?controller=baitap&action=xoaFileNop&maBaiTap=<?= $baiTap['maBaiTap'] ?>&key=<?= $key ?>" 
                                class="btn btn-sm btn-outline-danger" 
                                onclick="return confirm('Bạn có chắc chắn muốn xóa file này không?');">
                                 <i class="fas fa-times"></i> Xóa
                             </a>
-                            <?php endif; ?>
                         </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -130,10 +128,16 @@
                 </div>
             <?php endif; ?>
 
+            <?php 
+                if ($hetHan): 
+                ?>
+                    <div style="background-color: #fef1d6ff; color: #dfb737ff; border: 1px solid #f9f5d1ff; padding: 1.25rem; border-radius: 0.25rem;">
+                        <strong>Đã hết hạn nộp bài!</strong> 
+                        Mọi file nộp hoặc xóa bây giờ sẽ được ghi nhận là "Nộp trễ"!
+                    </div>
+                <?php endif; ?>
 
-            <?php if (!$hetHan): ?>
-                
-                <h5 class="font-weight-bold">
+                <h5 class="font-weight-bold mt-4">
                     <?php if (!empty($filesNop)): ?>
                         <i class="fas fa-plus text-primary"></i> Thêm file
                     <?php else: ?>
@@ -147,7 +151,7 @@
                     <div class="form-group">
                         <div id="danhSachFile" class="mb-2"></div>
                         <input type="file" name="fileDinhKem[]" id="fileDinhKem" class="form-control-file" 
-                               onchange="hienThiFile()" multiple required>
+                            onchange="hienThiFile()" multiple required>
                         <br>
                         <small class="form-text text-muted">
                             • Bạn có thể đính kèm nhiều file (tối đa 20MB).
@@ -160,23 +164,14 @@
                         </button>
                         <button type="submit" class="btn btn-success btn-lg ms-2">
                             <i class="fas fa-paper-plane"></i> 
-                            <?= (!empty($filesNop)) ? 'Thêm file' : 'Nộp bài' ?>
+                            <?php if ($hetHan): ?>
+                                <?= (!empty($filesNop)) ? 'Thêm file (Nộp trễ)' : 'Nộp bài (Nộp trễ)' ?>
+                            <?php else: ?>
+                                <?= (!empty($filesNop)) ? 'Thêm file' : 'Nộp bài' ?>
+                            <?php endif; ?>
                         </button>
                     </div>
                 </form>
-
-            <?php else: ?>
-                
-                <?php if (empty($filesNop)): // Đã hết hạn VÀ chưa nộp ?>
-                <div style="color: red;">
-                    <i>Đã hết hạn nộp bài. Bạn không thể nộp bài tập này.</i>
-                </div>
-                <?php else: // Đã hết hạn VÀ đã nộp ?>
-                <div style="color: red;">
-                    <i>Đã hết hạn nộp bài. Bạn không thể thêm hoặc xóa file.</i>
-                </div>
-                <?php endif; ?>
-            <?php endif; ?>
         </div>
     </div>
 </div>

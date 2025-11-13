@@ -300,12 +300,6 @@ class BaiTapController {
             $now = new DateTime();
             $hetHan = $now > $hanNopDate;
 
-            if ($hetHan) {
-                $_SESSION['error'] = "Đã hết hạn, bạn không thể thêm file!";
-                header("Location: index.php?controller=baitap&action=chitiet_hs&maBaiTap=" . $maBaiTap);
-                exit;
-            }
-
             $newFilesInfo = $this->xuLyUploadFile();
             
             if ($newFilesInfo === null && !isset($_SESSION['error'])) {
@@ -328,7 +322,7 @@ class BaiTapController {
             $mergedFiles = array_merge($existingFiles, $newFilesInfo);
             $fileDinhKemJSON = json_encode($mergedFiles);
 
-            $trangThai = 'Đã nộp';
+            $trangThai = $hetHan ? 'Nộp trễ' : 'Đã nộp';
 
             $result = $this->baiTapModel->nopBai(
                 $maBaiTap,
@@ -466,11 +460,6 @@ class BaiTapController {
         
         $hanNopDate = new DateTime($baiTap['hanNop']);
         $now = new DateTime();
-        if ($now > $hanNopDate) {
-            $_SESSION['error'] = "Đã hết hạn, bạn không thể xóa file!";
-            header("Location: index.php?controller=baitap&action=chitiet_hs&maBaiTap=" . $maBaiTap);
-            exit;
-        }
         
         $baiNop = $this->baiTapModel->getBaiNop($maBaiTap, $this->maHocSinh);
         
