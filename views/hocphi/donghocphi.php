@@ -26,6 +26,12 @@
     font-size: 12px;
 }
 </style>
+<div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="fas fa-credit-card me-2"></i>Đóng học phí</h1>
+                    <a href="index.php?controller=hocphi&action=index" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Quay lại Dashboard
+                    </a>
+                </div>
 <div class="table-responsive">
     <table class="table table-bordered table-striped">
         <thead class="table-light">

@@ -192,7 +192,6 @@ class TinNhanController {
                 return null;
             }
         }
-
         return $uploadedFilesInfo;
     }
 

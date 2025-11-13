@@ -133,7 +133,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         pageData.forEach(item => {
             const tr = document.createElement('tr');
-            
             const maNguoiDung = item.maNguoiDung;
             const ten = item.hoTen;
             const isChecked = danhSachDaChon.some(ng => ng.maNguoiDung === maNguoiDung);

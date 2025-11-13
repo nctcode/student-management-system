@@ -28,7 +28,7 @@ class DiemModel {
     // Lấy danh sách học sinh và các điểm ĐÃ CÓ của họ cho môn học và học kỳ cụ thể.
     public function getDanhSachLopVaDiemHienTai($maLop, $maMonHoc, $hocKy, $namHoc) {
         $conn = $this->db->getConnection();
-        
+
         $sqlHS = "SELECT hs.maHocSinh, nd.hoTen
                   FROM hocsinh hs
                   JOIN nguoidung nd ON hs.maNguoiDung = nd.maNguoiDung

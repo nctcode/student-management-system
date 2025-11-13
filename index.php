@@ -32,6 +32,12 @@ if (file_exists($controllerFile)) {
             switch ($controller) {
                 case 'donchuyenloptruong':
                     switch ($action) {
+                        case 'guidon':
+                        case 'xulyguiDon':
+                        case 'danhsachdoncuatoi':
+                        case 'chitiet':
+                            $controllerInstance->$action();
+                            break;
                         case 'detail':
                         case 'pheduyetdon':
                         case 'cancel':
@@ -50,6 +56,7 @@ if (file_exists($controllerFile)) {
                         case 'student':
                         case 'parent':
                         case 'principal':
+                        case 'leader':
                             $controllerInstance->$action();
                             break;
                         default:
@@ -196,7 +203,49 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
-
+                
+                case 'thongbao':
+                    switch ($action) {
+                        case 'dangthongbao':
+                        case 'xulydangthongbao':
+                        case 'danhsach':
+                        case 'chitiet':
+                        case 'xoa':
+                        case 'loadNotifications':
+                        case 'markAsRead':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->danhsach();
+                    }
+                    break;
+                
+                case 'ketquahoctap':
+                    switch ($action) {
+                        case 'thongke':
+                            $controllerInstance->thongke();
+                            break;
+                        default:
+                            $controllerInstance->thongke();
+                    }
+                    break;
+                
+                case 'dangkybanhoc':
+                    switch ($action) {
+                        case 'index':
+                            $controllerInstance->index();
+                            break;
+                        case 'store':
+                            $controllerInstance->store();
+                            break;
+                        case 'success':
+                            $controllerInstance->success();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;    
+                    
                 default:
                     $controllerInstance->$action();
             }

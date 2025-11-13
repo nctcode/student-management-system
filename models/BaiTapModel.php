@@ -77,7 +77,7 @@ class BaiTapModel {
     // Lấy chi tiết một bài tập
     public function getBaiTapChiTiet($maBaiTap) {
         $conn = $this->db->getConnection();
-        
+
         $sql = "SELECT 
                     bt.*, 
                     l.tenLop, 

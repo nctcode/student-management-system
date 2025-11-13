@@ -79,8 +79,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const maMonHoc = selMaMonHoc.value;
         const hocKy = selHocKy.value;
         const namHoc = selNamHoc.value;
-
         if (!maLop || !maMonHoc || !hocKy || !namHoc) return;
+        if (!maLop || !maMonHoc || !hocKy || !namHoc) {
+            alert('Vui lòng chọn đầy đủ Lớp, Môn học, Học kỳ và Năm học.');
+            return;
+        }
 
         btnXemBangDiem.disabled = true;
         btnXemBangDiem.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
@@ -324,6 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCurrentDataFromInputs(); 
 
         const inputs = tableBody.querySelectorAll('input[type="text"]');
+
         if (inputs.length === 0) return; 
 
         let emptyFields = 0;
@@ -357,7 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
             selMaMonHoc.value = maMonHoc;
             selHocKy.value = hocKy;
             selNamHoc.value = namHoc;
-            
+
             checkFormValidity();
             btnXemBangDiem.click();
             
@@ -366,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
             checkFormValidity();
         }
     }
-    
+
     checkFormValidity();
     autoLoadTable(); 
 });

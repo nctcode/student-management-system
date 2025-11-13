@@ -15,24 +15,30 @@ class TinNhanModel {
         try {
             $conn->beginTransaction();
 
+            // Tạo cuộc hội thoại mới
             $sqlHoiThoai = "INSERT INTO cuochoithoai (tenHoiThoai, loaiHoiThoai, maNguoiDung, ngayTao) 
                            VALUES (?, 'NHOM', ?, NOW())";
             $stmtHoiThoai = $conn->prepare($sqlHoiThoai);
             $stmtHoiThoai->execute([$tieuDe, $maNguoiGui]);
             $maHoiThoai = $conn->lastInsertId();
 
+            // Thêm người tham gia hội thoại
             $sqlThamGia = "INSERT INTO thanhviengoi (maHoiThoai, maNguoiDung, ngayThamGia) 
                           VALUES (?, ?, NOW())";
             $stmtThamGia = $conn->prepare($sqlThamGia);
             
+            // Thêm người gửi
             $stmtThamGia->execute([$maHoiThoai, $maNguoiGui]);
             
+            // Thêm người nhận
             foreach ($danhSachNguoiNhan as $maNguoiNhan) {
                 $stmtThamGia->execute([$maHoiThoai, $maNguoiNhan]);
             }
 
+            // Tạo tin nhắn đầu tiên
             $sqlTinNhan = "INSERT INTO tinnhan (maHoiThoai, tieuDe, noiDung, fileDinhKem, thoiGianGui, maNguoiDung, trangThai) 
                           VALUES (?, ?, ?, ?, NOW(), ?, 0)";
+
             $stmtTinNhan = $conn->prepare($sqlTinNhan);
             
             $filePath = $fileDinhKem ? json_encode($fileDinhKem) : null;

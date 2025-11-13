@@ -64,12 +64,40 @@ class HocSinhModel {
     }
 
     // Lấy thông tin học sinh theo mã học sinh
+    // public function getHocSinhById($maHocSinh) {
+    //     $conn = $this->db->getConnection();
+        
+    //     $sql = "SELECT h.*, nd.hoTen, nd.ngaySinh, nd.gioiTinh, nd.soDienThoai, nd.email, nd.diaChi
+    //             FROM hocsinh h
+    //             JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+    //             WHERE h.maHocSinh = ?";
+        
+    //     $stmt = $conn->prepare($sql);
+    //     $stmt->execute([$maHocSinh]);
+        
+    //     $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+    //     // Debug
+    //     error_log("Query getHocSinhById: maHocSinh = " . $maHocSinh);
+    //     error_log("Result: " . print_r($result, true));
+        
+    //     return $result;
+    // }
+
     public function getHocSinhById($maHocSinh) {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT h.*, nd.hoTen, nd.ngaySinh, nd.gioiTinh, nd.soDienThoai, nd.email, nd.diaChi
+        $sql = "SELECT 
+                    h.maHocSinh, 
+                    h.maLop,
+                    nd.hoTen as tenHocSinh,
+                    l.tenLop,
+                    l.maTruong,
+                    t.tenTruong
                 FROM hocsinh h
                 JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN lophoc l ON h.maLop = l.maLop
+                LEFT JOIN truong t ON l.maTruong = t.maTruong
                 WHERE h.maHocSinh = ?";
         
         $stmt = $conn->prepare($sql);
