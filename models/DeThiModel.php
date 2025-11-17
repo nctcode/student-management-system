@@ -167,4 +167,89 @@ class DethiModel
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // -----------------------------------------------------------------------------------
+    // ----------------------------------------LẬP ĐỀ THI---------------------------------
+    // -----------------------------------------------------------------------------------
+
+    public function createExam($maKhoi, $maNienKhoa, $maNguoiDung, $tieuDe, $noiDungDeThi)
+    {
+        $conn = $this->db->getConnection();
+
+        // Lấy mã giáo viên và mã môn học từ bảng giaovien dựa vào maNguoiDung
+        $sqlGV = "SELECT maGiaoVien, maMonHoc FROM giaovien WHERE maNguoiDung = ?";
+        $stmtGV = $conn->prepare($sqlGV);
+        $stmtGV->execute([$maNguoiDung]);
+        $resultGV = $stmtGV->fetch(PDO::FETCH_ASSOC);
+        var_dump($resultGV);
+
+        if (!$resultGV) return false; // Không tìm thấy giáo viên
+
+        $maGiaoVien = $resultGV['maGiaoVien']; // Đây mới là mã giáo viên đúng
+        $maMonHoc = $resultGV['maMonHoc'];
+
+        // Thêm đề thi vào bảng dethi
+        $sqlInsert = "INSERT INTO dethi (tieuDe, noiDung, maKhoi, maNienKhoa, maGiaoVien, maMonHoc, trangThai, ngayNop)
+        VALUES (?, ?, ?, ?, ?, ?, 'CHO_DUYET', NOW())";
+
+        $stmtInsert = $conn->prepare($sqlInsert);
+        $stmtInsert->execute([$tieuDe, $noiDungDeThi, $maKhoi, $maNienKhoa, $maGiaoVien, $maMonHoc]);
+
+        return $conn->lastInsertId(); // Trả về maDeThi vừa tạo
+    }
+
+    // Thêm 1 câu hỏi vào cauhoi
+    public function addQuestion($maDeThi, $noiDung, $mucDiem)
+    {
+        $conn = $this->db->getConnection();
+        $sql = "INSERT INTO cauhoi (maDeThi, noiDungCauHoi, mucDiem)
+            VALUES (?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        return $stmt->execute([$maDeThi, $noiDung, $mucDiem]);
+    }
+
+    // Thêm nhiều câu hỏi từ mảng
+    public function addQuestionsBatch($maDeThi, $cauHoiArr = [])
+    {
+        foreach ($cauHoiArr as $cau) {
+            $this->addQuestion($maDeThi, $cau['noiDung'], $cau['mucDiem']);
+        }
+        return true;
+    }
+
+    // Lấy tất cả đề thi đã tạo của giáo viên đang đăng nhập, kèm tên môn học và câu hỏi
+    public function getDeThiByGiaoVien($maNguoiDung)
+    {
+        $conn = $this->db->getConnection();
+
+        // Lấy mã giáo viên từ maNguoiDung
+        $sqlGV = "SELECT maGiaoVien FROM giaovien WHERE maNguoiDung = ?";
+        $stmtGV = $conn->prepare($sqlGV);
+        $stmtGV->execute([$maNguoiDung]);
+        $gv = $stmtGV->fetch(PDO::FETCH_ASSOC);
+
+        if (!$gv) return []; // Nếu không tìm thấy giáo viên
+
+        $maGiaoVien = $gv['maGiaoVien'];
+
+        // Lấy danh sách đề thi của giáo viên, kèm tên môn học
+        $sql = "SELECT d.*, m.tenMonHoc AS monHoc
+            FROM dethi d
+            LEFT JOIN monhoc m ON d.maMonHoc = m.maMonHoc
+            WHERE d.maGiaoVien = ?
+            ORDER BY d.ngayNop DESC";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maGiaoVien]);
+        $deThiList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Lấy câu hỏi cho mỗi đề
+        foreach ($deThiList as &$deThi) {
+            $stmtCH = $conn->prepare("SELECT noiDungCauHoi, mucDiem FROM cauhoi WHERE maDeThi = ? ORDER BY maCauHoi ASC");
+            $stmtCH->execute([$deThi['maDeThi']]);
+            $deThi['cauHoi'] = $stmtCH->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        return $deThiList;
+    }
 }
