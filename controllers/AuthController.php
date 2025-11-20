@@ -144,37 +144,46 @@ class AuthController {
         require_once 'views/auth/login.php';
     }
     
-  public function processLogin() {
+ public function processLogin() {
     if ($_POST) {
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
         
         $user = $this->model->authenticate($username, $password);
         
-        if ($user) {
-            // ✅ THÊM: Lấy maNguoiDung từ database
-            $maNguoiDung = $this->model->getMaNguoiDung($user['maTaiKhoan']);
-            
-            $_SESSION['user'] = [
-                'maTaiKhoan' => $user['maTaiKhoan'],
-                'tenDangNhap' => $user['tenDangNhap'],
-                'hoTen' => $user['hoTen'],
-                'vaiTro' => $user['vaiTro'],
-                'maNguoiDung' => $maNguoiDung // ← QUAN TRỌNG
-            ];
-            
-            $this->redirectByRole($user['vaiTro']);
-            return;
+        // 🔥 KIỂM TRA TÀI KHOẢN BỊ KHÓA
+        if ($user === "LOCKED") {
+            $_SESSION['error'] = "⛔ Tài khoản của bạn đã bị khóa!";
+            header('Location: index.php?controller=auth&action=login');
+            exit;
         }
         
-        $_SESSION['error'] = "Tên đăng nhập hoặc mật khẩu không đúng!";
-        header('Location: index.php?controller=auth&action=login');
-        exit;
+        // 🔥 KIỂM TRA SAI TÀI KHOẢN/ MẬT KHẨU
+        if (!$user) {
+            $_SESSION['error'] = "Tên đăng nhập hoặc mật khẩu không đúng!";
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+        
+        // ✅ NẾU ĐẾN ĐƯỢC ĐÂY THÌ ĐĂNG NHẬP THÀNH CÔNG
+        // Lấy maNguoiDung từ database
+        $maNguoiDung = $this->model->getMaNguoiDung($user['maTaiKhoan']);
+        
+        $_SESSION['user'] = [
+            'maTaiKhoan' => $user['maTaiKhoan'],
+            'tenDangNhap' => $user['tenDangNhap'],
+            'hoTen' => $user['hoTen'],
+            'vaiTro' => $user['vaiTro'],
+            'maNguoiDung' => $maNguoiDung
+        ];
+        
+        $this->redirectByRole($user['vaiTro']);
+        return;
     }
     
     header('Location: index.php?controller=auth&action=login');
     exit;
-}    private function redirectByRole($role) {
+}   private function redirectByRole($role) {
         error_log("Redirecting by role: " . $role);
         
         switch ($role) {

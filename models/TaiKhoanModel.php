@@ -26,7 +26,7 @@ class TaiKhoanModel {
         // CHỈ kiểm tra trong bảng taikhoan
         $sql = "SELECT maTaiKhoan, tenDangNhap, matKhau, vaiTro, trangThai 
                 FROM taikhoan 
-                WHERE tenDangNhap = ? AND trangThai = 'HOAT_DONG'";
+                WHERE tenDangNhap = ?";
         
         error_log("📝 SQL: " . $sql);
         
@@ -38,7 +38,10 @@ class TaiKhoanModel {
             error_log("❌ USER NOT FOUND in taikhoan OR ACCOUNT INACTIVE");
             return false;
         }
-        
+        // 🔥 KIỂM TRA TÀI KHOẢN BỊ KHÓA
+        if ($user['trangThai'] === 'DA_KHOA') {
+            return "LOCKED";
+        }
         error_log("✅ USER FOUND in taikhoan:");
         error_log("   - maTaiKhoan: " . $user['maTaiKhoan']);
         error_log("   - tenDangNhap: " . $user['tenDangNhap']);
@@ -503,21 +506,17 @@ private function deleteAllRelatedData($maTaiKhoan) {
         // KHÔNG throw - tiếp tục xóa
     }
 }
-    public function toggleUserStatus($id) {
-        try {
-            $sql = "UPDATE taikhoan 
-                    SET trangThai = CASE 
-                        WHEN trangThai = 'HOAT_DONG' THEN 'KHOA' 
-                        ELSE 'HOAT_DONG' 
-                    END 
-                    WHERE maTaiKhoan = ?";
-            $stmt = $this->conn->prepare($sql);
-            return $stmt->execute([$id]);
-            
-        } catch (Exception $e) {
-            return false;
-        }
+  public function toggleUserStatus($id) {
+    try {
+        // CÁCH ĐƠN GIẢN NHẤT - update trực tiếp
+        $sql = "UPDATE taikhoan SET trangThai = IF(trangThai = 'HOAT_DONG', 'DA_KHOA', 'HOAT_DONG') WHERE maTaiKhoan = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([$id]);
+        
+    } catch (Exception $e) {
+        return false;
     }
+}
 
     public function updatePassword($tenDangNhap, $newPassword) {
         try {

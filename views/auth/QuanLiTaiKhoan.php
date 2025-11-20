@@ -1,3 +1,8 @@
+<?PHP
+    require_once 'views/layouts/header.php';
+    require_once 'views/layouts/sidebar/admin.php';
+    require_once 'views/layouts/footer.php';
+?>
 <style>
 /* Vùng chứa chính */
 .taikhoan-container {
@@ -223,7 +228,7 @@ if (isset($_SESSION['error'])) {
                     <td><?= htmlspecialchars($acc['hoTen'] ?? '') ?></td>
                     <td><?= htmlspecialchars($acc['loaiNguoiDung']) ?></td>
                     <td class="<?= $acc['trangThai'] === 'HOAT_DONG' ? 'status-active' : 'status-locked' ?>">
-                        <?= $acc['trangThai'] === 'HOAT_DONG' ? 'Hoạt động' : 'Đã khóa' ?>
+                     <?= $acc['trangThai'] === 'HOAT_DONG' ? 'Hoạt động' : 'Đã khóa' ?>
                     </td>
                     <td>
                         <a href="index.php?controller=QuanLyTaiKhoan&action=edit&id=<?= $acc['maTaiKhoan'] ?>" class="edit">Sửa</a>
