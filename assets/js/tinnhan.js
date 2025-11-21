@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // --- Biến toàn cục ---
+<<<<<<< HEAD
     let danhSachDaChon = []; 
     let dataHocSinh = []; 
     let dataPhuHuynh = []; 
@@ -8,6 +9,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPageHS = 1; 
     let currentPagePH = 1; 
     const ROWS_PER_PAGE = 5; 
+=======
+    let danhSachDaChon = [];
+    let dataHocSinh = [];
+    let dataPhuHuynh = [];
+    let filteredHocSinh = [];
+    let filteredPhuHuynh = [];
+    let currentPageHS = 1;
+    let currentPagePH = 1;
+    const ROWS_PER_PAGE = 5;
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
 
     // --- DOM Elements ---
     const selectLop = document.getElementById('selectLop');
@@ -24,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const formGuiTinNhan = document.getElementById('formGuiTinNhan');
 
     // --- Gán sự kiện ---
+<<<<<<< HEAD
     selectLop?.addEventListener('change', loadData);
     checkHocSinh?.addEventListener('change', toggleViews);
     checkPhuHuynh?.addEventListener('change', toggleViews);
@@ -37,6 +49,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const loai = [checkHocSinh.checked ? 'HOCSINH' : '', checkPhuHuynh.checked ? 'PHUHUYNH' : '']
                      .filter(Boolean).join(',');
         
+=======
+    selectLop ? .addEventListener('change', loadData);
+    checkHocSinh ? .addEventListener('change', toggleViews);
+    checkPhuHuynh ? .addEventListener('change', toggleViews);
+    timKiemInput ? .addEventListener('keyup', handleFilter);
+    chonTatCaHS ? .addEventListener('change', () => chonTatCa('HS'));
+    chonTatCaPH ? .addEventListener('change', () => chonTatCa('PH'));
+
+    formGuiTinNhan ? .addEventListener('submit', function() {
+        hiddenInputNguoiNhan.value = danhSachDaChon.map(item => item.maNguoiDung).join(',');
+
+        const loai = [checkHocSinh.checked ? 'HOCSINH' : '', checkPhuHuynh.checked ? 'PHUHUYNH' : '']
+            .filter(Boolean).join(',');
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
         let loaiInput = formGuiTinNhan.querySelector('input[name="loaiNguoiNhan"]');
         if (!loaiInput) {
             loaiInput = document.createElement('input');
@@ -57,8 +84,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
+<<<<<<< HEAD
             if(tbodyHS) tbodyHS.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Đang tải...</td></tr>`;
             if(tbodyPH) tbodyPH.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Đang tải...</td></tr>`;
+=======
+            if (tbodyHS) tbodyHS.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Đang tải...</td></tr>`;
+            if (tbodyPH) tbodyPH.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Đang tải...</td></tr>`;
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
 
             const [hsResponse, phResponse] = await Promise.all([
                 fetch(`index.php?controller=tinnhan&action=getHocSinhByLop&maLop=${maLop}`),
@@ -67,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             dataHocSinh = await hsResponse.json();
             dataPhuHuynh = await phResponse.json();
+<<<<<<< HEAD
             
             currentPageHS = 1;
             currentPagePH = 1;
@@ -77,19 +110,38 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Lỗi tải danh sách:', error);
             if(tbodyHS) tbodyHS.innerHTML = `<tr><td colspan="4" class="text-danger">Lỗi tải dữ liệu</td></tr>`;
             if(tbodyPH) tbodyPH.innerHTML = `<tr><td colspan="7" class="text-danger">Lỗi tải dữ liệu</td></tr>`;
+=======
+
+            currentPageHS = 1;
+            currentPagePH = 1;
+
+            handleFilter();
+
+        } catch (error) {
+            console.error('Lỗi tải danh sách:', error);
+            if (tbodyHS) tbodyHS.innerHTML = `<tr><td colspan="4" class="text-danger">Lỗi tải dữ liệu</td></tr>`;
+            if (tbodyPH) tbodyPH.innerHTML = `<tr><td colspan="7" class="text-danger">Lỗi tải dữ liệu</td></tr>`;
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
         }
     }
 
     function toggleViews() {
         const dsHocSinh = document.getElementById('danhSachHocSinh');
         const dsPhuHuynh = document.getElementById('danhSachPhuHuynh');
+<<<<<<< HEAD
         if(dsHocSinh) dsHocSinh.style.display = checkHocSinh.checked ? 'block' : 'none';
         if(dsPhuHuynh) dsPhuHuynh.style.display = checkPhuHuynh.checked ? 'block' : 'none';
         capNhatDanhSachNguoiNhan(); 
+=======
+        if (dsHocSinh) dsHocSinh.style.display = checkHocSinh.checked ? 'block' : 'none';
+        if (dsPhuHuynh) dsPhuHuynh.style.display = checkPhuHuynh.checked ? 'block' : 'none';
+        capNhatDanhSachNguoiNhan();
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
     }
 
     function handleFilter() {
         const searchTerm = timKiemInput.value.toLowerCase();
+<<<<<<< HEAD
         
         filteredHocSinh = dataHocSinh.filter(item => 
             (item.hoTen && item.hoTen.toLowerCase().includes(searchTerm)) || 
@@ -98,13 +150,27 @@ document.addEventListener('DOMContentLoaded', function() {
         
         filteredPhuHuynh = dataPhuHuynh.filter(item => 
             (item.hoTen && item.hoTen.toLowerCase().includes(searchTerm)) || 
+=======
+
+        filteredHocSinh = dataHocSinh.filter(item =>
+            (item.hoTen && item.hoTen.toLowerCase().includes(searchTerm)) ||
+            (item.maHocSinh && item.maHocSinh.toString().toLowerCase().includes(searchTerm))
+        );
+
+        filteredPhuHuynh = dataPhuHuynh.filter(item =>
+            (item.hoTen && item.hoTen.toLowerCase().includes(searchTerm)) ||
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
             (item.tenHocSinh && item.tenHocSinh.toLowerCase().includes(searchTerm)) ||
             (item.maPhuHuynh && item.maPhuHuynh.toString().toLowerCase().includes(searchTerm))
         );
 
         currentPageHS = 1;
         currentPagePH = 1;
+<<<<<<< HEAD
         renderAll(); 
+=======
+        renderAll();
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
     }
 
     function renderAll() {
@@ -112,15 +178,25 @@ document.addEventListener('DOMContentLoaded', function() {
         renderTable('PH', filteredPhuHuynh, currentPagePH);
         renderPagination('HS', filteredHocSinh.length, currentPageHS);
         renderPagination('PH', filteredPhuHuynh.length, currentPagePH);
+<<<<<<< HEAD
         capNhatDanhSachNguoiNhan(); 
+=======
+        capNhatDanhSachNguoiNhan();
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
     }
 
     function renderTable(loai, data, page) {
         const tbody = (loai === 'HS') ? tbodyHS : tbodyPH;
         if (!tbody) return;
+<<<<<<< HEAD
         
         tbody.innerHTML = '';
         
+=======
+
+        tbody.innerHTML = '';
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
         if (data.length === 0) {
             const cols = (loai === 'HS') ? 4 : 7;
             tbody.innerHTML = `<tr><td colspan="${cols}" class="text-center text-muted">Không có dữ liệu</td></tr>`;
@@ -133,7 +209,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         pageData.forEach(item => {
             const tr = document.createElement('tr');
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
             const maNguoiDung = item.maNguoiDung;
             const ten = item.hoTen;
             const isChecked = danhSachDaChon.some(ng => ng.maNguoiDung === maNguoiDung);
@@ -160,11 +240,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 tr.appendChild(createTd(item.email || ''));
                 tr.appendChild(createTd(item.soDienThoai || ''));
             }
+<<<<<<< HEAD
             
             tbody.appendChild(tr);
         });
     }
     
+=======
+
+            tbody.appendChild(tr);
+        });
+    }
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
     function createTd(text) {
         const td = document.createElement('td');
         td.textContent = text;
@@ -174,10 +262,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderPagination(loai, totalItems, currentPage) {
         const container = document.getElementById(`pagination${loai}`);
         if (!container) return;
+<<<<<<< HEAD
         
         container.innerHTML = '';
         const totalPages = Math.ceil(totalItems / ROWS_PER_PAGE);
         
+=======
+
+        container.innerHTML = '';
+        const totalPages = Math.ceil(totalItems / ROWS_PER_PAGE);
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
         if (totalPages <= 1) return;
 
         for (let i = 1; i <= totalPages; i++) {
@@ -212,6 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function capNhatDanhSachNguoiNhan() {
         if (!containerNguoiNhan) return;
+<<<<<<< HEAD
         
         containerNguoiNhan.innerHTML = '';
         
@@ -225,6 +321,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const badge = document.createElement('span');
             badge.className = 'badge badge-primary mr-2 mb-2 p-2';
             
+=======
+
+        containerNguoiNhan.innerHTML = '';
+
+        const daChon = danhSachDaChon.length;
+        const tongSo = (checkHocSinh.checked ? filteredHocSinh.length : 0) +
+            (checkPhuHuynh.checked ? filteredPhuHuynh.length : 0);
+
+        soLuongChonSpan.textContent = `${daChon} / ${tongSo}`;
+
+        danhSachDaChon.forEach(item => {
+            const badge = document.createElement('span');
+            badge.className = 'badge badge-primary mr-2 mb-2 p-2';
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
             // Thêm tên
             badge.appendChild(document.createTextNode(item.ten + ' '));
 
@@ -233,12 +344,20 @@ document.addEventListener('DOMContentLoaded', function() {
             closeButton.innerHTML = '×';
             closeButton.style.cursor = 'pointer';
             closeButton.style.marginLeft = '5px';
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
             // Gán sự kiện click
             closeButton.addEventListener('click', () => {
                 window.xoaNguoiNhan(item.maNguoiDung);
             });
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
             badge.appendChild(closeButton);
             containerNguoiNhan.appendChild(badge);
         });
@@ -252,7 +371,11 @@ document.addEventListener('DOMContentLoaded', function() {
     window.chonTatCa = function(loai) {
         const isChecked = (loai === 'HS') ? chonTatCaHS.checked : chonTatCaPH.checked;
         const tbody = (loai === 'HS') ? tbodyHS : tbodyPH;
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
         tbody.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             if (checkbox.checked !== isChecked) {
                 checkbox.checked = isChecked;
@@ -260,7 +383,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
     // --- Các hàm phụ ---
     window.demKyTu = function(textarea) {
         const soKyTu = document.getElementById('soKyTu');
@@ -273,13 +400,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.getElementById('fileDinhKem');
         const fileList = document.getElementById('danhSachFile');
         if (!fileInput || !fileList) return;
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
         fileList.innerHTML = '';
         for (let i = 0; i < fileInput.files.length; i++) {
             const file = fileInput.files.item(i);
             if (file) {
                 const fileSize = (file.size / (1024 * 1024)).toFixed(1);
+<<<<<<< HEAD
                 
+=======
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
                 const fileItem = document.createElement('div');
                 fileItem.className = 'd-flex justify-content-between align-items-center border rounded p-2 mb-2';
                 fileItem.innerHTML = `
@@ -295,6 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.getElementById('fileDinhKem');
         const dt = new DataTransfer();
         const files = Array.from(fileInput.files);
+<<<<<<< HEAD
         
         files.splice(index, 1); 
         
@@ -303,6 +439,16 @@ document.addEventListener('DOMContentLoaded', function() {
         hienThiFile(); 
     }
     
+=======
+
+        files.splice(index, 1);
+
+        files.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+        hienThiFile();
+    }
+
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
     function clearTables() {
         dataHocSinh = [];
         dataPhuHuynh = [];
@@ -312,8 +458,13 @@ document.addEventListener('DOMContentLoaded', function() {
         currentPagePH = 1;
         renderAll();
     }
+<<<<<<< HEAD
     
     if(selectLop) {
+=======
+
+    if (selectLop) {
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
         toggleViews();
         loadData();
     }

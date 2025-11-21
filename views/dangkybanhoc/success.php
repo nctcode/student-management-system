@@ -1,6 +1,10 @@
 <?php
 require_once 'views/layouts/header.php';
+<<<<<<< HEAD
 
+=======
+require_once 'views/layouts/sidebar/hocsinh.php';
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
 // Kiểm tra xem có nên hiển thị trang success không
 if (!isset($_SESSION['success']) || $_SESSION['success'] !== "Đăng ký ban học thành công!") {
     // Nếu không phải từ quy trình đăng ký thành công, redirect về trang chủ

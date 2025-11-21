@@ -16,6 +16,12 @@
                     <span>Kết quả học tập</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=thoikhoabieu&action=xemluoi">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Thời khóa biểu</span>
+                </a>
+            </li>
             <li>
                 <a href="#">
                     <i class="fas fa-calendar-check"></i>
@@ -26,6 +32,20 @@
                 <a href="index.php?controller=hocphi&action=index">
                     <i class="fas fa-money-bill-wave"></i>
                     <span>Học phí</span>
+                </a>
+            </li>
+            <!-- Sửa lại link cho đúng -->
+            <li>
+                <a href="index.php?controller=donchuyenloptruong&action=guidon">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Gửi đơn chuyển</span>
+                </a>
+            </li>
+            <!-- Thêm vào sidebar phụ huynh -->
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=donchuyenloptruong&action=danhsachdoncuatoi">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Đơn chuyển lớp/trường</span>
                 </a>
             </li>
             <li>
@@ -40,22 +60,21 @@
                     <span>Bài tập về nhà</span>
                 </a>
             </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-bell"></i>
-                    <span>Thông báo</span>
+            <li class="nav-item">
+                <a href="index.php?controller=thongbao&action=danhsach" class="nav-link">
+                    <i class="nav-icon fas fa-bullhorn"></i>
+                    <p>
+                        Thông báo
+                        <?php if ($soThongBaoChuaDoc > 0): ?>
+                        <span class="badge bg-danger float-right"><?php echo $soThongBaoChuaDoc; ?></span>
+                        <?php endif; ?>
+                    </p>
                 </a>
             </li>
             <li>
-                <a href="#">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Đơn từ</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-phone"></i>
-                    <span>Liên hệ</span>
+                <a href="index.php?controller=tuyensinh&action=hosocuatoi">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Hồ sơ tuyển sinh</span>
                 </a>
             </li>
         </ul>

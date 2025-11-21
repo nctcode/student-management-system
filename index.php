@@ -30,6 +30,15 @@ if (file_exists($controllerFile)) {
             switch ($controller) {
                 case 'donchuyenloptruong':
                     switch ($action) {
+<<<<<<< HEAD
+=======
+                        case 'guidon':
+                        case 'xulyguiDon':
+                        case 'danhsachdoncuatoi':
+                        case 'chitiet':
+                            $controllerInstance->$action();
+                            break;
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
                         case 'detail':
                         case 'pheduyetdon':
                         case 'cancel':
@@ -48,6 +57,10 @@ if (file_exists($controllerFile)) {
                         case 'student':
                         case 'parent':
                         case 'principal':
+<<<<<<< HEAD
+=======
+                        case 'leader':
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
                             $controllerInstance->$action();
                             break;
                         default:
@@ -140,8 +153,63 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
+<<<<<<< HEAD
 
                 // THÊM CASE CHO DANGKYBANHOC - ĐÃ SỬA
+=======
+                
+                case 'diem':
+                    $controllerInstance->$action();
+                    break;
+
+                case 'chuyencan':
+                    $controllerInstance->$action();
+                    break; 
+                
+                case 'baitap':
+                    switch ($action) {
+                        case 'danhsach':
+                            $controllerInstance->danhsach();
+                            break;
+                        case 'luu': 
+                            $controllerInstance->luu();
+                            break;
+                        case 'chitiet':
+                            $maBaiTap = $_GET['maBaiTap'] ?? 0;
+                            $controllerInstance->chitiet($maBaiTap);
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
+                
+                case 'thongbao':
+                    switch ($action) {
+                        case 'dangthongbao':
+                        case 'xulydangthongbao':
+                        case 'danhsach':
+                        case 'chitiet':
+                        case 'xoa':
+                        case 'loadNotifications':
+                        case 'markAsRead':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->danhsach();
+                    }
+                    break;
+                
+                case 'ketquahoctap':
+                    switch ($action) {
+                        case 'thongke':
+                            $controllerInstance->thongke();
+                            break;
+                        default:
+                            $controllerInstance->thongke();
+                    }
+                    break;
+                
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
                 case 'dangkybanhoc':
                     switch ($action) {
                         case 'index':
@@ -156,9 +224,18 @@ if (file_exists($controllerFile)) {
                         default:
                             $controllerInstance->index();
                     }
+<<<<<<< HEAD
                     break;                    
                 default:
                     $controllerInstance->$action();
+=======
+                    break;    
+                    
+                default:
+                    $controllerInstance->$action();
+                
+                
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
             }
         } else {
             die("Action không tồn tại: $action");

@@ -219,6 +219,7 @@ Hệ thống sử dụng **30+ bảng** được thiết kế **chuẩn hóa**, 
 
 | Họ tên | Vai trò | Công việc chính |
 |--------|----------|------------------|
+<<<<<<< HEAD
 | Nguyễn Chí Thuận | Project Manager | UI/UX, Bootstrap, JavaScript |
 | Đỗ Phan Bảo lộc | Backend Developer | UI/UX, Bootstrap, JavaScript  |
 | Lý Thị Yến | Frontend Developer | UI/UX, Bootstrap, JavaScript |
@@ -226,6 +227,15 @@ Hệ thống sử dụng **30+ bảng** được thiết kế **chuẩn hóa**, 
 | Cao Hoàng Minh Cơ | Frontend Developer | UI/UX, Bootstrap, JavaScript |
 | Phan Quốc Kiệt | Frontend Developer | UI/UX, Bootstrap, JavaScript |
 | Trần Lê Phương Khánh | Frontend Developer | UI/UX, Bootstrap, JavaScript |
+=======
+| [Nguyễn Chí Thuận] | Project Manager | UI/UX, Bootstrap, JavaScript |
+| [Đỗ Phan Bảo lộc] | Backend Developer | UI/UX, Bootstrap, JavaScript  |
+| [Lý Thị Yến] | Frontend Developer | UI/UX, Bootstrap, JavaScript |
+| [Lê Thị Thu Hằng] | Frontend Developer | UI/UX, Bootstrap, JavaScript |
+| [Cao Hoàng Minh Cơ] | Frontend Developer | UI/UX, Bootstrap, JavaScript |
+| [Phan Quốc Kiệt] | Frontend Developer | UI/UX, Bootstrap, JavaScript |
+| [Trần Lê Phương Khánh] | Frontend Developer | UI/UX, Bootstrap, JavaScript |
+>>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
 
 ---
 
