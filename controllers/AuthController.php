@@ -16,15 +16,13 @@ class AuthController {
             $db = new Database();
             $conn = $db->getConnection();
             
-<<<<<<< HEAD
             // KHẮC PHỤC: Lấy nd.maTruong từ database
-=======
+
             // Kiểm tra thông tin đăng nhập
             // $sql = "SELECT tk.*, nd.maNguoiDung, nd.hoTen, nd.loaiNguoiDung 
             //         FROM taikhoan tk 
             //         JOIN nguoidung nd ON tk.maTaiKhoan = nd.maTaiKhoan 
             //         WHERE tk.tenDangNhap = ? AND tk.trangThai = 'HOAT_DONG'";
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
             $sql = "SELECT tk.*, nd.maNguoiDung, nd.hoTen, nd.loaiNguoiDung, nd.maTruong,
                            hs.maHocSinh, l.tenLop, k.tenKhoi as khoi
                     FROM taikhoan tk 
@@ -40,23 +38,10 @@ class AuthController {
             
             if ($user && password_verify($password, $user['matKhau'])) {
                 
-<<<<<<< HEAD
-                // KHẮC PHỤC: Lưu maTruong vào session
-                $_SESSION['user'] = [
-=======
-                // Kiểm tra mật khẩu (trong thực tế dùng password_verify)
-                // Demo: so sánh với mật khẩu cố định 123456
+
+
                if (password_verify($password, $user['matKhau']) || md5($password) === $user['matKhau']) {
-                    // Lưu thông tin người dùng vào session
-                    // $_SESSION['user'] = [
-                    //     'maTaiKhoan' => $user['maTaiKhoan'],
-                    //     'maNguoiDung' => $user['maNguoiDung'],
-                    //     'tenDangNhap' => $user['tenDangNhap'],
-                    //     'hoTen' => $user['hoTen'],
-                    //     'vaiTro' => $user['loaiNguoiDung']
-                    // ];
                     $_SESSION['user'] = [
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
                     'maNguoiDung' => $user['maNguoiDung'],
                     'hoTen' => $user['hoTen'],
                     'vaiTro' => $user['loaiNguoiDung'],
@@ -65,18 +50,12 @@ class AuthController {
                     'khoi' => $user['khoi'] ?? null,
                     'maTruong' => $user['maTruong'] ?? null // DÒNG QUAN TRỌNG ĐÃ CÓ
                 ];
-<<<<<<< HEAD
                 
                 // Chuyển hướng theo vai trò
                 $this->redirectByRole($user['loaiNguoiDung']);
                 return;
-=======
-                    
-                    // Chuyển hướng theo vai trò
-                    $this->redirectByRole($user['loaiNguoiDung']);
-                    return;
                 }
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
+
             }
             
             // Đăng nhập thất bại

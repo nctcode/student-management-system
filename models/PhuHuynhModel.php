@@ -73,8 +73,3 @@ class PhuHuynhModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
-<<<<<<< HEAD
-?>
-=======
-?>  
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b

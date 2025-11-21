@@ -1,9 +1,8 @@
 <?php
 require_once 'views/layouts/header.php';
-<<<<<<< HEAD
-=======
+
 require_once 'views/layouts/sidebar/hocsinh.php';
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
+
 
 // Helper functions for this view only
 function renderNotifications() {

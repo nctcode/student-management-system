@@ -28,7 +28,7 @@ class HomeController
             exit;
         }
     }
-<<<<<<< HEAD
+
     
     // HÀM KIỂM TRA MÃ TRƯỜNG: CHỈ CHẠY ĐỐI VỚI BGH
     private function checkSchoolAccess() {
@@ -43,13 +43,10 @@ class HomeController
             exit;
         }
     }
-    
-    public function index() {
-=======
 
     public function index()
     {
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
+
         $this->checkAuth();
 
         // Chuyển hướng đến trang phù hợp với vai trò
@@ -230,13 +227,7 @@ class HomeController
         $maTruong = $_SESSION['user']['maTruong'];
         
         $title = "Ban giám hiệu - QLHS";
-<<<<<<< HEAD
-        
-        // Lấy dữ liệu thống kê (cần truyền $maTruong vào HomeModel nếu cần lọc theo trường)
-=======
 
-        // Lấy dữ liệu thống kê
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
         $stats = $this->homeModel->getPrincipalStats();
         $systemOverview = $this->homeModel->getSystemOverview();
         $newNotifications = $this->homeModel->getNewNotifications('BGH');
@@ -275,9 +266,4 @@ class HomeController
         require_once 'views/layouts/header.php';
         require_once 'views/errors/500.php';
         require_once 'views/layouts/footer.php';
-    }
-<<<<<<< HEAD
-}
-=======
-}
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
+    }}

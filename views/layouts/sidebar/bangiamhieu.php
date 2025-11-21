@@ -59,8 +59,7 @@
                     <i class="fas fa-chalkboard-teacher"></i>Phân công giáo viên
                 </a>
             </li>
-<<<<<<< HEAD
-=======
+
             <!-- <li class="nav-item">
                 <a href="index.php?controller=thongbao&action=dangthongbao" class="nav-link">
                     <i class="nav-icon fas fa-bullhorn"></i>
@@ -85,7 +84,6 @@
                     <span>Tuyển sinh</span>
                 </a>
             </li>
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
         </ul>
     </div>
 </nav>

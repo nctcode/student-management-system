@@ -30,15 +30,12 @@ if (file_exists($controllerFile)) {
             switch ($controller) {
                 case 'donchuyenloptruong':
                     switch ($action) {
-<<<<<<< HEAD
-=======
                         case 'guidon':
                         case 'xulyguiDon':
                         case 'danhsachdoncuatoi':
                         case 'chitiet':
                             $controllerInstance->$action();
                             break;
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
                         case 'detail':
                         case 'pheduyetdon':
                         case 'cancel':
@@ -57,10 +54,7 @@ if (file_exists($controllerFile)) {
                         case 'student':
                         case 'parent':
                         case 'principal':
-<<<<<<< HEAD
-=======
                         case 'leader':
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
                             $controllerInstance->$action();
                             break;
                         default:
@@ -153,10 +147,8 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
-<<<<<<< HEAD
 
                 // THÊM CASE CHO DANGKYBANHOC - ĐÃ SỬA
-=======
                 
                 case 'diem':
                     $controllerInstance->$action();
@@ -209,7 +201,6 @@ if (file_exists($controllerFile)) {
                     }
                     break;
                 
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
                 case 'dangkybanhoc':
                     switch ($action) {
                         case 'index':
@@ -224,29 +215,27 @@ if (file_exists($controllerFile)) {
                         default:
                             $controllerInstance->index();
                     }
-<<<<<<< HEAD
-                    break;                    
+                    break; 
                 default:
                     $controllerInstance->$action();
-=======
                     break;    
-                    
-                default:
-                    $controllerInstance->$action();
-                
-                
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
             }
         } else {
-            die("Action không tồn tại: $action");
+            // Xử lý lỗi Action không tồn tại
+            require_once 'controllers/HomeController.php';
+            $home = new HomeController();
+            $home->index(); 
         }
-    } else {
-        die("Controller không tồn tại: $controllerClass");
-    }
-} else {
-    // Fallback - hiển thị trang chủ
-    require_once 'controllers/HomeController.php';
-    $home = new HomeController();
-    $home->index();
-}
+        } else {
+            // Xử lý lỗi Controller Class không tồn tại
+            require_once 'controllers/HomeController.php';
+            $home = new HomeController();
+            $home->index();
+        }
+        } else {
+            // Fallback - hiển thị trang chủ khi Controller file không tồn tại
+            require_once 'controllers/HomeController.php';
+            $home = new HomeController();
+            $home->index();
+        }
 ?>

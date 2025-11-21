@@ -57,10 +57,8 @@
                     </p>
                 </a>
             </li>
-<<<<<<< HEAD
             
             <!-- THÊM MỤC ĐĂNG KÝ BAN HỌC CHỈ CHO KHỐI 11 -->
-=======
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=donchuyenloptruong&action=index">
                     <i class="fas fa-exchange-alt"></i>
@@ -73,7 +71,6 @@
                     <span>Hồ sơ tuyển sinh</span>
                 </a>
             </li>
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
             <?php 
             // Kiểm tra nếu là học sinh và có thông tin khối
             if (isset($_SESSION['user']) && 
@@ -89,10 +86,6 @@
                 </a>
             </li>
             <?php endif; ?>
-<<<<<<< HEAD
-=======
-            
->>>>>>> b9b80e75bb6b4268557a0dd832104badc968ba5b
         </ul>
     </div>
 </nav>
