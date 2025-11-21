@@ -266,7 +266,21 @@ private function createUserDetail($vaiTro, $maNguoiDung, $data) {
             return false;
         }
     }
-
+public function getUserByUsername($username) {
+    try {
+        $sql = "SELECT tk.*, nd.hoTen, nd.loaiNguoiDung 
+                FROM taikhoan tk 
+                JOIN nguoidung nd ON tk.maTaiKhoan = nd.maTaiKhoan 
+                WHERE tk.tenDangNhap = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$username]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+        
+    } catch (Exception $e) {
+        error_log("💥 getUserByUsername error: " . $e->getMessage());
+        return false;
+    }
+}
     public function updateUser($data) {
     $maTaiKhoan = $data['maTaiKhoan'] ?? null;
     
@@ -287,7 +301,7 @@ private function createUserDetail($vaiTro, $maNguoiDung, $data) {
         
         if (!empty($data['matKhau'])) {
             $sql1 .= ", matKhau = ?";
-            $params1[] = password_hash($data['matKhau'], PASSWORD_DEFAULT);
+             $params1[] = $data['matKhau']; // ĐÃ HASH RỒI, KHÔNG HASH LẠI
         }
         
         $sql1 .= " WHERE maTaiKhoan = ?";
@@ -518,16 +532,16 @@ private function deleteAllRelatedData($maTaiKhoan) {
     }
 }
 
-    public function updatePassword($tenDangNhap, $newPassword) {
-        try {
-            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-            $sql = "UPDATE taikhoan SET matKhau = ? WHERE tenDangNhap = ?";
-            $stmt = $this->conn->prepare($sql);
-            return $stmt->execute([$hashedPassword, $tenDangNhap]);
-            
-        } catch (Exception $e) {
-            return false;
-        }
+   public function updatePassword($tenDangNhap, $newPassword) {
+    try {
+        $sql = "UPDATE taikhoan SET matKhau = ? WHERE tenDangNhap = ?";
+        $stmt = $this->conn->prepare($sql);
+        // SỬA: dùng $newPassword (đã được hash từ controller)
+        return $stmt->execute([$newPassword, $tenDangNhap]); // ĐÚNG
+    } catch (Exception $e) {
+        error_log("Lỗi updatePassword: " . $e->getMessage());
+        return false;
     }
+}
 }
 ?>

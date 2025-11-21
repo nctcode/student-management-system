@@ -140,14 +140,14 @@ public function update() {
                     $data['maLop'] = $_POST['maLop'] ?? null;
                     $data['chuyenMon'] = $_POST['chuyenMon'] ?? null;
                     $data['ngheNghiep'] = $_POST['ngheNghiep'] ?? null;
-                    // ... thêm các trường khác nếu cần
                 }
                 
-                // Xử lý mật khẩu nếu có nhập
+                // ✅ SỬA: Xử lý mật khẩu nếu có nhập - THÊM HASH
                 if (!empty($_POST['new_password'])) {
                     if ($_POST['new_password'] === $_POST['confirm_password']) {
-                        $data['matKhau'] = $_POST['new_password'];
-                        error_log("🔑 Password will be updated");
+                        // THÊM DÒNG NÀY: HASH MẬT KHẨU TRƯỚC KHI LƯU
+                        $data['matKhau'] = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
+                        error_log("🔑 Password will be updated (HASHED)");
                     } else {
                         $_SESSION['error'] = "Mật khẩu xác nhận không khớp!";
                         header('Location: index.php?controller=QuanLyTaiKhoan&action=edit&id=' . $id);

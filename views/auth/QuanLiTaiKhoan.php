@@ -1,48 +1,85 @@
 <?PHP
     require_once 'views/layouts/header.php';
     require_once 'views/layouts/sidebar/admin.php';
-    require_once 'views/layouts/footer.php';
 ?>
+
+<!-- THÊM THẺ MAIN BAO QUANH NỘI DUNG -->
+<main class="content-area">
+
 <style>
-/* Vùng chứa chính */
+/* RESET TRIỆT ĐỂ */
+body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Content area */
+.content-area {
+    margin-left: 280px;
+    padding: 20px;
+    background: #f4f6fb;
+    min-height: 100vh;
+}
+
+/* Vùng chứa chính - ĐÃ SỬA: bỏ margin-left */
 .taikhoan-container {
     background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    padding: 30px;
-    max-width: 1000px;
-    margin: 40px auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 25px;
+    margin: 0;
     font-family: "Segoe UI", sans-serif;
 }
 
-/* Tiêu đề */
-.taikhoan-container h2 {
-    text-align: center;
-    color: #2c3e50;
-    margin-bottom: 25px;
+/* Alert messages - ĐÃ SỬA: bỏ margin-left */
+.alert {
+    margin: 0 0 20px 0;
+    border-radius: 8px;
+    padding: 15px 20px;
+    font-weight: 500;
 }
 
-/* Nút thêm mới */
+/* Responsive */
+@media (max-width: 768px) {
+    .content-area {
+        margin-left: 0;
+        padding: 10px;
+    }
+}
+
+/* PHẦN CSS CÒN LẠI GIỮ NGUYÊN */
+.taikhoan-container h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 600;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
 .taikhoan-container .btn-primary {
     display: inline-block;
-    background-color: #007bff;
+    background: linear-gradient(135deg, #007bff, #0056b3);
     color: #fff;
-    padding: 8px 14px;
+    padding: 10px 20px;
     border-radius: 6px;
     text-decoration: none;
-    margin-bottom: 15px;
-    transition: 0.2s;
+    margin-bottom: 20px;
+    border: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
 }
 .taikhoan-container .btn-primary:hover {
-    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.4);
 }
 
-/* Form tìm kiếm */
 .search-form {
     background: #f8f9fa;
     padding: 20px;
     border-radius: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     border: 1px solid #e9ecef;
 }
 
@@ -53,111 +90,187 @@
 .search-form label {
     display: block;
     font-weight: 600;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     color: #495057;
+    font-size: 14px;
 }
 
 .search-form input[type="text"] {
     width: 100%;
-    padding: 8px 12px;
+    padding: 10px 12px;
     border: 1px solid #ced4da;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.search-form input[type="text"]:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 }
 
 .search-form button {
-    background-color: #28a745;
+    background: linear-gradient(135deg, #28a745, #218838);
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
+    padding: 10px 20px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin-right: 10px;
 }
 
 .search-form button:hover {
-    background-color: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40,167,69,0.3);
 }
 
 .search-form .btn-reset {
-    background-color: #6c757d;
-    margin-left: 10px;
+    background: linear-gradient(135deg, #6c757d, #545b62);
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    display: inline-block;
+    transition: all 0.3s ease;
 }
 
 .search-form .btn-reset:hover {
-    background-color: #545b62;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(108,117,125,0.3);
+    color: white;
 }
 
-/* Bảng */
 .taikhoan-container table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 15px;
+    font-size: 14px;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .taikhoan-container th {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #007bff, #0056b3);
     color: white;
     text-align: left;
-    padding: 10px;
+    padding: 12px 15px;
+    font-weight: 600;
+    font-size: 14px;
 }
 
 .taikhoan-container td {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
+    padding: 12px 15px;
+    border-bottom: 1px solid #e9ecef;
+    color: #495057;
 }
 
 .taikhoan-container tr:hover {
-    background-color: #f2f6ff;
+    background-color: #f8f9fa;
 }
 
-/* Cột hành động */
+.taikhoan-container tr:last-child td {
+    border-bottom: none;
+}
+
 .taikhoan-container td a {
     text-decoration: none;
-    margin-right: 8px;
+    margin-right: 12px;
     font-weight: 500;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
 }
 
 .taikhoan-container a.edit {
     color: #28a745;
+    background: rgba(40,167,69,0.1);
 }
 .taikhoan-container a.delete {
     color: #dc3545;
+    background: rgba(220,53,69,0.1);
 }
 .taikhoan-container a.toggle {
     color: #ffc107;
-}
-.taikhoan-container a.edit:hover {
-    text-decoration: underline;
-    color: #1f7a33;
-}
-.taikhoan-container a.delete:hover {
-    text-decoration: underline;
-    color: #b02a37;
-}
-.taikhoan-container a.toggle:hover {
-    text-decoration: underline;
-    color: #c69500;
+    background: rgba(255,193,7,0.1);
 }
 
-/* Trạng thái */
+.taikhoan-container a.edit:hover {
+    background: #28a745;
+    color: white;
+}
+.taikhoan-container a.delete:hover {
+    background: #dc3545;
+    color: white;
+}
+.taikhoan-container a.toggle:hover {
+    background: #ffc107;
+    color: #212529;
+}
+
 .status-active {
     color: #28a745;
     font-weight: 600;
+    background: rgba(40,167,69,0.1);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
 }
 .status-locked {
     color: #dc3545;
     font-weight: 600;
+    background: rgba(220,53,69,0.1);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
 }
 
-/* Không có kết quả */
 .no-results {
     text-align: center;
-    padding: 20px;
+    padding: 40px;
     color: #6c757d;
     font-style: italic;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.taikhoan-container .btn-back {
+    background: linear-gradient(135deg, #6c757d, #545b62);
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+    border: none;
+    font-weight: 500;
+}
+
+.taikhoan-container .btn-back:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(108,117,125,0.3);
+    color: white;
 }
 </style>
+
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -165,18 +278,18 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Hiển thị thông báo
 if (isset($_SESSION['success'])) {
-    echo '<div class="alert alert-success" style="background: #d4edda; color: #155724; padding: 10px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #c3e6cb;">' . $_SESSION['success'] . '</div>';
+    echo '<div class="alert alert-success">' . $_SESSION['success'] . '</div>';
     unset($_SESSION['success']);
 }
 
 if (isset($_SESSION['error'])) {
-    echo '<div class="alert alert-danger" style="background: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #f5c6cb;">' . $_SESSION['error'] . '</div>';
+    echo '<div class="alert alert-danger">' . $_SESSION['error'] . '</div>';
     unset($_SESSION['error']);
 }
 ?>
 
 <div class="taikhoan-container">
-    <h2>Quản lý tài khoản</h2>
+    <h2>📊 Quản lý tài khoản</h2>
     
     <!-- Form tìm kiếm -->
     <div class="search-form">
@@ -185,64 +298,77 @@ if (isset($_SESSION['error'])) {
             <input type="hidden" name="action" value="index">
             
             <div class="form-group">
-                <label for="search_id">Tìm theo ID:</label>
+                <label for="search_id">🔍 Tìm theo ID:</label>
                 <input type="text" id="search_id" name="search_id" 
                        value="<?php echo htmlspecialchars($_GET['search_id'] ?? ''); ?>" 
                        placeholder="Nhập ID tài khoản">
             </div>
             
             <div class="form-group">
-                <label for="search_username">Tìm theo tên đăng nhập:</label>
+                <label for="search_username">👤 Tìm theo tên đăng nhập:</label>
                 <input type="text" id="search_username" name="search_username" 
                        value="<?php echo htmlspecialchars($_GET['search_username'] ?? ''); ?>" 
                        placeholder="Nhập tên đăng nhập">
             </div>
             
             <div>
-                <button type="submit">Tìm kiếm</button>
-                <a href="index.php?controller=QuanLyTaiKhoan&action=index" class="btn-reset" style="color: white; text-decoration: none; padding: 8px 16px; background: #6c757d; border-radius: 4px; display: inline-block;">Reset</a>
+                <button type="submit">🔍 Tìm kiếm</button>
+                <a href="index.php?controller=QuanLyTaiKhoan&action=index" class="btn-reset">🔄 Reset</a>
             </div>
         </form>
     </div>
 
-    <a href="index.php?controller=QuanLyTaiKhoan&action=create" class="btn-primary">+ Thêm tài khoản</a>
+    <a href="index.php?controller=QuanLyTaiKhoan&action=create" class="btn-primary">➕ Thêm tài khoản</a>
     
     <table>
-        <tr>
-            <th>ID</th>
-            <th>Tên đăng nhập</th>
-            <th>Họ tên</th>
-            <th>Vai trò</th>
-            <th>Trạng thái</th>
-            <th>Hành động</th>
-        </tr>
-        <?php if (empty($accounts)): ?>
+        <thead>
             <tr>
-                <td colspan="6" class="no-results">Không tìm thấy tài khoản nào</td>
+                <th>ID</th>
+                <th>Tên đăng nhập</th>
+                <th>Họ tên</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
             </tr>
-        <?php else: ?>
-            <?php foreach ($accounts as $acc): ?>
+        </thead>
+        <tbody>
+            <?php if (empty($accounts)): ?>
                 <tr>
-                    <td><?= $acc['maTaiKhoan'] ?></td>
-                    <td><?= htmlspecialchars($acc['tenDangNhap']) ?></td>
-                    <td><?= htmlspecialchars($acc['hoTen'] ?? '') ?></td>
-                    <td><?= htmlspecialchars($acc['loaiNguoiDung']) ?></td>
-                    <td class="<?= $acc['trangThai'] === 'HOAT_DONG' ? 'status-active' : 'status-locked' ?>">
-                     <?= $acc['trangThai'] === 'HOAT_DONG' ? 'Hoạt động' : 'Đã khóa' ?>
-                    </td>
-                    <td>
-                        <a href="index.php?controller=QuanLyTaiKhoan&action=edit&id=<?= $acc['maTaiKhoan'] ?>" class="edit">Sửa</a>
-                        <a href="index.php?controller=QuanLyTaiKhoan&action=delete&id=<?= $acc['maTaiKhoan'] ?>" class="delete" onclick="return confirm('Xóa tài khoản này?')">Xóa</a>
-                        <a href="index.php?controller=QuanLyTaiKhoan&action=toggleStatus&id=<?= $acc['maTaiKhoan'] ?>" class="toggle">
-                            <?= $acc['trangThai'] === 'HOAT_DONG' ? 'Khóa' : 'Mở khóa' ?>
-                        </a>
-                    </td>
+                    <td colspan="6" class="no-results">📭 Không tìm thấy tài khoản nào</td>
                 </tr>
-            <?php endforeach; ?>
-        <?php endif; ?>
+            <?php else: ?>
+                <?php foreach ($accounts as $acc): ?>
+                    <tr>
+                        <td><?= $acc['maTaiKhoan'] ?></td>
+                        <td><?= htmlspecialchars($acc['tenDangNhap']) ?></td>
+                        <td><?= htmlspecialchars($acc['hoTen'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($acc['loaiNguoiDung']) ?></td>
+                        <td>
+                            <span class="<?= $acc['trangThai'] === 'HOAT_DONG' ? 'status-active' : 'status-locked' ?>">
+                                <?= $acc['trangThai'] === 'HOAT_DONG' ? '✅ Hoạt động' : '❌ Đã khóa' ?>
+                            </span>
+                        </td>
+                        <td>
+                            <a href="index.php?controller=QuanLyTaiKhoan&action=edit&id=<?= $acc['maTaiKhoan'] ?>" class="edit">✏️ Sửa</a>
+                            <a href="index.php?controller=QuanLyTaiKhoan&action=delete&id=<?= $acc['maTaiKhoan'] ?>" class="delete" onclick="return confirm('Bạn có chắc muốn xóa tài khoản này?')">🗑️ Xóa</a>
+                            <a href="index.php?controller=QuanLyTaiKhoan&action=toggleStatus&id=<?= $acc['maTaiKhoan'] ?>" class="toggle">
+                                <?= $acc['trangThai'] === 'HOAT_DONG' ? '🔒 Khóa' : '🔓 Mở khóa' ?>
+                            </a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
     </table>
-     <!-- THÊM NÚT QUAY LẠI TRANG CHÍNH -->
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="index.php" class="btn-reset" style="color: white; text-decoration: none; padding: 8px 16px; background: #6c757d; border-radius: 4px; display: inline-block;">← Quay lại trang chính</a>
+    
+    <!-- Nút quay lại -->
+    <div style="text-align: center; margin-top: 25px;">
+        <a href="index.php" class="btn-back">← Quay lại trang chính</a>
     </div>
 </div>
+
+</main> <!-- ĐÓNG THẺ MAIN -->
+
+<?php
+    require_once 'views/layouts/footer.php';
+?>
