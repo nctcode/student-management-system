@@ -16,14 +16,14 @@
                     <span>Xem thời khóa biểu</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">
+            <li>
+                <a href="index.php?controller=diem&action=xemdiem">
                     <i class="fas fa-clipboard-list"></i>
                     <span>Xem điểm</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">
+            <li>
+                <a href="index.php?controller=baitap&action=danhsach_hs">
                     <i class="fas fa-book"></i>
                     <span>Bài tập</span>
                 </a>

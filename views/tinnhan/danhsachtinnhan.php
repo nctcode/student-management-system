@@ -10,17 +10,30 @@
     <?php endif; ?>
 
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-10 offset-md-1">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h3 class="m-0 font-weight-bold text-primary">Danh sách tin nhắn</h3>
+                    <h5 class="m-0 font-weight-bold text-primary">Danh sách tin nhắn</h5>
                     <?php if (in_array($_SESSION['user']['vaiTro'], ['QTV', 'BGH', 'GIAOVIEN'])): ?>
                     <a href="index.php?controller=tinnhan&action=guitinnhan" class="btn btn-primary btn-sm">
                         <i class="fas fa-paper-plane"></i> Gửi tin nhắn mới
                     </a>
                     <?php endif; ?>
                 </div>
+                
                 <div class="card-body">
+                    <div class="mb-3 d-flex justify-content-start border-bottom pb-3">
+                        <?php $currentFilter = $_GET['filter'] ?? 'all'; ?>
+                        
+                        <a href="index.php?controller=tinnhan&action=index&filter=all" 
+                           class="btn btn-sm <?= $currentFilter == 'all' ? 'btn-primary' : 'btn-outline-secondary' ?> mr-2">
+                           Tất cả
+                        </a>
+                        <a href="index.php?controller=tinnhan&action=index&filter=unread" 
+                           class="btn btn-sm <?= $currentFilter == 'unread' ? 'btn-danger' : 'btn-outline-secondary' ?> ms-2">
+                           Chưa đọc
+                        </a>
+                    </div>
                     <?php if (empty($tinNhan)): ?>
                         <div class="text-center py-4">
                             <i class="fas fa-comments fa-3x text-muted mb-3"></i>
@@ -37,7 +50,7 @@
                             <a href="index.php?controller=tinnhan&action=chitiettinnhan&maHoiThoai=<?= $tn['maHoiThoai'] ?>" 
                                class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
+                                    <div class="flex-grow-1 min-width-0">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <h6 class="mb-1 font-weight-bold">
                                                 <?= htmlspecialchars($tn['tenHoiThoai']) ?>
@@ -49,17 +62,17 @@
                                                 <?= date('H:i d/m/Y', strtotime($tn['thoiGianGui'])) ?>
                                             </small>
                                         </div>
-                                        <p class="mb-1 text-truncate"><?= htmlspecialchars($tn['noiDung']) ?></p>
+                                        <p class="mb-1 text-truncate" style="white-space: normal;overflow-wrap: break-word;word-wrap: break-word;word-break: break-all;"><?= $tn['noiDung'] ?></p>
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <div class="flex-grow-1">
+                                            <div class="flex-grow-1 min-width-0">
                                                 <small class="text-muted">
                                                     <i class="fas fa-user"></i> <strong>Từ:</strong> <?= htmlspecialchars($tn['nguoiGui']) ?>
                                                 </small>
                                                 
-                                                <small class="text-muted d-block text-truncate" title="<?= htmlspecialchars($tn['danhSachThanhVien']) ?>">
+                                                <small class="text-muted d-block text-truncate" style="white-space: normal;overflow-wrap: break-word;word-wrap: break-word;word-break: break-all;" title="<?= htmlspecialchars($tn['danhSachThanhVien']) ?>">
                                                     <i class="fas fa-users"></i> <strong>Đến:</strong> <?= htmlspecialchars($tn['danhSachThanhVien']) ?>
                                                 </small>
-                                                </div>
+                                            </div>
 
                                             <?php 
                                             if (!empty($tn['fileDinhKem'])): 

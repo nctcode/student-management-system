@@ -12,8 +12,14 @@
             </li>
             <li>
                 <a href="#">
-                    <i class="fas fa-chart-bar"></i>
+                    <i class="fas fa-clipboard-list"></i>
                     <span>Kết quả học tập</span>
+                </a>
+            </li>
+            <li>
+                <a href="index.php?controller=diem&action=xemdiem">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Xem điểm</span>
                 </a>
             </li>
             <li class="nav-item">

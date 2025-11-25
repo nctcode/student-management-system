@@ -147,6 +147,22 @@ class HocSinhModel {
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getSoLuongHocSinhByLop($maLop) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as siSo FROM hocsinh WHERE maLop = ?";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$maLop]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['siSo'] ?? 0;
+        } catch (Exception $e) {
+            error_log("Lỗi CSDL khi lấy sĩ số: " . $e->getMessage());
+            return 0;
+        }
+    }
     
 }
 ?>

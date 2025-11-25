@@ -87,6 +87,12 @@ $roleName = 'Giáo viên';
                                             <small class="d-block text-muted">Xem thông tin lớp và học sinh</small>
                                         </div>
                                     </a>
+                                    <a href="index.php?controller=diem&action=nhapdiem" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-edit me-2"></i>Nhập điểm
+                                    </a>
+                                    <a href="index.php?controller=chuyencan&action=index" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-user-check me-2"></i>Ghi nhận chuyên cần
+                                    </a>
                                     <a href="index.php?controller=thoikhoabieu&action=index" class="list-group-item list-group-item-action d-flex align-items-center">
                                         <i class="fas fa-calendar-alt me-3 text-success"></i>
                                         <div>
@@ -107,6 +113,9 @@ $roleName = 'Giáo viên';
                                             <strong>Tin Nhắn</strong>
                                             <small class="d-block text-muted">Liên hệ với học sinh và phụ huynh</small>
                                         </div>
+                                    </a>
+                                    <a href="index.php?controller=baitap&action=danhsach" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-tasks me-2"></i>Bài tập
                                     </a>
                                 </div>
                             </div>

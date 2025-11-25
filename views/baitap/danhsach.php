@@ -10,7 +10,7 @@
 
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h4 class="m-0 font-weight-bold text-primary">Danh sách bài tập</h4>
+            <h5 class="m-0 font-weight-bold text-primary">Danh sách bài tập</h5>
             <a href="index.php?controller=baitap&action=index" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus"></i> Giao bài tập mới
             </a>
@@ -19,7 +19,7 @@
             <?php if (empty($danhSachBaiTap)): ?>
                 <div class="text-center py-4">
                     <i class="fas fa-book-reader fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">Bạn chưa giao bài tập nào.</p>
+                    <p class="text-muted">Bạn chưa giao bài tập nào!</p>
                     <a href="index.php?controller=baitap&action=index" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Giao bài tập ngay
                     </a>
@@ -96,17 +96,4 @@
     </div>
 </div>
 
-<style>
-    #dataTable tbody a {
-        text-decoration: none;
-        color: black;
-    }
-
-    #dataTable tbody a:hover {
-        text-decoration: underline;
-    }
-
-    #dataTable tbody tr:hover {
-        background-color: #e8e9eaff; 
-    }
-</style>
+<link rel="stylesheet" href="assets/css/baitap.css">
