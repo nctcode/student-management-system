@@ -79,7 +79,7 @@ $roleName = 'Giáo viên';
                                     <a href="index.php?controller=ketquahoctap&action=thongke" class="list-group-item list-group-item-action">
                                         <i class="fas fa-chart-line me-2"></i>Thống kê kết quả học tập
                                     </a>
-                                    <a href="index.php?controller=taodethi&action=index" class="list-group-item list-group-item-action">
+                                    <a href="index.php?controller=dethi&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-file-alt me-2"></i> Tạo đề thi
                                     </a>
                                 </div>
