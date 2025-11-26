@@ -76,7 +76,7 @@ $roleName = 'Tổ trưởng chuyên môn';
                                     <a href="index.php?controller=dethi&action=duyet" class="list-group-item list-group-item-action">
                                         <i class="fas fa-check-circle me-2"></i>Duyệt đề thi
                                     </a>
-                                    <a href="index.php?controller=duyetdethi&action=lichSuDuyetDeThi" class="list-group-item list-group-item-action">
+                                    <a href="index.php?controller=dethi&action=lichSuDuyetDeThi" class="list-group-item list-group-item-action">
                                         <i class="fas fa-history me-2"></i>Lịch sử duyệt đề
                                     </a>
                                     <a href="index.php?controller=phancongdethi&action=index" class="list-group-item list-group-item-action">

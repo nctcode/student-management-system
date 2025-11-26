@@ -58,7 +58,7 @@ class DethiModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Lấy danh sách đề thi theo môn học, khối và học kỳ (có thể filter)
+    // Lấy danh sách đề thi theo môn học, khối và học kỳ 
     public function getDeThi($maMonHoc, $maKhoi = null, $maNienKhoa = null)
     {
         $sql =
@@ -122,12 +122,59 @@ class DethiModel
     // Cập nhật trạng thái đề thi
     public function capNhatTrangThai($maDeThi, $trangThai, $ghiChu = null)
     {
-        $sql = "UPDATE dethi SET trangThai = :trangThai, ghiChu = :ghiChu WHERE maDeThi = :maDeThi";
+        $sql = "UPDATE dethi SET trangThai = :trangThai, ghiChu = :ghiChu, ngayDuyet = NOW() WHERE maDeThi = :maDeThi";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             'trangThai' => $trangThai,
             'ghiChu' => $ghiChu,
             'maDeThi' => $maDeThi
         ]);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////
+    ////////////////////////////LỊCH SỬ DUYỆT ĐỀ THI///////////////////////
+    ///////////////////////////////////////////////////////////////////////
+
+
+    // Lấy lịch sử duyệt đề thi theo chuyên môn tổ trưởng, khối, niên khóa
+    public function getLichSuDuyetDeThi($maNguoiDung, $maKhoi = null, $maNienKhoa = null)
+    {
+        // Lấy thông tin tổ trưởng
+        $toTruong = $this->getToTruongByMaNguoiDung($maNguoiDung);
+        if (!$toTruong) return [];
+
+        $maMonHoc = $toTruong['maMonHoc'];
+
+        // Query chính
+        $sql = "SELECT d.maDeThi, d.tieuDe, d.trangThai, d.noiDung AS fileDeThi,
+                   n.hoTen, m.tenMonHoc, d.maKhoi, d.maNienKhoa, d.ngayDuyet AS ngayDuyet
+            FROM dethi d
+            JOIN giaovien g ON d.maGiaoVien = g.maGiaoVien
+            JOIN nguoidung n ON g.maNguoiDung = n.maNguoiDung
+            JOIN monhoc m ON d.maMonHoc = m.maMonHoc
+            WHERE d.maMonHoc = :maMonHoc
+              AND (d.trangThai = 'DA_DUYET' OR d.trangThai = 'TU_CHOI')";
+
+        $params = ['maMonHoc' => $maMonHoc];
+
+        // Lọc khối
+        if (!empty($maKhoi)) {
+            $sql .= " AND d.maKhoi = :maKhoi";
+            $params['maKhoi'] = $maKhoi;
+        }
+
+        // Lọc niên khóa
+        if (!empty($maNienKhoa)) {
+            $sql .= " AND d.maNienKhoa = :maNienKhoa";
+            $params['maNienKhoa'] = $maNienKhoa;
+        }
+
+        $sql .= " ORDER BY d.maDeThi DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

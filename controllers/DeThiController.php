@@ -207,4 +207,42 @@ class DeThiController
         header("Location: index.php?controller=dethi&action=duyet&maKhoi={$maKhoi}&maNienKhoa={$maNienKhoa}");
         exit;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////
+    ////////////////////////////LỊCH SỬ DUYỆT//////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+
+    public function lichSuDuyetDeThi()
+    {
+        if (!isset($_SESSION['user'])) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+        $maKhoi = $_GET['maKhoi'] ?? null;
+        $maNienKhoa = $_GET['maNienKhoa'] ?? null;
+        $maDeThi = $_GET['maDeThi'] ?? null;
+
+        // Chỉ lấy danh sách đề thi khi đã chọn khối hoặc học kỳ
+        $exams = [];
+        if ($maKhoi || $maNienKhoa) {
+            $exams = $this->model->getLichSuDuyetDeThi($maNguoiDung, $maKhoi, $maNienKhoa);
+        }
+
+        // Nếu có maDeThi, lấy chi tiết đề thi
+        $examDetail = null;
+        if ($maDeThi) {
+            $examDetail = $this->model->getDeThiById($maDeThi);
+        }
+
+        // Lấy danh sách Khối và Niên khóa để filter
+        $khoiHocList = $this->model->getAllKhoiHoc();
+        $nienKhoaList = $this->model->getAllNienKhoa();
+
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/totruong.php';
+        require_once 'views/dethi/lichsuduyetde.php';
+    }
 }
