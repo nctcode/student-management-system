@@ -1,5 +1,8 @@
 <?php
 $title = "Đăng Nhập - QLHS";
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 ?>
 
 <!DOCTYPE html>
@@ -236,12 +239,14 @@ $title = "Đăng Nhập - QLHS";
                 </div>
                 
                 <button type="submit" class="btn-login">Đăng nhập</button>
-                
-                <?php if (isset($_GET['error'])): ?>
-                <div class="alert-error" role="alert">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    Tên đăng nhập hoặc mật khẩu không đúng!
-                </div>
+                <?php if (isset($_SESSION['error'])): ?>
+    <div class="alert-error" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <?php 
+        echo $_SESSION['error']; 
+        unset($_SESSION['error']); // Xóa sau khi hiển thị
+        ?>
+    </div>
                 <?php endif; ?>
             </form>
             
@@ -266,7 +271,7 @@ $title = "Đăng Nhập - QLHS";
                         <div>ph01 / 123456</div>
                     </div>
                     <div class="demo-item">
-                        <strong>Ban giám hiệu:</strong>
+                        <strong>Ban giám hiệu 1:</strong>
                         <div>bgh01 / 123456</div>
                     </div>
                     <div class="demo-item">

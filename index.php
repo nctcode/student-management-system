@@ -255,7 +255,22 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;    
-                    
+                
+                case 'quanlytaikhoan':
+                    switch ($action) {
+                        case 'index':
+                        case 'create':
+                        case 'store':
+                        case 'edit':
+                        case 'update':
+                        case 'delete':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
+
                 default:
                     $controllerInstance->$action();
             }

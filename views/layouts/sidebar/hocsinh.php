@@ -16,24 +16,37 @@
                     <span>Xem thời khóa biểu</span>
                 </a>
             </li>
-            <li>
-                <a href="index.php?controller=diem&action=xemdiem">
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=diem&action=xemdiem">
                     <i class="fas fa-clipboard-list"></i>
                     <span>Xem điểm</span>
                 </a>
             </li>
-            <li>
-                <a href="index.php?controller=baitap&action=danhsach_hs">
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=baitap&action=danhsach_hs">
                     <i class="fas fa-book"></i>
                     <span>Bài tập</span>
                 </a>
             </li>
+            <?php if (in_array($_SESSION['user']['vaiTro'], ['QTV', 'BGH', 'GIAOVIEN', 'HOCSINH', 'PHUHUYNH'])): ?>
             <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=tinnhan&action=index">
-                    <i class="fas fa-comments"></i>
+                <a class="nav-link collapsed" href="#" 
+                   data-bs-toggle="collapse" 
+                   data-bs-target="#collapseTinNhan"
+                   aria-expanded="false" 
+                   aria-controls="collapseTinNhan">
+                    <i class="fas fa-fw fa-comments"></i>
                     <span>Tin nhắn</span>
+                    <i class="fas fa-fw fa-angle-right sidebar-arrow"></i>
                 </a>
+                <div id="collapseTinNhan" class="collapse" aria-labelledby="headingTinNhan" data-bs-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="index.php?controller=tinnhan&action=guitinnhangiaovien">Gửi tin nhắn mới</a>
+                        <a class="collapse-item" href="index.php?controller=tinnhan&action=index">Danh sách tin nhắn</a>
+                    </div>
+                </div>
             </li>
+            <?php endif; ?>
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=hocphi&action=index">
                     <i class="fas fa-money-bill-wave"></i>
@@ -49,12 +62,12 @@
             <li class="nav-item">
                 <a href="index.php?controller=thongbao&action=danhsach" class="nav-link">
                     <i class="nav-icon fas fa-bullhorn"></i>
-                    <p>
+                    <span>
                         Thông báo
                         <?php if ($soThongBaoChuaDoc > 0): ?>
                         <span class="badge bg-danger float-right"><?php echo $soThongBaoChuaDoc; ?></span>
                         <?php endif; ?>
-                    </p>
+                    </span>
                 </a>
             </li>
             <li class="nav-item">
@@ -76,8 +89,8 @@
                 isset($_SESSION['user']['khoi']) && 
                 $_SESSION['user']['khoi'] == 11): 
             ?>
-            <li>
-                <a href="index.php?controller=dangkybanhoc&action=index">
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=dangkybanhoc&action=index">
                     <i class="fas fa-graduation-cap"></i>
                     <span>Đăng ký ban học</span>
                     <span class="badge bg-warning ms-2">Mới</span>
