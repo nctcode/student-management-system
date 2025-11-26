@@ -308,5 +308,193 @@ class TinNhanController {
         echo json_encode($phuHuynh);
         exit;
     }
+
+    // Thêm vào TinNhanController.php
+
+public function guitinnhangiaovien() {
+    $this->checkAuth();
+    
+    $userRole = $_SESSION['user']['vaiTro'] ?? '';
+    $allowedRoles = ['PHUHUYNH', 'HOCSINH'];
+    
+    if (!in_array($userRole, $allowedRoles)) {
+        $_SESSION['error'] = "Bạn không có quyền truy cập chức năng này!";
+        header('Location: index.php?controller=tinnhan&action=index');
+        exit;
+    }
+
+    $title = "Gửi Tin Nhắn Cho Giáo Viên - QLHS";
+    $showSidebar = true;
+
+    // Lấy danh sách giáo viên
+    require_once 'models/GiaoVienModel.php';
+    $giaoVienModel = new GiaoVienModel();
+    $danhSachGiaoVien = $giaoVienModel->getAllGiaoVien();
+
+    // Lấy thông tin người gửi
+    $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+    $thongTinNguoiGui = $this->layThongTinNguoiGui($userRole, $maNguoiDung);
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $this->xuLyGuiTinNhanGiaoVien($thongTinNguoiGui);
+    }
+
+    require_once 'views/layouts/header.php';
+    
+    if ($userRole === 'PHUHUYNH') {
+        require_once 'views/layouts/sidebar/phuhuynh.php';
+    } else {
+        require_once 'views/layouts/sidebar/hocsinh.php';
+    }
+    
+    require_once 'views/tinnhan/guitinnhangiaovien.php';
+    require_once 'views/layouts/footer.php';
+}
+
+private function layThongTinNguoiGui($vaiTro, $maNguoiDung) {
+    $thongTin = [];
+    
+    if ($vaiTro === 'PHUHUYNH') {
+        $phuHuynh = $this->phuHuynhModel->getPhuHuynhByNguoiDung($maNguoiDung);
+        $hocSinh = $this->phuHuynhModel->getHocSinhCuaPhuHuynh($phuHuynh['maPhuHuynh']);
+        
+        $thongTin = [
+            'maNguoiDung' => $maNguoiDung,
+            'hoTen' => $phuHuynh['hoTen'],
+            'vaiTro' => 'PHUHUYNH',
+            'hocSinh' => $hocSinh
+        ];
+    } elseif ($vaiTro === 'HOCSINH') {
+        $hocSinh = $this->hocSinhModel->getHocSinhByNguoiDung($maNguoiDung);
+        
+        $thongTin = [
+            'maNguoiDung' => $maNguoiDung,
+            'hoTen' => $hocSinh['hoTen'],
+            'vaiTro' => 'HOCSINH',
+            'lop' => $hocSinh['tenLop']
+        ];
+    }
+    
+    return $thongTin;
+}
+
+// Trong TinNhanController.php - Sửa hàm xuLyGuiTinNhanGiaoVien
+
+private function xuLyGuiTinNhanGiaoVien($thongTinNguoiGui) {
+    $maNguoiGui = $thongTinNguoiGui['maNguoiDung'];
+    $tieuDe = $_POST['tieuDe'] ?? '';
+    $noiDung = $_POST['noiDung'] ?? '';
+    $danhSachGiaoVienNhan = $_POST['giaoVienNhan'] ?? [];
+
+    if (is_string($danhSachGiaoVienNhan) && !empty($danhSachGiaoVienNhan)) {
+        $danhSachGiaoVienNhan = explode(',', $danhSachGiaoVienNhan);
+    }
+
+    if (empty($tieuDe) || empty($noiDung) || empty($danhSachGiaoVienNhan)) {
+        $_SESSION['error'] = "Vui lòng điền đầy đủ thông tin tin nhắn và chọn giáo viên nhận!";
+        return;
+    }
+
+    if (strlen($noiDung) > 1000) {
+        $_SESSION['error'] = "Tin nhắn không được vượt quá 1000 ký tự!";
+        return;
+    }
+
+    // Lấy mã người dùng của giáo viên từ mã giáo viên
+    $danhSachNguoiNhan = $this->chuyenMaGiaoVienSangMaNguoiDung($danhSachGiaoVienNhan);
+    
+    if (empty($danhSachNguoiNhan)) {
+        $_SESSION['error'] = "Không tìm thấy thông tin giáo viên!";
+        return;
+    }
+
+    // KHÔNG thêm thông tin người gửi vào nội dung nữa
+    // Chỉ sử dụng nội dung người dùng nhập
+    $noiDungHoanChinh = $noiDung;
+
+    // Xử lý upload file
+    $fileDinhKem = $this->xuLyUploadFile();
+    
+    // Tạo cuộc hội thoại và gửi tin nhắn
+    $result = $this->tinNhanModel->taoTinNhan(
+        $maNguoiGui,
+        $danhSachNguoiNhan,
+        $tieuDe,
+        $noiDungHoanChinh,
+        $fileDinhKem,
+        'GIAOVIEN'
+    );
+
+    if ($result) {
+        $_SESSION['success'] = "Gửi tin nhắn thành công!";
+        header('Location: index.php?controller=tinnhan&action=index');
+        exit;
+    } else {
+        $_SESSION['error'] = "Có lỗi xảy ra khi gửi tin nhắn!";
+    }
+}
+
+// Có thể xóa hàm themThongTinNguoiGuiVaoNoiDung nếu không dùng
+
+private function chuyenMaGiaoVienSangMaNguoiDung($danhSachMaGiaoVien) {
+    require_once 'models/GiaoVienModel.php';
+    $giaoVienModel = new GiaoVienModel();
+    $danhSachMaNguoiDung = [];
+    
+    foreach ($danhSachMaGiaoVien as $maGiaoVien) {
+        $giaoVien = $giaoVienModel->getGiaoVienById($maGiaoVien);
+        if ($giaoVien && isset($giaoVien['maNguoiDung'])) {
+            $danhSachMaNguoiDung[] = $giaoVien['maNguoiDung'];
+        }
+    }
+    
+    return $danhSachMaNguoiDung;
+}
+
+// AJAX: Lấy tất cả giáo viên
+public function getAllGiaoVien() {
+    require_once 'models/GiaoVienModel.php';
+    $giaoVienModel = new GiaoVienModel();
+    
+    $danhSachGiaoVien = $giaoVienModel->getAllGiaoVien();
+    
+    // Format dữ liệu cho frontend
+    $formattedData = [];
+    foreach ($danhSachGiaoVien as $gv) {
+        $formattedData[] = [
+            'maGiaoVien' => $gv['maGiaoVien'],
+            'hoTen' => $gv['hoTen'],
+            'toChuyenMon' => $gv['toChuyenMon'] ?? 'Giáo viên'
+        ];
+    }
+    
+    echo json_encode($formattedData);
+    exit;
+}
+
+// AJAX: Lấy giáo viên theo lớp (cho phụ huynh)
+public function getGiaoVienByLop() {
+    $maLop = $_GET['maLop'] ?? '';
+    
+    if (empty($maLop)) {
+        echo json_encode([]);
+        exit;
+    }
+
+    require_once 'models/GiaoVienModel.php';
+    $giaoVienModel = new GiaoVienModel();
+    
+    // Lấy GVCN
+    $gvcn = $giaoVienModel->getGiaoVienChuNhiemByLop($maLop);
+    
+    // Lấy GVBM
+    $gvbm = $giaoVienModel->getGiaoVienBoMonByLop($maLop);
+    
+    $danhSachGiaoVien = array_merge($gvcn, $gvbm);
+    
+    echo json_encode($danhSachGiaoVien);
+    exit;
+}
+
 }
 ?>

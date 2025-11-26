@@ -14,11 +14,17 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                     <h5 class="m-0 font-weight-bold text-primary">Danh sách tin nhắn</h5>
-                    <?php if (in_array($_SESSION['user']['vaiTro'], ['QTV', 'BGH', 'GIAOVIEN'])): ?>
-                    <a href="index.php?controller=tinnhan&action=guitinnhan" class="btn btn-primary btn-sm">
-                        <i class="fas fa-paper-plane"></i> Gửi tin nhắn mới
-                    </a>
-                    <?php endif; ?>
+                    <div>
+                        <?php if (in_array($_SESSION['user']['vaiTro'], ['QTV', 'BGH', 'GIAOVIEN'])): ?>
+                        <a href="index.php?controller=tinnhan&action=guitinnhan" class="btn btn-primary btn-sm">
+                            <i class="fas fa-paper-plane"></i> Gửi tin nhắn mới
+                        </a>
+                        <?php elseif (in_array($_SESSION['user']['vaiTro'], ['PHUHUYNH', 'HOCSINH'])): ?>
+                        <a href="index.php?controller=tinnhan&action=guitinnhangiaovien" class="btn btn-primary btn-sm">
+                            <i class="fas fa-paper-plane"></i> Gửi tin nhắn cho giáo viên
+                        </a>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 
                 <div class="card-body">

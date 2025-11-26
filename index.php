@@ -130,6 +130,7 @@ if (file_exists($controllerFile)) {
                     }
                     break;
                 
+                // Trong phần case 'tinnhan' của index.php
                 case 'tinnhan':
                     switch ($action) {
                         case 'guitinnhan':
@@ -144,6 +145,15 @@ if (file_exists($controllerFile)) {
                             break;
                         case 'getPhuHuynhByLop':
                             $controllerInstance->getPhuHuynhByLop();
+                            break;
+                        case 'guitinnhangiaovien':
+                            $controllerInstance->guitinnhangiaovien();
+                            break;
+                        case 'getAllGiaoVien': // THÊM DÒNG NÀY
+                            $controllerInstance->getAllGiaoVien();
+                            break;
+                        case 'getGiaoVienByLop': // THÊM DÒNG NÀY
+                            $controllerInstance->getGiaoVienByLop();
                             break;
                         default:
                             $controllerInstance->index();
