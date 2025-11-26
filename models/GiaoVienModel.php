@@ -146,13 +146,15 @@ class GiaoVienModel {
     }
 
     // Lấy lịch dạy trong tuần của giáo viên
+    // Đã sửa lỗi JOIN để lấy chính xác tên lớp từ maLop trong bảng thoikhoabieu
     public function getLichDayTrongTuan($maGiaoVien, $tuan = null) {
         $conn = $this->db->getConnection();
         
         $sql = "SELECT tkb.*, mh.tenMonHoc, l.tenLop, l.maLop
                 FROM thoikhoabieu tkb
                 JOIN monhoc mh ON tkb.maMonHoc = mh.maMonHoc
-                JOIN lophoc l ON mh.maKhoi = l.maKhoi
+                -- SỬA LỖI JOIN: JOIN lớp học bằng maLop có sẵn trong tkb
+                JOIN lophoc l ON tkb.maLop = l.maLop
                 WHERE tkb.maGiaoVien = ?
                 AND (? IS NULL OR tkb.ngayApDung >= ?)
                 ORDER BY tkb.loaiLich, tkb.tietBatDau";
@@ -160,9 +162,12 @@ class GiaoVienModel {
         $stmt = $conn->prepare($sql);
         
         if ($tuan) {
-            $ngayDauTuan = date('Y-m-d', strtotime($tuan));
+            // Lấy ngày đầu tiên của tuần (Thứ Hai)
+            $ngayDauTuan = date('Y-m-d', strtotime($tuan . ' Monday'));
             $stmt->execute([$maGiaoVien, $ngayDauTuan, $ngayDauTuan]);
         } else {
+            // Nếu không có tuần, chỉ lấy những TKB có ngày áp dụng gần nhất (tùy thuộc vào logic controller xử lý ngày áp dụng)
+            // Hiện tại, để đơn giản, chỉ lấy TKB không lọc theo ngày (nếu logic controller đã lọc tuần hiện tại)
             $stmt->execute([$maGiaoVien, null, null]);
         }
         

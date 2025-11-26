@@ -7,14 +7,13 @@
                 <?php
                 $userRole = $_SESSION['user']['vaiTro'] ?? '';
                 if ($userRole === 'HOCSINH') echo 'Thời khóa biểu của tôi';
-                elseif ($userRole === 'GIAOVIEN') echo 'Lịch dạy của tôi';
+                elseif ($userRole === 'GIAOVIEN') echo 'Lịch dạy của tôi'; // Đổi tiêu đề rõ hơn cho Giáo viên
                 elseif ($userRole === 'PHUHUYNH') echo 'Thời khóa biểu của con';
                 else echo 'Thời khóa biểu';
                 ?>
             </h6>
         </div>
         <div class="card-body">
-            <!-- Form chọn tuần -->
             <form method="GET" class="mb-3">
                 <input type="hidden" name="controller" value="thoikhoabieu">
                 <input type="hidden" name="action" value="xemtkb">
@@ -24,7 +23,7 @@
                     </div>
                     <div class="col-auto">
                         <input type="week" name="tuan" value="<?= $_GET['tuan'] ?? date('Y-\WW') ?>" 
-                               class="form-control" onchange="this.form.submit()">
+                             class="form-control" onchange="this.form.submit()">
                     </div>
                 </div>
             </form>
@@ -32,8 +31,13 @@
             <?php if (empty($thoiKhoaBieu)): ?>
                 <div class="alert alert-info">Chưa có thời khóa biểu cho tuần này.</div>
             <?php else: ?>
-                <!-- Hiển thị dạng bảng cho học sinh/phụ huynh -->
-                <?php if (in_array($userRole, ['HOCSINH', 'PHUHUYNH', 'QTV', 'BGH'])): ?>
+                
+                <?php 
+                // Định nghĩa các vai trò xem TKB dạng BẢNG
+                $rolesForTable = ['HOCSINH', 'PHUHUYNH', 'QTV', 'BGH'];
+                ?>
+                
+                <?php if (in_array($userRole, $rolesForTable)): ?>
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead>
@@ -63,10 +67,15 @@
                                             if ($tkb['loaiLich'] === $day && 
                                                 $tkb['tietBatDau'] <= $period && 
                                                 $tkb['tietKetThuc'] >= $period + 1) {
+                                                
+                                                // Hiển thị Môn học
                                                 echo $tkb['tenMonHoc'];
+                                                
+                                                // Hiển thị Giáo viên (nếu có và không phải là người đang xem)
                                                 if (!empty($tkb['tenGiaoVien'])) {
-                                                    echo '<br><small class="text-muted">' . $tkb['tenGiaoVien'] . '</small>';
+                                                    echo '<br><small class="text-muted">GV: ' . $tkb['tenGiaoVien'] . '</small>';
                                                 }
+                                                // Hiển thị Phòng học
                                                 if (!empty($tkb['phongHoc'])) {
                                                     echo '<br><small class="text-muted">' . $tkb['phongHoc'] . '</small>';
                                                 }
@@ -83,19 +92,24 @@
                             </tbody>
                         </table>
                     </div>
-                <?php else: ?>
-                    <!-- Hiển thị dạng danh sách cho giáo viên -->
+                
+                <?php elseif ($userRole === 'GIAOVIEN'): ?>
                     <div class="list-group">
                         <?php foreach ($thoiKhoaBieu as $tkb): ?>
                         <div class="list-group-item">
                             <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1"><?= $tkb['tenMonHoc'] ?> - <?= $tkb['tenLop'] ?></h5>
-                                <small><?= $this->convertDay($tkb['loaiLich']) ?></small>
+                                <h5 class="mb-1">
+                                    <i class="fas fa-book"></i> <?= $tkb['tenMonHoc'] ?> - 
+                                    <i class="fas fa-users"></i> Lớp: <?= $tkb['tenLop'] ?>
+                                </h5>
+                                <small class="text-primary font-weight-bold">
+                                    <?= $this->convertDay($tkb['loaiLich']) ?>
+                                </small>
                             </div>
                             <p class="mb-1">
-                                Tiết: <?= $tkb['tietBatDau'] ?>-<?= $tkb['tietKetThuc'] ?> | 
-                                Phòng: <?= $tkb['phongHoc'] ?> |
-                                Ngày: <?= date('d/m/Y', strtotime($tkb['ngayApDung'])) ?>
+                                <i class="fas fa-clock"></i> Tiết: **<?= $tkb['tietBatDau'] ?>-<?= $tkb['tietKetThuc'] ?>** | 
+                                <i class="fas fa-door-open"></i> Phòng: <?= $tkb['phongHoc'] ?> |
+                                <i class="fas fa-calendar-alt"></i> Ngày: <?= date('d/m/Y', strtotime($tkb['ngayApDung'])) ?>
                             </p>
                         </div>
                         <?php endforeach; ?>
@@ -107,7 +121,7 @@
 </div>
 
 <?php
-// Hàm chuyển đổi thứ
+// Hàm chuyển đổi thứ (Giữ nguyên)
 function convertDay($loaiLich) {
     $days = [
         'THU_2' => 'Thứ 2',
