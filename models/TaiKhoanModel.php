@@ -543,5 +543,40 @@ private function deleteAllRelatedData($maTaiKhoan) {
         return false;
     }
 }
+    public function getMaPhuHuynhByMaNguoiDung($maNguoiDung) {
+    $sql = "SELECT maPhuHuynh FROM phuhuynh WHERE maNguoiDung = :maNguoiDung";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([':maNguoiDung' => $maNguoiDung]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    return $result ? $result['maPhuHuynh'] : null;
+}
+
+public function getMaGiaoVienByMaNguoiDung($maNguoiDung) {
+    $sql = "SELECT maGiaoVien FROM giaovien WHERE maNguoiDung = :maNguoiDung";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([':maNguoiDung' => $maNguoiDung]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    return $result ? $result['maGiaoVien'] : null;
+}
+
+public function getMaHocSinhByMaNguoiDung($maNguoiDung) {
+    $sql = "SELECT maHocSinh FROM hocsinh WHERE maNguoiDung = :maNguoiDung";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([':maNguoiDung' => $maNguoiDung]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    return $result ? $result['maHocSinh'] : null;
+}
+
+public function getMaTruongByMaNguoiDung($maNguoiDung) {
+    $sql = "SELECT maTruong FROM nguoidung WHERE maNguoiDung = :maNguoiDung";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([':maNguoiDung' => $maNguoiDung]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    return $result ? $result['maTruong'] : null;
+}
 }
 ?>

@@ -232,4 +232,163 @@ class DonChuyenLopTruongModel {
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([':reason' => $reason, ':now' => $now, ':id' => $maDon]);
     }
+    // Thêm các phương thức sau vào class DonChuyenLopTruongModel
+
+    public function getByParentId($maPhuHuynh) {
+        $sql = "SELECT d.maDon, d.lyDoChuyen, d.ngayGui, d.maHocSinh,
+                        nd.hoTen AS tenHS,
+                        d.maTruongHienTai, d.maTruongDen, d.maLopHienTai, d.maLopDen,
+                        d.trangThaiTruongDi, d.trangThaiTruongDen, d.trangThaiLop,
+                        d.loaiDon,
+                        COALESCE(t1.tenTruong, '') AS truongHienTai, COALESCE(t2.tenTruong, '') AS truongDen,
+                        COALESCE(l1.tenLop, '') AS lopHienTai, COALESCE(l2.tenLop, '') AS lopDen
+                    FROM donchuyenloptruong d
+                    LEFT JOIN hocsinh h ON d.maHocSinh = h.maHocSinh
+                    LEFT JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+                    LEFT JOIN truong t1 ON d.maTruongHienTai = t1.maTruong
+                    LEFT JOIN truong t2 ON d.maTruongDen = t2.maTruong
+                    LEFT JOIN lophoc l1 ON d.maLopHienTai = l1.maLop
+                    LEFT JOIN lophoc l2 ON d.maLopDen = l2.maLop
+                    WHERE h.maPhuHuynh = :maPhuHuynh
+                    ORDER BY d.ngayGui DESC";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maPhuHuynh' => $maPhuHuynh]);
+        $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Thêm trạng thái tổng
+        foreach ($requests as &$don) {
+            $don['trangThaiTong'] = $this->determineOverallStatus($don);
+        }
+        unset($don);
+        
+        return $requests;
+    }
+
+    public function getStudentsByParent($maPhuHuynh) {
+        $sql = "SELECT h.maHocSinh, nd.hoTen, h.maLop, l.tenLop, t.maTruong, t.tenTruong
+                FROM hocsinh h
+                LEFT JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN lophoc l ON h.maLop = l.maLop
+                LEFT JOIN truong t ON l.maTruong = t.maTruong
+                WHERE h.maPhuHuynh = :maPhuHuynh 
+                AND h.trangThai = 'dang_hoc'";  // CHỈ GIỮ LẠI trangThai CỦA hocsinh
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maPhuHuynh' => $maPhuHuynh]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getLopByTruong($maTruong = null) {
+        // SỬA: Dùng namHoc thay vì tenNienKhoa
+        $sql = "SELECT l.maLop, l.tenLop, k.tenKhoi, nk.namHoc, nk.hocKy
+                FROM lophoc l
+                LEFT JOIN khoi k ON l.maKhoi = k.maKhoi
+                LEFT JOIN nienkhoa nk ON l.maNienKhoa = nk.maNienKhoa
+                WHERE 1=1";
+        
+        if ($maTruong) {
+            $sql .= " AND l.maTruong = :maTruong";
+        }
+        
+        $sql .= " ORDER BY l.tenLop ASC";
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        if ($maTruong) {
+            $stmt->execute([':maTruong' => $maTruong]);
+        } else {
+            $stmt->execute();
+        }
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function createDon($maHocSinh, $loaiDon, $lyDoChuyen, $maTruongDen = null, $maLopDen = null) {
+        // Lấy thông tin học sinh hiện tại
+        $studentInfo = $this->getStudentInfo($maHocSinh);
+        if (!$studentInfo) {
+            return false;
+        }
+        
+        $sql = "INSERT INTO donchuyenloptruong 
+                (maHocSinh, loaiDon, lyDoChuyen, maTruongHienTai, maLopHienTai, maTruongDen, maLopDen, ngayGui) 
+                VALUES 
+                (:maHocSinh, :loaiDon, :lyDoChuyen, :maTruongHienTai, :maLopHienTai, :maTruongDen, :maLopDen, NOW())";
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        return $stmt->execute([
+            ':maHocSinh' => $maHocSinh,
+            ':loaiDon' => $loaiDon,
+            ':lyDoChuyen' => $lyDoChuyen,
+            ':maTruongHienTai' => $studentInfo['maTruong'],
+            ':maLopHienTai' => $studentInfo['maLop'],
+            ':maTruongDen' => $maTruongDen,
+            ':maLopDen' => $maLopDen
+        ]);
+    }
+
+    public function getByIdAndParent($maDon, $maPhuHuynh) {
+        $sql = "SELECT d.*, 
+                        h.maHocSinh, 
+                        nd.hoTen AS tenHS,
+                        COALESCE(t1.tenTruong, '') AS truongHienTai, 
+                        COALESCE(t2.tenTruong, '') AS truongDen,
+                        COALESCE(l1.tenLop, '') AS lopHienTai, 
+                        COALESCE(l2.tenLop, '') AS lopDen
+                FROM donchuyenloptruong d
+                LEFT JOIN hocsinh h ON d.maHocSinh = h.maHocSinh
+                LEFT JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN truong t1 ON d.maTruongHienTai = t1.maTruong
+                LEFT JOIN truong t2 ON d.maTruongDen = t2.maTruong
+                LEFT JOIN lophoc l1 ON d.maLopHienTai = l1.maLop
+                LEFT JOIN lophoc l2 ON d.maLopDen = l2.maLop
+                WHERE d.maDon = :maDon AND h.maPhuHuynh = :maPhuHuynh";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maDon' => $maDon, ':maPhuHuynh' => $maPhuHuynh]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getStudentInfo($maHocSinh) {
+        $sql = "SELECT h.maLop, l.maTruong 
+                FROM hocsinh h
+                LEFT JOIN lophoc l ON h.maLop = l.maLop
+                WHERE h.maHocSinh = :maHocSinh";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maHocSinh' => $maHocSinh]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    private function determineOverallStatus($don) {
+        if ($don['loaiDon'] === 'chuyen_lop') {
+            $status = $don['trangThaiLop'] ?? 'Chờ duyệt';
+            return match($status) {
+                'Từ chối' => 'Bị từ chối',
+                'Đã duyệt' => 'Hoàn tất',
+                default => 'Chờ duyệt'
+            };
+        } else {
+            $statusDi = $don['trangThaiTruongDi'] ?? 'Chờ duyệt';
+            $statusDen = $don['trangThaiTruongDen'] ?? 'Chờ duyệt';
+            
+            if ($statusDen === 'Từ chối' || $statusDi === 'Từ chối') {
+                return 'Bị từ chối';
+            } elseif ($statusDi === 'Đã duyệt' && $statusDen === 'Đã duyệt') {
+                return 'Hoàn tất';
+            } else {
+                return 'Chờ duyệt';
+            }
+        }
+    }
+    public function getMaPhuHuynhByMaNguoiDung($maNguoiDung) {
+        $sql = "SELECT maPhuHuynh FROM phuhuynh WHERE maNguoiDung = :maNguoiDung";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maNguoiDung' => $maNguoiDung]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $result ? $result['maPhuHuynh'] : null;
+    }
 }

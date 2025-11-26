@@ -177,6 +177,38 @@ class AuthController {
             'maNguoiDung' => $maNguoiDung
         ];
         
+        // 🆕 THÊM: Lấy mã phụ huynh nếu vai trò là PHUHUYNH
+        if ($user['vaiTro'] === 'PHUHUYNH') {
+            $maPhuHuynh = $this->model->getMaPhuHuynhByMaNguoiDung($maNguoiDung);
+            if ($maPhuHuynh) {
+                $_SESSION['user']['maPhuHuynh'] = $maPhuHuynh;
+            }
+        }
+        
+        // 🆕 THÊM: Lấy mã giáo viên nếu vai trò là GIAOVIEN
+        if ($user['vaiTro'] === 'GIAOVIEN') {
+            $maGiaoVien = $this->model->getMaGiaoVienByMaNguoiDung($maNguoiDung);
+            if ($maGiaoVien) {
+                $_SESSION['user']['maGiaoVien'] = $maGiaoVien;
+            }
+        }
+        
+        // 🆕 THÊM: Lấy mã học sinh nếu vai trò là HOCSINH
+        if ($user['vaiTro'] === 'HOCSINH') {
+            $maHocSinh = $this->model->getMaHocSinhByMaNguoiDung($maNguoiDung);
+            if ($maHocSinh) {
+                $_SESSION['user']['maHocSinh'] = $maHocSinh;
+            }
+        }
+        
+        // 🆕 THÊM: Lấy mã trường nếu vai trò là BGH
+        if ($user['vaiTro'] === 'BGH') {
+            $maTruong = $this->model->getMaTruongByMaNguoiDung($maNguoiDung);
+            if ($maTruong) {
+                $_SESSION['user']['maTruong'] = $maTruong;
+            }
+        }
+        
         $this->redirectByRole($user['vaiTro']);
         return;
     }

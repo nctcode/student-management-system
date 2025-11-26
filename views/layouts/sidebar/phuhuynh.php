@@ -40,13 +40,6 @@
                     <span>Học phí</span>
                 </a>
             </li>
-            <!-- Sửa lại link cho đúng -->
-            <li>
-                <a href="index.php?controller=donchuyenloptruong&action=guidon">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Gửi đơn chuyển</span>
-                </a>
-            </li>
             <!-- Thêm vào sidebar phụ huynh -->
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=donchuyenloptruong&action=danhsachdoncuatoi">

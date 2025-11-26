@@ -30,9 +30,9 @@
             </li>
             <?php endif; ?>
             <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=donchuyenloptruong&action=index">
+                <a class="nav-link" href="index.php?controller=donchuyenloptruong&action=danhsach">
                     <i class="fas fa-exchange-alt"></i>
-                    <span>Đơn chuyển lớp/trường</span>
+                    <span>Phê duyệt đơn chuyển lớp/trường</span>
                 </a>
             </li>
             <li class="nav-item">

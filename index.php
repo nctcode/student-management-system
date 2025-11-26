@@ -32,10 +32,16 @@ if (file_exists($controllerFile)) {
             switch ($controller) {
                 case 'donchuyenloptruong':
                     switch ($action) {
-                        case 'guidon':
-                        case 'xulyguiDon':
+                        case 'index':
+                        case 'store':
+                        case 'create':
                         case 'danhsachdoncuatoi':
-                        case 'chitiet':
+                        case 'chitietdoncuatoi':
+                        case 'danhsach':
+                        case 'approve':
+                        case 'reject':
+                        case 'ajax_chitiet':
+                        case 'ajax_getlop':
                             $controllerInstance->$action();
                             break;
                         case 'detail':

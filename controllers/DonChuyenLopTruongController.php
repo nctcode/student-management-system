@@ -7,22 +7,39 @@ class DonChuyenLopTruongController {
     public function __construct() {
         $this->model = new DonChuyenLopTruongModel();
         
-        // ĐẢM BẢO SESSION ĐƯỢC KHỞI TẠO
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
-        // DEBUG: Kiểm tra session trong constructor
-        error_log("DEBUG DonChuyenLopTruongController - Session: " . print_r($_SESSION, true));
-        
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        $currentAction = $_GET['action'] ?? '';
         
-        if (!in_array($userRole, ['QTV', 'BGH', 'GIAOVIEN'])) {
+        error_log("DEBUG Constructor - User Role: $userRole, Action: $currentAction");
+        
+        // 🆕 CHỈ CHO PHÉP BGH VÀ PHUHUYNH
+        if (!isset($_SESSION['user']) || !in_array($userRole, ['BGH', 'PHUHUYNH'])) {
+            error_log("DEBUG Access denied - Invalid role: $userRole");
+            $_SESSION['error'] = "Bạn không có quyền truy cập chức năng này.";
             header('Location: index.php?controller=home&action=index');
             exit;
         }
-
-        // KIỂM TRA KỸ HƠN: Nếu là BGH mà không có maTruong
+        
+        // 🆕 DANH SÁCH ACTION CHO PHÉP THEO ROLE
+        // Trong constructor - sửa phần allowedActions
+        $allowedActions = [
+            'PHUHUYNH' => ['danhsachdoncuatoi', 'create', 'store', 'chitietdoncuatoi', 'ajaxGetLop'],
+            'BGH' => ['index', 'danhsach', 'approve', 'reject', 'ajax_chitiet', 'ajaxGetLop']
+        ];
+        
+        // KIỂM TRA ACTION CHO PHÉP
+        if (!in_array($currentAction, $allowedActions[$userRole])) {
+            error_log("DEBUG Access denied - $userRole cannot access: $currentAction");
+            $_SESSION['error'] = "Bạn không có quyền truy cập chức năng: $currentAction";
+            header('Location: index.php?controller=home&action=index');
+            exit;
+        }
+        
+        // 🆕 KIỂM TRA BGH CÓ MÃ TRƯỜNG KHÔNG
         if ($userRole === 'BGH') {
             if (!isset($_SESSION['user']['maTruong']) || empty($_SESSION['user']['maTruong'])) {
                 error_log("DEBUG: BGH user missing maTruong in session");
@@ -33,20 +50,35 @@ class DonChuyenLopTruongController {
                 error_log("DEBUG: BGH user maTruong = " . $_SESSION['user']['maTruong']);
             }
         }
-
-        // Đảm bảo BGH không bị lỗi truy cập trường khác
-        if ($userRole === 'BGH' && isset($_GET['school']) && is_numeric($_GET['school'])) {
-            $maTruongTam = intval($_GET['school']);
-            if ($maTruongTam !== ($_SESSION['user']['maTruong'] ?? 0)) {
-                // BGH chỉ được xem trường của mình, chuyển hướng nếu cố tình xem trường khác
-                header('Location: index.php?controller=home&action=principal&error=unauthorized_school');
-                exit;
+        
+        // 🆕 KIỂM TRA PHUHUYNH CÓ MÃ PHỤ HUYNH KHÔNG
+        if ($userRole === 'PHUHUYNH') {
+            $maNguoiDung = $_SESSION['user']['maNguoiDung'] ?? null;
+            if ($maNguoiDung && !isset($_SESSION['user']['maPhuHuynh'])) {
+                // Tự động lấy maPhuHuynh nếu chưa có
+                $maPhuHuynh = $this->model->getMaPhuHuynhByMaNguoiDung($maNguoiDung);
+                if ($maPhuHuynh) {
+                    $_SESSION['user']['maPhuHuynh'] = $maPhuHuynh;
+                } else {
+                    error_log("DEBUG: PHUHUYNH missing maPhuHuynh");
+                    $_SESSION['error'] = "Không tìm thấy thông tin phụ huynh. Vui lòng liên hệ quản trị viên.";
+                    header('Location: index.php?controller=home&action=index');
+                    exit;
+                }
             }
         }
     }
-
     public function index() {
-        header('Location: index.php?controller=donchuyenloptruong&action=danhsach');
+    // Tự động chuyển hướng theo role
+        $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        
+        if ($userRole === 'PHUHUYNH') {
+            header('Location: index.php?controller=donchuyenloptruong&action=danhsachdoncuatoi');
+        } else if ($userRole === 'BGH') {
+            header('Location: index.php?controller=donchuyenloptruong&action=danhsach');
+        } else {
+            header('Location: index.php?controller=home&action=index');
+        }
         exit;
     }
 
@@ -134,10 +166,16 @@ class DonChuyenLopTruongController {
     }
 
     private function checkPermission($allowedRoles) {
-        if (!isset($_SESSION['user']) || !in_array($_SESSION['user']['vaiTro'], $allowedRoles)) {
+        $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        
+        if (!in_array($userRole, $allowedRoles)) {
+            error_log("DEBUG checkPermission failed - User Role: $userRole, Allowed: " . implode(',', $allowedRoles));
+            $_SESSION['error'] = "Bạn không có quyền truy cập chức năng này.";
             header('Location: index.php?controller=home&action=index');
             exit;
         }
+        
+        return true;
     }
     
     public function approve() {
@@ -228,5 +266,215 @@ class DonChuyenLopTruongController {
             echo json_encode(['error' => 'Lỗi máy chủ: ' . $e->getMessage()]);
             exit;
         }
+    }
+    public function danhsachdoncuatoi() {
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'] ?? null;
+        
+        if (!$maNguoiDung) {
+            $_SESSION['error'] = "Không tìm thấy thông tin người dùng.";
+            header('Location: index.php?controller=home&action=index');
+            exit;
+        }
+        
+        // 🆕 TỰ ĐỘNG LẤY maPhuHuynh NẾU CHƯA CÓ TRONG SESSION
+        if (!isset($_SESSION['user']['maPhuHuynh'])) {
+            $maPhuHuynh = $this->model->getMaPhuHuynhByMaNguoiDung($maNguoiDung);
+            if ($maPhuHuynh) {
+                $_SESSION['user']['maPhuHuynh'] = $maPhuHuynh;
+            } else {
+                $_SESSION['error'] = "Không tìm thấy thông tin phụ huynh. Vui lòng liên hệ quản trị viên.";
+                header('Location: index.php?controller=home&action=index');
+                exit;
+            }
+        }
+        
+        $maPhuHuynh = $_SESSION['user']['maPhuHuynh'];
+        
+        $requests = $this->model->getByParentId($maPhuHuynh);
+        $hocSinhList = $this->model->getStudentsByParent($maPhuHuynh);
+        
+        $title = "Đơn chuyển lớp/trường của tôi";
+        $showSidebar = true;
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/phuhuynh.php';
+        require_once 'views/donchuyenloptruong/danhsachdoncuatoi.php';
+        require_once 'views/layouts/footer.php';
+    }
+
+    public function create() {
+        $maPhuHuynh = $_SESSION['user']['maPhuHuynh'] ?? null;
+        
+        if (!$maPhuHuynh) {
+            $_SESSION['error'] = "Không tìm thấy thông tin phụ huynh.";
+            header('Location: index.php?controller=home&action=index');
+            exit;
+        }
+        
+        $hocSinhList = $this->model->getStudentsByParent($maPhuHuynh);
+        $truongList = $this->model->getAllSchools();
+        
+        $title = "Tạo đơn chuyển lớp/trường";
+        $showSidebar = true;
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/phuhuynh.php';
+        require_once 'views/donchuyenloptruong/taodon.php';
+        require_once 'views/layouts/footer.php';
+    }
+
+
+    public function store() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?controller=donchuyenloptruong&action=create');
+            exit;
+        }
+        
+        $this->checkPermission(['PHUHUYNH']);
+        
+        $maPhuHuynh = $_SESSION['user']['maPhuHuynh'] ?? null;
+        if (!$maPhuHuynh) {
+            $_SESSION['error'] = "Không tìm thấy thông tin phụ huynh.";
+            header('Location: index.php?controller=home&action=index');
+            exit;
+        }
+        
+        // Lấy dữ liệu từ form
+        $maHocSinh = intval($_POST['maHocSinh'] ?? 0);
+        $loaiDon = $_POST['loaiDon'] ?? '';
+        $lyDoChuyen = trim($_POST['lyDoChuyen'] ?? '');
+        
+        // Kiểm tra dữ liệu bắt buộc
+        if ($maHocSinh <= 0 || empty($loaiDon) || empty($lyDoChuyen)) {
+            $_SESSION['error'] = "Vui lòng điền đầy đủ thông tin bắt buộc.";
+            header('Location: index.php?controller=donchuyenloptruong&action=create');
+            exit;
+        }
+        
+        // Kiểm tra học sinh thuộc về phụ huynh này
+        $hocSinhList = $this->model->getStudentsByParent($maPhuHuynh);
+        $isValidStudent = false;
+        foreach ($hocSinhList as $hs) {
+            if ($hs['maHocSinh'] == $maHocSinh) {
+                $isValidStudent = true;
+                $currentStudent = $hs;
+                break;
+            }
+        }
+        
+        if (!$isValidStudent) {
+            $_SESSION['error'] = "Học sinh không hợp lệ.";
+            header('Location: index.php?controller=donchuyenloptruong&action=create');
+            exit;
+        }
+        
+        // Xử lý dữ liệu theo loại đơn
+        $maTruongDen = null;
+        $maLopDen = null;
+        
+        if ($loaiDon === 'chuyen_truong') {
+            $maTruongDen = intval($_POST['maTruongDen'] ?? 0);
+            if ($maTruongDen <= 0) {
+                $_SESSION['error'] = "Vui lòng chọn trường chuyển đến.";
+                header('Location: index.php?controller=donchuyenloptruong&action=create');
+                exit;
+            }
+        } else if ($loaiDon === 'chuyen_lop') {
+            $maLopDen = intval($_POST['maLopDen'] ?? 0);
+            if ($maLopDen <= 0) {
+                $_SESSION['error'] = "Vui lòng chọn lớp chuyển đến.";
+                header('Location: index.php?controller=donchuyenloptruong&action=create');
+                exit;
+            }
+        }
+        
+        // Tạo đơn
+        if ($this->model->createDon($maHocSinh, $loaiDon, $lyDoChuyen, $maTruongDen, $maLopDen)) {
+            $_SESSION['success'] = "Tạo đơn chuyển " . ($loaiDon === 'chuyen_lop' ? 'lớp' : 'trường') . " thành công!";
+            header('Location: index.php?controller=donchuyenloptruong&action=danhsachdoncuatoi');
+        } else {
+            $_SESSION['error'] = "Có lỗi xảy ra khi tạo đơn. Vui lòng thử lại.";
+            header('Location: index.php?controller=donchuyenloptruong&action=create');
+        }
+        exit;
+    }
+
+    public function chitietdoncuatoi() {
+        $this->checkPermission(['PHUHUYNH']);
+        
+        $maDon = intval($_GET['id'] ?? 0);
+        $maPhuHuynh = $_SESSION['user']['maPhuHuynh'] ?? null;
+        
+        if ($maDon <= 0 || !$maPhuHuynh) {
+            $_SESSION['error'] = "Thông tin không hợp lệ.";
+            header('Location: index.php?controller=donchuyenloptruong&action=danhsachdoncuatoi');
+            exit;
+        }
+        
+        // Kiểm tra đơn thuộc về phụ huynh này
+        $don = $this->model->getByIdAndParent($maDon, $maPhuHuynh);
+        if (!$don) {
+            $_SESSION['error'] = "Không tìm thấy đơn hoặc bạn không có quyền xem đơn này.";
+            header('Location: index.php?controller=donchuyenloptruong&action=danhsachdoncuatoi');
+            exit;
+        }
+        
+        $title = "Chi tiết đơn chuyển lớp/trường";
+        $showSidebar = true;
+        
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/phuhuynh.php';
+        require_once 'views/donchuyenloptruong/chitietdon.php';
+        require_once 'views/layouts/footer.php';
+    }
+    public function ajaxGetLop() {
+        // ĐẢM BẢO CHỈ TRẢ VỀ JSON
+        header('Content-Type: application/json; charset=utf-8');
+        
+        try {
+            // KIỂM TRA PHƯƠNG THỨC REQUEST
+            if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+                throw new Exception('Phương thức không hợp lệ');
+            }
+            
+            $maHocSinh = intval($_GET['maHocSinh'] ?? 0);
+            
+            if ($maHocSinh <= 0) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Mã học sinh không hợp lệ'
+                ]);
+                exit;
+            }
+            
+            // Lấy thông tin học sinh
+            $studentInfo = $this->model->getStudentInfo($maHocSinh);
+            
+            if (!$studentInfo) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Không tìm thấy thông tin học sinh'
+                ]);
+                exit;
+            }
+            
+            $maTruong = $studentInfo['maTruong'] ?? null;
+            
+            // Lấy danh sách lớp
+            $lopList = $this->model->getLopByTruong($maTruong);
+            
+            echo json_encode([
+                'success' => true, 
+                'lopList' => $lopList
+            ]);
+            
+        } catch (Exception $e) {
+            // TRẢ VỀ LỖI DẠNG JSON
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Lỗi server: ' . $e->getMessage()
+            ]);
+        }
+        exit;
     }
 }
