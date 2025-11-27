@@ -272,6 +272,9 @@ class ThongBaoController {
             case 'GIAOVIEN':
                 $allowed = in_array($thongBao['nguoiNhan'], ['GIAO_VIEN', 'TAT_CA']);
                 break;
+            case 'TOTRUONG':
+                $allowed = in_array($thongBao['nguoiNhan'], ['TO_TRUONG', 'TAT_CA']);
+                break;
             case 'QTV':
             case 'BGH':
                 $allowed = true;
@@ -287,7 +290,7 @@ class ThongBaoController {
         }
 
         // Cập nhật trạng thái đã xem (chỉ cho học sinh, phụ huynh, giáo viên)
-        if (in_array($userRole, ['HOCSINH', 'PHUHUYNH', 'GIAOVIEN'])) {
+        if (in_array($userRole, ['HOCSINH', 'PHUHUYNH', 'GIAOVIEN', 'TOTRUONG'])) {
             $this->thongBaoModel->capNhatTrangThai($maThongBao, 'Đã xem');
         }
 
@@ -356,6 +359,9 @@ class ThongBaoController {
                 break;
             case 'GIAOVIEN':
                 $thongBao = $this->thongBaoModel->layThongBaoTheoNguoiNhan('GIAO_VIEN');
+                break;
+            case 'TOTRUONG':
+                $thongBao = $this->thongBaoModel->layThongBaoTheoNguoiNhan('TO_TRUONG');
                 break;
             case 'QTV':
             case 'BGH':
@@ -427,5 +433,6 @@ class ThongBaoController {
             return date('d/m/Y', $time);
         }
     }
+    
 }
 ?>

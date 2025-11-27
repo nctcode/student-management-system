@@ -6,6 +6,7 @@ function getRoleName($role) {
         'HOCSINH' => 'Học sinh',
         'PHUHUYNH' => 'Phụ huynh',
         'BGH' => 'Ban giám hiệu',
+        'TOTRUONG' => 'Tổ trưởng chuyên môn',
         'GUEST' => 'Khách'
     ];
     return $roles[$role] ?? $role;
@@ -27,6 +28,9 @@ if (isset($_SESSION['user'])) {
             break;
         case 'GIAOVIEN':
             $soThongBaoChuaDoc = $thongBaoModel->demThongBaoChuaDoc('GIAO_VIEN');
+            break;
+            case 'TOTRUONG':
+            $soThongBaoChuaDoc = $thongBaoModel->demThongBaoChuaDoc('TO_TRUONG');
             break;
         case 'QTV':
         case 'BGH':
@@ -188,6 +192,101 @@ if (isset($_SESSION['user'])) {
         color: #0056b3;
     }
 
+    /* User Dropdown Styles */
+    .user-dropdown {
+        position: relative;
+    }
+
+    .user-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        width: 220px;
+        background: white;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        z-index: 1050;
+        display: none;
+        margin-top: 8px;
+        overflow: hidden;
+    }
+
+    .user-menu.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    .user-menu-header {
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .user-menu-header .user-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+    }
+
+    .user-menu-header .user-role {
+        font-size: 0.8rem;
+        opacity: 0.9;
+    }
+
+    .user-menu-items {
+        padding: 8px 0;
+    }
+
+    .user-menu-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .user-menu-item:hover {
+        background: #f8f9ff;
+        color: #667eea;
+    }
+
+    .user-menu-item i {
+        width: 20px;
+        margin-right: 12px;
+        font-size: 0.9rem;
+    }
+
+    .user-menu-item.logout {
+        border-top: 1px solid #f1f3f4;
+        margin-top: 8px;
+        padding-top: 16px;
+        color: #dc3545;
+    }
+
+    .user-menu-item.logout:hover {
+        background: #fff5f5;
+        color: #dc3545;
+    }
+
+    .user-info {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 20px;
+        padding: 8px 12px;
+    }
+
+    .user-info:hover {
+        background: rgba(255,255,255,0.1);
+    }
+
     /* Scrollbar styling */
     .notification-list::-webkit-scrollbar {
         width: 6px;
@@ -236,7 +335,7 @@ if (isset($_SESSION['user'])) {
                     </div>
                     
                     <!-- Notification dropdown menu -->
-                    <div class="notification-menu" id="notificationMenu">
+                    <div class="notification-menu" id="notificationMenu" style="display: none;">
                         <div class="notification-header">
                             <h6 class="mb-0">Thông báo</h6>
                             <?php if (in_array($_SESSION['user']['vaiTro'] ?? '', ['QTV', 'BGH'])): ?>
@@ -264,37 +363,52 @@ if (isset($_SESSION['user'])) {
                     </div>
                 </div>
                 
-                <!-- User info -->
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?php 
-                        $userName = $_SESSION['user']['hoTen'] ?? 'User';
-                        echo strtoupper(substr($userName, 0, 1)); 
-                        ?>
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">
-                            <a href="index.php?controller=profile" style="color: inherit; text-decoration: none;">
-                                <?php echo $userName; ?>
-                            </a>
-                        </div>
-                        <div class="user-role">
+                <!-- User info với dropdown -->
+                <div class="user-dropdown">
+                    <div class="user-info" id="userInfo">
+                        <div class="user-avatar">
                             <?php 
-                            $role = $_SESSION['user']['vaiTro'] ?? 'GUEST';
-                            echo getRoleName($role); 
+                            $userName = $_SESSION['user']['hoTen'] ?? 'User';
+                            echo strtoupper(substr($userName, 0, 1)); 
                             ?>
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">
+                                <?php echo $userName; ?>
+                            </div>
+                            <div class="user-role">
+                                <?php 
+                                $role = $_SESSION['user']['vaiTro'] ?? 'GUEST';
+                                echo getRoleName($role); 
+                                ?>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-down ms-2" style="font-size: 0.8rem; opacity: 0.7;"></i>
+                    </div>
+                    
+                    <!-- User dropdown menu -->
+                    <div class="user-menu" id="userMenu">
+                        <div class="user-menu-header">
+                            <div class="user-name"><?php echo $userName; ?></div>
+                            <div class="user-role"><?php echo getRoleName($role); ?></div>
+                        </div>
+                        <div class="user-menu-items">
+                            <a href="index.php?controller=profile" class="user-menu-item">
+                                <i class="fas fa-user"></i>
+                                <span>Thông tin cá nhân</span>
+                            </a>
+                            <a href="index.php?controller=auth&action=changePassword" class="user-menu-item">
+                                <i class="fas fa-key"></i>
+                                <span>Đổi mật khẩu</span>
+                            </a>
+                            <a href="index.php?controller=auth&action=logout" class="user-menu-item logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Đăng xuất</span>
+                            </a>
                         </div>
                     </div>
                 </div>
-                <a href="index.php?controller=auth&action=changePassword" class="logout-btn">
-                    <i class="fas fa-key"></i>
-                    <span>Đổi mật khẩu</span>
-                </a>
-                <!-- Logout button -->
-                <a href="index.php?controller=auth&action=logout" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Đăng xuất</span>
-                </a>
+                
                 <?php else: ?>
                 <!-- Hiển thị nút đăng nhập khi chưa đăng nhập -->
                 <a href="index.php?controller=auth&action=login" class="logout-btn">
@@ -317,3 +431,79 @@ if (isset($_SESSION['user'])) {
         
         <!-- Content area -->
         <main class="content-area" style="<?php echo (!isset($_SESSION['user']) || !isset($showSidebar) || $showSidebar === false) ? 'margin-left: 0;' : ''; ?>">
+
+<script>
+// PHƯƠNG ÁN 2: Sử dụng style trực tiếp thay vì class
+document.addEventListener('DOMContentLoaded', function() {
+    // Xử lý dropdown user menu
+    const userInfo = document.getElementById('userInfo');
+    const userMenu = document.getElementById('userMenu');
+    
+    if (userInfo && userMenu) {
+        userInfo.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Đóng notification menu
+            const notificationMenu = document.getElementById('notificationMenu');
+            if (notificationMenu) notificationMenu.style.display = 'none';
+            
+            // Toggle user menu
+            userMenu.style.display = userMenu.style.display === 'block' ? 'none' : 'block';
+        });
+    }
+    
+    // Xử lý dropdown notification
+    const notificationBell = document.getElementById('notificationBell');
+    const notificationMenu = document.getElementById('notificationMenu');
+    
+    if (notificationBell && notificationMenu) {
+        notificationBell.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Đóng user menu
+            if (userMenu) userMenu.style.display = 'none';
+            
+            // Toggle notification menu
+            notificationMenu.style.display = notificationMenu.style.display === 'block' ? 'none' : 'block';
+            
+            // Tải thông báo khi mở dropdown
+            if (notificationMenu.style.display === 'block') {
+                loadNotifications();
+            }
+        });
+    }
+    
+    // Đóng dropdown khi click ra ngoài
+    document.addEventListener('click', function() {
+        if (userMenu) userMenu.style.display = 'none';
+        if (notificationMenu) notificationMenu.style.display = 'none';
+    });
+    
+    // Ngăn dropdown đóng khi click bên trong
+    if (userMenu) {
+        userMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
+    if (notificationMenu) {
+        notificationMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
+    // Hàm tải thông báo bằng AJAX
+    function loadNotifications() {
+        const notificationList = document.getElementById('notificationList');
+        if (!notificationList) return;
+        
+        fetch('index.php?controller=thongbao&action=loadNotifications')
+            .then(response => response.text())
+            .then(html => {
+                notificationList.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+                notificationList.innerHTML = '<div class="text-center p-3 text-danger">Lỗi tải thông báo</div>';
+            });
+    }
+});
+</script>
