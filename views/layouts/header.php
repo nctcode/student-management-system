@@ -273,7 +273,11 @@ if (isset($_SESSION['user'])) {
                         ?>
                     </div>
                     <div class="user-details">
-                        <div class="user-name"><?php echo $userName; ?></div>
+                        <div class="user-name">
+                            <a href="index.php?controller=profile" style="color: inherit; text-decoration: none;">
+                                <?php echo $userName; ?>
+                            </a>
+                        </div>
                         <div class="user-role">
                             <?php 
                             $role = $_SESSION['user']['vaiTro'] ?? 'GUEST';

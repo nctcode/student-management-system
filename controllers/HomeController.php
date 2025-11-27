@@ -24,6 +24,7 @@ class HomeController
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
 
         if (!in_array($userRole, $allowedRoles)) {
+            $_SESSION['error'] = "Bạn không có quyền truy cập trang này!";
             header('Location: index.php?controller=home&action=index');
             exit;
         }
@@ -95,9 +96,9 @@ class HomeController
         $title = "Quản trị viên - QLHS";
 
         // Lấy dữ liệu thống kê
-        $stats = $this->homeModel->getAdminStats();
-        $systemOverview = $this->homeModel->getSystemOverview();
-        $newNotifications = $this->homeModel->getNewNotifications('QTV');
+        $stats = $this->homeModel->getAdminStats() ?? [];
+        $systemOverview = $this->homeModel->getSystemOverview() ?? [];
+        $newNotifications = $this->homeModel->getNewNotifications('QTV') ?? [];
 
         $showSidebar = true;
 
@@ -113,59 +114,59 @@ class HomeController
         $title = "Giáo viên - QLHS";
 
         // Lấy mã người dùng từ session
-        $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'] ?? $_SESSION['user']['maTaiKhoan'];
 
         // Lấy mã giáo viên thực tế
         $maGiaoVien = $this->homeModel->getMaGiaoVien($maNguoiDung);
-
+        
         if (!$maGiaoVien) {
-            $_SESSION['error'] = "Không tìm thấy thông tin giáo viên!";
-            header('Location: index.php?controller=auth&action=login');
-            exit;
+            // Vẫn hiển thị trang nhưng với dữ liệu rỗng
+            $stats = [];
+            $todaySchedule = [];
+            $teacherClasses = [];
+        } else {
+            $stats = $this->homeModel->getTeacherStats($maGiaoVien) ?? [];
+            $todaySchedule = $this->homeModel->getTodaySchedule($maNguoiDung, 'GIAOVIEN') ?? [];
+            $teacherClasses = $this->homeModel->getTeacherClasses($maGiaoVien) ?? [];
         }
-
-        // Lấy dữ liệu thống kê
-        $stats = $this->homeModel->getTeacherStats($maGiaoVien);
-        $todaySchedule = $this->homeModel->getTodaySchedule($maNguoiDung, 'GIAOVIEN');
-        $newNotifications = $this->homeModel->getNewNotifications('GIAOVIEN');
-        $teacherClasses = $this->homeModel->getTeacherClasses($maGiaoVien);
-
+        
+        $newNotifications = $this->homeModel->getNewNotifications('GIAOVIEN') ?? [];
         $showSidebar = true;
-
+        
         require_once 'views/layouts/header.php';
         require_once 'views/layouts/sidebar/giaovien.php';
         require_once 'views/home/giaovien.php';
         require_once 'views/layouts/footer.php';
     }
 
-    public function student()
-    {
+    public function student() {
         $this->checkRole(['HOCSINH']);
         $title = "Học sinh - QLHS";
-
-        // Lấy mã người dùng từ session
-        $maNguoiDung = $_SESSION['user']['maNguoiDung'];
-
-        // Lấy thông tin học sinh
+        
+        // ✅ FIX: Đảm bảo luôn có maNguoiDung
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'] ?? $_SESSION['user']['maTaiKhoan'];
+        
+        // ✅ FIX: Không bắt buộc phải có thông tin học sinh
         $studentInfo = $this->homeModel->getStudentInfo($maNguoiDung);
-
+        
         if (!$studentInfo) {
-            $_SESSION['error'] = "Không tìm thấy thông tin học sinh!";
-            header('Location: index.php?controller=auth&action=login');
-            exit;
+            // Vẫn hiển thị trang nhưng với dữ liệu rỗng
+            $maHocSinh = null;
+            $stats = [];
+            $todaySchedule = [];
+            $recentScores = [];
+            $newAssignments = [];
+        } else {
+            $maHocSinh = $studentInfo['maHocSinh'];
+            $stats = $this->homeModel->getStudentStats($maHocSinh) ?? [];
+            $todaySchedule = $this->homeModel->getTodaySchedule($maNguoiDung, 'HOCSINH') ?? [];
+            $recentScores = $this->homeModel->getRecentScores($maHocSinh) ?? [];
+            $newAssignments = $this->homeModel->getNewAssignments($maHocSinh) ?? [];
         }
-
-        $maHocSinh = $studentInfo['maHocSinh'];
-
-        // Lấy dữ liệu thống kê
-        $stats = $this->homeModel->getStudentStats($maHocSinh);
-        $todaySchedule = $this->homeModel->getTodaySchedule($maNguoiDung, 'HOCSINH');
-        $newNotifications = $this->homeModel->getNewNotifications('HOCSINH');
-        $recentScores = $this->homeModel->getRecentScores($maHocSinh);
-        $newAssignments = $this->homeModel->getNewAssignments($maHocSinh);
-
+        
+        $newNotifications = $this->homeModel->getNewNotifications('HOCSINH') ?? [];
         $showSidebar = true;
-
+        
         require_once 'views/layouts/header.php';
         require_once 'views/layouts/sidebar/hocsinh.php';
         require_once 'views/home/hocsinh.php';
@@ -177,25 +178,24 @@ class HomeController
         $this->checkRole(['PHUHUYNH']);
         $title = "Phụ huynh - QLHS";
 
-        // Lấy mã người dùng từ session
-        $maNguoiDung = $_SESSION['user']['maNguoiDung'];
-
-        // Lấy mã phụ huynh thực tế
+        // ✅ FIX: Đảm bảo luôn có maNguoiDung
+        $maNguoiDung = $_SESSION['user']['maNguoiDung'] ?? $_SESSION['user']['maTaiKhoan'];
+        
+        // ✅ FIX: Không bắt buộc phải có thông tin phụ huynh
         $maPhuHuynh = $this->homeModel->getMaPhuHuynh($maNguoiDung);
-
+        
         if (!$maPhuHuynh) {
-            $_SESSION['error'] = "Không tìm thấy thông tin phụ huynh!";
-            header('Location: index.php?controller=auth&action=login');
-            exit;
+            // Vẫn hiển thị trang nhưng với dữ liệu rỗng
+            $stats = [];
+            $parentChildren = [];
+        } else {
+            $stats = $this->homeModel->getParentStats($maPhuHuynh) ?? [];
+            $parentChildren = $this->homeModel->getParentChildren($maPhuHuynh) ?? [];
         }
-
-        // Lấy dữ liệu thống kê
-        $stats = $this->homeModel->getParentStats($maPhuHuynh);
-        $newNotifications = $this->homeModel->getNewNotifications('PHUHUYNH');
-        $parentChildren = $this->homeModel->getParentChildren($maPhuHuynh);
-
+        
+        $newNotifications = $this->homeModel->getNewNotifications('PHUHUYNH') ?? [];
         $showSidebar = true;
-
+        
         require_once 'views/layouts/header.php';
         require_once 'views/layouts/sidebar/phuhuynh.php';
         require_once 'views/home/phuhuynh.php';
@@ -208,14 +208,14 @@ class HomeController
         $title = "Ban giám hiệu - QLHS";
 
         // Lấy dữ liệu thống kê
-        $stats = $this->homeModel->getPrincipalStats();
-        $systemOverview = $this->homeModel->getSystemOverview();
-        $newNotifications = $this->homeModel->getNewNotifications('BGH');
-
+        $stats = $this->homeModel->getPrincipalStats() ?? [];
+        $systemOverview = $this->homeModel->getSystemOverview() ?? [];
+        $newNotifications = $this->homeModel->getNewNotifications('BGH') ?? [];
+        
         $showSidebar = true;
 
         require_once 'views/layouts/header.php';
-        require_once 'views/layouts/sidebar/bangiamhieu.php'; // Sidebar riêng cho BGH
+        require_once 'views/layouts/sidebar/bangiamhieu.php';
         require_once 'views/home/bangiamhieu.php';
         require_once 'views/layouts/footer.php';
     }

@@ -48,12 +48,14 @@
                                     </option>
                                     
                                     <?php foreach ($danhSachKyHoc as $ky): ?>
-                                        <?php 
-                                            $value = $ky['namHoc'] . '|' . $ky['hocKy'];
-                                            $text = $ky['hocKy'] . ' (' . $ky['namHoc'] . ')';
-                                            $selected = ($ky['namHoc'] == $namHocChon && $ky['hocKy'] == $hocKyChon) ? 'selected' : '';
-                                        ?>
-                                        <option value="<?= $value ?>" <?= $selected ?>><?= $text ?></option>
+                                        <?php if (is_array($ky)): ?>
+                                            <?php 
+                                                $value = ($ky['namHoc'] ?? '') . '|' . ($ky['hocKy'] ?? '');
+                                                $text = ($ky['hocKy'] ?? '') . ' (' . ($ky['namHoc'] ?? '') . ')';
+                                                $selected = (($ky['namHoc'] ?? '') == ($namHocChon ?? '') && ($ky['hocKy'] ?? '') == ($hocKyChon ?? '')) ? 'selected' : '';
+                                            ?>
+                                            <option value="<?= $value ?>" <?= $selected ?>><?= $text ?></option>
+                                        <?php endif; ?>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
@@ -65,13 +67,13 @@
                 <div class="row">
                     <div class="col-md-12 d-flex justify-content-start">
                         <div class="form-group">
-                            <?php if ($maHocSinhChon): ?>
+                            <?php if (isset($maHocSinhChon) && $maHocSinhChon): ?>
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-eye"></i> Xem điểm
                                 </button>
 
-                                <?php if ($viewMode !== 'none'): ?>
-                                    <a href="index.php?controller=diem&action=taibangdiem&maHocSinh=<?= htmlspecialchars($maHocSinhChon) ?>&namHoc=<?= htmlspecialchars($namHocChon) ?>&hocKy=<?= htmlspecialchars($hocKyChon) ?>"
+                                <?php if (isset($viewMode) && $viewMode !== 'none'): ?>
+                                    <a href="index.php?controller=diem&action=taibangdiem&maHocSinh=<?= htmlspecialchars($maHocSinhChon) ?>&namHoc=<?= htmlspecialchars($namHocChon ?? '') ?>&hocKy=<?= htmlspecialchars($hocKyChon ?? '') ?>"
                                        class="btn btn-success ml-2" target="_blank">
                                         <i class="fas fa-file-pdf"></i> Tải về (PDF)
                                     </a>
@@ -82,19 +84,19 @@
                     </div>
                 </div>
                 
-                <input type="hidden" id="namHoc" name="namHoc" value="<?= htmlspecialchars($namHocChon) ?>">
-                <input type="hidden" id="hocKy" name="hocKy" value="<?= htmlspecialchars($hocKyChon) ?>">
+                <input type="hidden" id="namHoc" name="namHoc" value="<?= htmlspecialchars($namHocChon ?? '') ?>">
+                <input type="hidden" id="hocKy" name="hocKy" value="<?= htmlspecialchars($hocKyChon ?? '') ?>">
             </form>
         </div>
     </div>
 
-    <?php if ($maHocSinhChon): ?>
-    <?php if ($viewMode === 'single'): ?>
-        <?php $bangDiem = $bangDiemData['single']; ?>
+    <?php if (isset($maHocSinhChon) && $maHocSinhChon): ?>
+    <?php if (isset($viewMode) && $viewMode === 'single'): ?>
+        <?php $bangDiem = $bangDiemData['single'] ?? []; ?>
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h5 class="m-0 font-weight-bold text-primary">
-                    Bảng điểm chi tiết <?= htmlspecialchars($hocKyChon) ?> (<?= htmlspecialchars($namHocChon) ?>)
+                    Bảng điểm chi tiết <?= htmlspecialchars($hocKyChon ?? '') ?> (<?= htmlspecialchars($namHocChon ?? '') ?>)
                 </h5>
             </div>
             <div class="card-body">
@@ -255,8 +257,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    kyHocSelect.addEventListener('change', updateHiddenInputs);
+    // Khởi tạo giá trị ban đầu
     updateHiddenInputs();
+
+    // Bật dropdown kỳ học nếu đã có học sinh được chọn
+    if (kyHocSelect && <?= (isset($maHocSinhChon) && $maHocSinhChon) ? 'true' : 'false' ?>) {
+        kyHocSelect.disabled = false;
+    }
 });
 </script>
 

@@ -25,12 +25,12 @@
             <li class="nav-item">
                 <a href="index.php?controller=thongbao&action=danhsach" class="nav-link">
                     <i class="nav-icon fas fa-bullhorn"></i>
-                    <p>
+                    <span>
                         Thông báo
                         <?php if ($soThongBaoChuaDoc > 0): ?>
                         <span class="badge bg-danger float-right"><?php echo $soThongBaoChuaDoc; ?></span>
                         <?php endif; ?>
-                    </p>
+                    </span>
                 </a>
             </li>
         </ul>

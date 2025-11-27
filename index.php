@@ -32,10 +32,16 @@ if (file_exists($controllerFile)) {
             switch ($controller) {
                 case 'donchuyenloptruong':
                     switch ($action) {
-                        case 'guidon':
-                        case 'xulyguiDon':
+                        case 'index':
+                        case 'store':
+                        case 'create':
                         case 'danhsachdoncuatoi':
-                        case 'chitiet':
+                        case 'chitietdoncuatoi':
+                        case 'danhsach':
+                        case 'approve':
+                        case 'reject':
+                        case 'ajax_chitiet':
+                        case 'ajax_getlop':
                             $controllerInstance->$action();
                             break;
                         case 'detail':
@@ -130,6 +136,7 @@ if (file_exists($controllerFile)) {
                     }
                     break;
                 
+                // Trong phần case 'tinnhan' của index.php
                 case 'tinnhan':
                     switch ($action) {
                         case 'guitinnhan':
@@ -144,6 +151,15 @@ if (file_exists($controllerFile)) {
                             break;
                         case 'getPhuHuynhByLop':
                             $controllerInstance->getPhuHuynhByLop();
+                            break;
+                        case 'guitinnhangiaovien':
+                            $controllerInstance->guitinnhangiaovien();
+                            break;
+                        case 'getAllGiaoVien': // THÊM DÒNG NÀY
+                            $controllerInstance->getAllGiaoVien();
+                            break;
+                        case 'getGiaoVienByLop': // THÊM DÒNG NÀY
+                            $controllerInstance->getGiaoVienByLop();
                             break;
                         default:
                             $controllerInstance->index();
@@ -245,7 +261,22 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;    
-                    
+                
+                case 'quanlytaikhoan':
+                    switch ($action) {
+                        case 'index':
+                        case 'create':
+                        case 'store':
+                        case 'edit':
+                        case 'update':
+                        case 'delete':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
+
                 default:
                     $controllerInstance->$action();
             }

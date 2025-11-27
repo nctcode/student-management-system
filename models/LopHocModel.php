@@ -48,5 +48,27 @@ class LopHocModel {
         $stmt = $this->$conn->query("SELECT maLop, tenLop FROM lophoc ORDER BY tenLop");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    public function getChiTietLop($maLop) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT l.*, k.tenKhoi, gv.maGiaoVien, nd.hoTen as tenGiaoVien
+                FROM lophoc l
+                JOIN khoi k ON l.maKhoi = k.maKhoi
+                LEFT JOIN giaovien gv ON l.maGiaoVien = gv.maGiaoVien
+                LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                WHERE l.maLop = ?";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maLop]);
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC); 
+    }
+    public function getKhoiHoc() {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT * FROM khoi ORDER BY tenKhoi ASC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
