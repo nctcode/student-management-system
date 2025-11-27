@@ -4,6 +4,26 @@ require_once 'views/layouts/sidebar/giaovien.php';
 
 $hocKy = $_GET['hocKy'] ?? '';
 $tieuChi = $_GET['tieuChi'] ?? '';
+
+function hienThi($text)
+{
+    switch ($text) {
+        case 'KHA':
+            return 'Khá';
+        case 'GIOI':
+            return 'Giỏi';
+        case 'TRUNG_BINH':
+            return 'Trung bình';
+        case 'TOT':
+            return 'Tốt';
+        case 'HOAN_THANH':
+            return 'Hoàn thành';
+        case 'CHUA_HOAN_THANH':
+            return 'Chưa hoàn thành';    
+        default:
+            return '';
+    }
+}
 ?>
 
 <title>Thống kê kết quả học tập</title>
@@ -45,8 +65,8 @@ $tieuChi = $_GET['tieuChi'] ?? '';
     <!-- Cột nút xuất Excel -->
     <div class="col-md-3" >
       <?php if ($hocKy && $tieuChi): ?>
-        <a href="?controller=ketquahoctap&action=xuatCSV&hocKy=<?= $hocKy ?>&tieuChi=<?= $tieuChi ?>" class="btn btn-success">
-          <i class="bi bi-file-earmark-excel"></i> Xuất CSV
+        <a href="?controller=ketquahoctap&action=xuatExcel&hocKy=<?= $hocKy ?>&tieuChi=<?= $tieuChi ?>" class="btn btn-success">
+          <i class="bi bi-file-earmark-excel"></i> Xuất file Excel
         </a>
       <?php endif; ?>
     </div>
@@ -87,7 +107,7 @@ $tieuChi = $_GET['tieuChi'] ?? '';
           <p class="card-text">
             <?php if ($hocKy && ($tieuChi === 'hocluchanhkiem' || $tieuChi === 'tatca')): ?>
               <?php foreach ($tongHocLuc as $hl => $soHS): ?>
-                <?= htmlspecialchars($hl) ?>: <?= $soHS ?> HS<br>
+                <?= htmlspecialchars(hienThi($hl)) ?>: <?= $soHS ?> Học sinh<br>
               <?php endforeach; ?>
             <?php else: ?> - <?php endif; ?>
           </p>
@@ -103,7 +123,7 @@ $tieuChi = $_GET['tieuChi'] ?? '';
           <p class="card-text">
             <?php if ($hocKy && ($tieuChi === 'hocluchanhkiem' || $tieuChi === 'tatca')): ?>
               <?php foreach ($tongHanhKiem as $hk => $soHS): ?>
-                <?= htmlspecialchars($hk) ?>: <?= $soHS ?> HS<br>
+                <?= htmlspecialchars(hienThi($hk)) ?>: <?= $soHS ?> Học sinh<br>
               <?php endforeach; ?>
             <?php else: ?> - <?php endif; ?>
           </p>
@@ -239,6 +259,7 @@ $tieuChi = $_GET['tieuChi'] ?? '';
             <th>Họ tên</th>
             <th>Học lực</th>
             <th>Hạnh kiểm</th>
+            <th>Xếp loại</th>
           </tr>
         </thead>
         <tbody>
@@ -247,8 +268,9 @@ $tieuChi = $_GET['tieuChi'] ?? '';
               <tr>
                 <td><?= $i + 1 ?></td>
                 <td><?= htmlspecialchars($hs['hoTen']) ?></td>
-                <td><?= htmlspecialchars($hs['hocLuc']) ?></td>
-                <td><?= htmlspecialchars($hs['hanhKiem']) ?></td>
+                <td><?= htmlspecialchars(hienThi($hs['hocLuc'])) ?></td>
+                <td><?= htmlspecialchars(hienThi($hs['hanhKiem'])) ?></td>
+                <td><?= htmlspecialchars(hienThi($hs['xepLoai'])) ?></td>
               </tr>
             <?php endforeach; ?>
           <?php else: ?>
