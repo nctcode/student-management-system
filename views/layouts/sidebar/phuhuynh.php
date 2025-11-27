@@ -10,15 +10,9 @@
                     <span>Dashboard</span>
                 </a>
             </li>
-<<<<<<< HEAD
-            <li>
-                <a href="#">
-                    <i class="fas fa-clipboard-list me-2"></i>
-=======
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=diem&action=xemdiem">
                     <i class="fas fa-clipboard-list"></i>
->>>>>>> 3b30855a2aa99a8c74f5a1f62018b47a620860e3
                     <span>Kết quả học tập</span>
                 </a>
             </li>
@@ -28,25 +22,8 @@
                     <span>Thời khóa biểu</span>
                 </a>
             </li>
-<<<<<<< HEAD
-            <li>
-                <a href="index.php?controller=diem&action=xemdiem">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    <span>Xem điểm</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-calendar-check"></i>
-                    <span>Chuyên cần</span>
-                </a>
-            </li>
-            <li>
-                <a href="index.php?controller=hocphi&action=index">
-=======
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=hocphi&action=index">
->>>>>>> 3b30855a2aa99a8c74f5a1f62018b47a620860e3
                     <i class="fas fa-money-bill-wave"></i>
                     <span>Học phí</span>
                 </a>
