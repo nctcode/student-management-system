@@ -164,7 +164,6 @@
                             <small class="form-text text-muted">
                                 • File đính kèm tối đa 10MB<br>
                                 • Định dạng hỗ trợ: PDF, DOC, JPG, PNG, XLSX<br>
-                                • Không gửi nội dung không phù hợp
                             </small>
                         </div>
                         <br>

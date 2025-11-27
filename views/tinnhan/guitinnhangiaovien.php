@@ -158,6 +158,7 @@
                             <div id="danhSachFileGV" class="mb-2"></div>
                             <input type="file" name="fileDinhKem[]" id="fileDinhKemGV" class="form-control-file" 
                                 onchange="hienThiFileGV()" multiple>
+                            <br>
                             <small class="form-text text-muted">
                                 • File đính kèm tối đa 10MB<br>
                                 • Định dạng hỗ trợ: PDF, DOC, JPG, PNG, XLSX
