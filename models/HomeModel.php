@@ -495,28 +495,6 @@ class HomeModel
     // =====================================================KIET================
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // Lấy tổng quan hệ thống
     public function getSystemOverview()
     {

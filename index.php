@@ -4,6 +4,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 // Simple router
 $controller = $_GET['controller'] ?? 'home';
 $action = $_GET['action'] ?? 'index';
@@ -30,10 +32,16 @@ if (file_exists($controllerFile)) {
             switch ($controller) {
                 case 'donchuyenloptruong':
                     switch ($action) {
-                        case 'guidon':
-                        case 'xulyguiDon':
+                        case 'index':
+                        case 'store':
+                        case 'create':
                         case 'danhsachdoncuatoi':
-                        case 'chitiet':
+                        case 'chitietdoncuatoi':
+                        case 'danhsach':
+                        case 'approve':
+                        case 'reject':
+                        case 'ajax_chitiet':
+                        case 'ajax_getlop':
                             $controllerInstance->$action();
                             break;
                         case 'detail':
@@ -143,15 +151,34 @@ if (file_exists($controllerFile)) {
                         case 'getPhuHuynhByLop':
                             $controllerInstance->getPhuHuynhByLop();
                             break;
+                        case 'guitinnhangiaovien':
+                            $controllerInstance->guitinnhangiaovien();
+                            break;
+                        case 'getAllGiaoVien':
+                            $controllerInstance->getAllGiaoVien();
+                            break;
+                        case 'getGiaoVienByLop':
+                            $controllerInstance->getGiaoVienByLop();
+                            break;
                         default:
                             $controllerInstance->index();
                     }
                     break;
 
-                // THÊM CASE CHO DANGKYBANHOC - ĐÃ SỬA
-                
                 case 'diem':
-                    $controllerInstance->$action();
+                    switch ($action) {
+                        case 'xemdiem':
+                            $controllerInstance->xemdiem();
+                            break;
+                        case 'nhapdiem':
+                            $controllerInstance->nhapdiem();
+                            break;
+                        case 'taibangdiem':
+                            $controllerInstance->taibangdiem();
+                            break;
+                        default:
+                            $controllerInstance->$action();
+                    }
                     break;
 
                 case 'chuyencan':
@@ -169,6 +196,23 @@ if (file_exists($controllerFile)) {
                         case 'chitiet':
                             $maBaiTap = $_GET['maBaiTap'] ?? 0;
                             $controllerInstance->chitiet($maBaiTap);
+                            break;
+                        case 'taiTatCaBaiNop':
+                            $maBaiTap = $_GET['maBaiTap'] ?? 0;
+                            $controllerInstance->taiTatCaBaiNop($maBaiTap);
+                            break;
+                        case 'danhsach_hs': 
+                            $controllerInstance->danhsach_hs();
+                            break;
+                        case 'chitiet_hs':
+                            $maBaiTap = $_GET['maBaiTap'] ?? 0;
+                            $controllerInstance->chitiet_hs($maBaiTap);
+                            break;
+                        case 'nopbai':
+                            $controllerInstance->nopbai();
+                            break;
+                        case 'xoaFileNop':
+                            $controllerInstance->xoaFileNop();
                             break;
                         default:
                             $controllerInstance->index();
@@ -215,10 +259,24 @@ if (file_exists($controllerFile)) {
                         default:
                             $controllerInstance->index();
                     }
-                    break; 
+                    break;
+                case 'quanlytaikhoan':
+                    switch ($action) {
+                        case 'index':
+                        case 'create':
+                        case 'store':
+                        case 'edit':
+                        case 'update':
+                        case 'delete':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
+
                 default:
                     $controllerInstance->$action();
-                    break;    
             }
         } else {
             // Xử lý lỗi Action không tồn tại
@@ -226,16 +284,16 @@ if (file_exists($controllerFile)) {
             $home = new HomeController();
             $home->index(); 
         }
-        } else {
-            // Xử lý lỗi Controller Class không tồn tại
-            require_once 'controllers/HomeController.php';
-            $home = new HomeController();
-            $home->index();
-        }
-        } else {
-            // Fallback - hiển thị trang chủ khi Controller file không tồn tại
-            require_once 'controllers/HomeController.php';
-            $home = new HomeController();
-            $home->index();
-        }
+    } else {
+        // Xử lý lỗi Controller Class không tồn tại
+        require_once 'controllers/HomeController.php';
+        $home = new HomeController();
+        $home->index();
+    }
+} else {
+    // Fallback - hiển thị trang chủ khi Controller file không tồn tại
+    require_once 'controllers/HomeController.php';
+    $home = new HomeController();
+    $home->index();
+}
 ?>

@@ -22,19 +22,18 @@
                     <span>Thời khóa biểu</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=diem&action=index">
+            <li>
+                <a href="index.php?controller=diem&action=nhapdiem">
                     <i class="fas fa-fw fa-pen-to-square"></i>
                     <span>Nhập điểm</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=chuyencan&action=index">
+            <li>
+                <a href="index.php?controller=chuyencan&action=index">
                     <i class="fas fa-user-check"></i>
                     <span>Chuyên cần</span>
                 </a>
             </li>
-            
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" 
                    data-bs-toggle="collapse" 

@@ -46,19 +46,18 @@ class DonChuyenLopTruongModel {
         }
 
         // 2. Lọc theo Trường đang chọn và Logic duyệt
+        // 2. Lọc theo Trường đang chọn và Logic duyệt
         if ($maTruong) {
             $sql .= " AND (
-                -- Logic 3 bước CHO ĐƠN CHUYỂN TRƯỜNG:
+                -- Logic 2 bước CHO ĐƠN CHUYỂN TRƯỜNG:
                 (d.loaiDon = 'chuyen_truong' AND (
-                    -- B1: Trường đến thấy (Đang chờ duyệt ở Trường đến)
-                    (d.maTruongDen = :maTruong AND d.trangThaiTruongDen = 'Chờ duyệt')
-                    -- B2: Trường đi thấy (Đã duyệt ở Trường đến, Chờ duyệt ở Trường đi)
-                    OR (d.maTruongHienTai = :maTruong AND d.trangThaiTruongDen = 'Đã duyệt' AND d.trangThaiTruongDi = 'Chờ duyệt')
-                    -- B3: Trường đến HOẶC Trường đi thấy các đơn ĐÃ HOÀN TẤT/BỊ TỪ CHỐI
-                    OR (d.maTruongDen = :maTruong AND d.trangThaiTruongDi IN ('Đã duyệt', 'Từ chối'))
+                    -- B1: Trường đi thấy (Chờ duyệt ở Trường đi)
+                    (d.maTruongHienTai = :maTruong AND d.trangThaiTruongDi = 'Chờ duyệt' AND d.trangThaiTruongDen = 'Chờ duyệt')
+                    -- B2: Trường đến thấy (Đã duyệt ở Trường đi, Chờ duyệt ở Trường đến)
+                    OR (d.maTruongDen = :maTruong AND d.trangThaiTruongDi = 'Đã duyệt' AND d.trangThaiTruongDen = 'Chờ duyệt')
+                    -- Cả 2 trường đều thấy đơn đã hoàn tất hoặc bị từ chối
                     OR (d.maTruongHienTai = :maTruong AND d.trangThaiTruongDi IN ('Đã duyệt', 'Từ chối'))
-                    OR (d.maTruongHienTai = :maTruong AND d.trangThaiTruongDen = 'Từ chối')
-                    OR (d.maTruongDen = :maTruong AND d.trangThaiTruongDen IN ('Đã duyệt', 'Từ chối') AND d.trangThaiTruongDi IN ('Đã duyệt', 'Từ chối'))
+                    OR (d.maTruongDen = :maTruong AND d.trangThaiTruongDen IN ('Đã duyệt', 'Từ chối'))
                 ))
                 -- Logic 1 bước CHO ĐƠN CHUYỂN LỚP:
                 OR (d.loaiDon = 'chuyen_lop' AND d.maTruongHienTai = :maTruong_2)
@@ -102,7 +101,8 @@ class DonChuyenLopTruongModel {
                         $don['canApprove'] = true;
                     }
                 }
-            } else { // Chuyển trường (LOGIC 3 BƯỚC)
+            } else { 
+                // Chuyển trường (LOGIC 2 BƯỚC)
                 $statusDi = $don['trangThaiTruongDi'] ?? 'Chờ duyệt';
                 $statusDen = $don['trangThaiTruongDen'] ?? 'Chờ duyệt';
 
@@ -113,15 +113,15 @@ class DonChuyenLopTruongModel {
                 } else {
                     $don['trangThaiTong'] = 'Chờ duyệt';
                     
-                    // B1: Trường đến duyệt (Duyệt/Từ chối)
-                    if ($statusDen === 'Chờ duyệt' && $maTruongDen == $currentSchoolId) {
+                    // B1: Trường đi duyệt (Cả Duyệt và Từ chối)
+                    if ($statusDi === 'Chờ duyệt' && $statusDen === 'Chờ duyệt' && $maTruongHienTai == $currentSchoolId) {
                         $don['canApprove'] = true;
                         $don['actionType'] = 'full'; 
                     } 
-                    // B2: Trường đi duyệt (CHỈ DUYỆT - Không có quyền từ chối)
-                    elseif ($statusDen === 'Đã duyệt' && $statusDi === 'Chờ duyệt' && $maTruongHienTai == $currentSchoolId) {
+                    // B2: Trường đến duyệt (Cả Duyệt và Từ chối)
+                    elseif ($statusDi === 'Đã duyệt' && $statusDen === 'Chờ duyệt' && $maTruongDen == $currentSchoolId) {
                         $don['canApprove'] = true;
-                        $don['actionType'] = 'approve_only'; // KHÔNG CÓ NÚT TỪ CHỐI
+                        $don['actionType'] = 'full';
                     }
                 }
             }
@@ -180,19 +180,47 @@ class DonChuyenLopTruongModel {
     public function approve($maDon, $side) {
         $now = date('Y-m-d H:i:s');
         
-        if ($side === 'truongden') {
-            $sql = "UPDATE donchuyenloptruong SET trangThaiTruongDen = 'Đã duyệt', ngayDuyetTruongDen = :now WHERE maDon = :id";
-        } elseif ($side === 'truongdi') {
-            $sql = "UPDATE donchuyenloptruong SET trangThaiTruongDi = 'Đã duyệt', ngayDuyetTruongDi = :now WHERE maDon = :id";
-        } elseif ($side === 'lop') { // Xử lý đơn chuyển lớp (duyệt 1 lần)
-            $sql = "UPDATE donchuyenloptruong 
-                     SET trangThaiLop = 'Đã duyệt', ngayDuyetLop = :now 
-                     WHERE maDon = :id";
-        } else {
+        try {
+            $this->conn->beginTransaction();
+            
+            // 1. Cập nhật trạng thái duyệt
+            if ($side === 'truongden') {
+                $sql = "UPDATE donchuyenloptruong SET trangThaiTruongDen = 'Đã duyệt', ngayDuyetTruongDen = :now WHERE maDon = :id";
+            } elseif ($side === 'truongdi') {
+                $sql = "UPDATE donchuyenloptruong SET trangThaiTruongDi = 'Đã duyệt', ngayDuyetTruongDi = :now WHERE maDon = :id";
+            } elseif ($side === 'lop') {
+                $sql = "UPDATE donchuyenloptruong SET trangThaiLop = 'Đã duyệt', ngayDuyetLop = :now WHERE maDon = :id";
+            } else {
+                $this->conn->rollBack();
+                return false;
+            }
+            
+            $stmt = $this->conn->prepare($sql);
+            $result = $stmt->execute([':now' => $now, ':id' => $maDon]);
+            
+            if (!$result) {
+                $this->conn->rollBack();
+                error_log("ERROR: Failed to update approval status for maDon=$maDon, side=$side");
+                return false;
+            }
+            
+            error_log("DEBUG: Successfully updated approval status for maDon=$maDon, side=$side");
+            
+            // 2. Cập nhật thông tin học sinh (nếu cần)
+            $updateStudentResult = $this->updateStudentInfo($maDon);
+            if (!$updateStudentResult) {
+                error_log("WARNING: Failed to update student info for maDon=$maDon, but approval was successful");
+                // Vẫn commit vì duyệt đơn thành công, chỉ là cập nhật học sinh thất bại
+            }
+            
+            $this->conn->commit();
+            return true;
+            
+        } catch (PDOException $e) {
+            $this->conn->rollBack();
+            error_log("ERROR in approve(): " . $e->getMessage());
             return false;
         }
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([':now' => $now, ':id' => $maDon]);
     }
 
     public function reject($maDon, $side, $reason) {
@@ -231,5 +259,266 @@ class DonChuyenLopTruongModel {
         }
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([':reason' => $reason, ':now' => $now, ':id' => $maDon]);
+    }
+    // Thêm các phương thức sau vào class DonChuyenLopTruongModel
+
+    public function getByParentId($maPhuHuynh) {
+        $sql = "SELECT d.maDon, d.lyDoChuyen, d.ngayGui, d.maHocSinh,
+                        nd.hoTen AS tenHS,
+                        d.maTruongHienTai, d.maTruongDen, d.maLopHienTai, d.maLopDen,
+                        d.trangThaiTruongDi, d.trangThaiTruongDen, d.trangThaiLop,
+                        d.loaiDon,
+                        COALESCE(t1.tenTruong, '') AS truongHienTai, COALESCE(t2.tenTruong, '') AS truongDen,
+                        COALESCE(l1.tenLop, '') AS lopHienTai, COALESCE(l2.tenLop, '') AS lopDen
+                    FROM donchuyenloptruong d
+                    LEFT JOIN hocsinh h ON d.maHocSinh = h.maHocSinh
+                    LEFT JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+                    LEFT JOIN truong t1 ON d.maTruongHienTai = t1.maTruong
+                    LEFT JOIN truong t2 ON d.maTruongDen = t2.maTruong
+                    LEFT JOIN lophoc l1 ON d.maLopHienTai = l1.maLop
+                    LEFT JOIN lophoc l2 ON d.maLopDen = l2.maLop
+                    WHERE h.maPhuHuynh = :maPhuHuynh
+                    ORDER BY d.ngayGui DESC";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maPhuHuynh' => $maPhuHuynh]);
+        $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Thêm trạng thái tổng
+        foreach ($requests as &$don) {
+            $don['trangThaiTong'] = $this->determineOverallStatus($don);
+        }
+        unset($don);
+        
+        return $requests;
+    }
+
+    public function getStudentsByParent($maPhuHuynh) {
+        $sql = "SELECT h.maHocSinh, nd.hoTen, h.maLop, l.tenLop, t.maTruong, t.tenTruong
+                FROM hocsinh h
+                LEFT JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN lophoc l ON h.maLop = l.maLop
+                LEFT JOIN truong t ON l.maTruong = t.maTruong
+                WHERE h.maPhuHuynh = :maPhuHuynh 
+                AND h.trangThai = 'dang_hoc'";  // CHỈ GIỮ LẠI trangThai CỦA hocsinh
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maPhuHuynh' => $maPhuHuynh]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getLopByTruong($maTruong = null) {
+        // SỬA: Dùng namHoc thay vì tenNienKhoa
+        $sql = "SELECT l.maLop, l.tenLop, k.tenKhoi, nk.namHoc, nk.hocKy
+                FROM lophoc l
+                LEFT JOIN khoi k ON l.maKhoi = k.maKhoi
+                LEFT JOIN nienkhoa nk ON l.maNienKhoa = nk.maNienKhoa
+                WHERE 1=1";
+        
+        if ($maTruong) {
+            $sql .= " AND l.maTruong = :maTruong";
+        }
+        
+        $sql .= " ORDER BY l.tenLop ASC";
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        if ($maTruong) {
+            $stmt->execute([':maTruong' => $maTruong]);
+        } else {
+            $stmt->execute();
+        }
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function createDon($maHocSinh, $loaiDon, $lyDoChuyen, $maTruongDen = null, $maLopDen = null) {
+        // Lấy thông tin học sinh hiện tại
+        $studentInfo = $this->getStudentInfo($maHocSinh);
+        if (!$studentInfo) {
+            return false;
+        }
+        
+        $sql = "INSERT INTO donchuyenloptruong 
+                (maHocSinh, loaiDon, lyDoChuyen, maTruongHienTai, maLopHienTai, maTruongDen, maLopDen, ngayGui) 
+                VALUES 
+                (:maHocSinh, :loaiDon, :lyDoChuyen, :maTruongHienTai, :maLopHienTai, :maTruongDen, :maLopDen, NOW())";
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        return $stmt->execute([
+            ':maHocSinh' => $maHocSinh,
+            ':loaiDon' => $loaiDon,
+            ':lyDoChuyen' => $lyDoChuyen,
+            ':maTruongHienTai' => $studentInfo['maTruong'],
+            ':maLopHienTai' => $studentInfo['maLop'],
+            ':maTruongDen' => $maTruongDen,
+            ':maLopDen' => $maLopDen
+        ]);
+    }
+
+    public function getByIdAndParent($maDon, $maPhuHuynh) {
+        $sql = "SELECT d.*, 
+                        h.maHocSinh, 
+                        nd.hoTen AS tenHS,
+                        COALESCE(t1.tenTruong, '') AS truongHienTai, 
+                        COALESCE(t2.tenTruong, '') AS truongDen,
+                        COALESCE(l1.tenLop, '') AS lopHienTai, 
+                        COALESCE(l2.tenLop, '') AS lopDen
+                FROM donchuyenloptruong d
+                LEFT JOIN hocsinh h ON d.maHocSinh = h.maHocSinh
+                LEFT JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN truong t1 ON d.maTruongHienTai = t1.maTruong
+                LEFT JOIN truong t2 ON d.maTruongDen = t2.maTruong
+                LEFT JOIN lophoc l1 ON d.maLopHienTai = l1.maLop
+                LEFT JOIN lophoc l2 ON d.maLopDen = l2.maLop
+                WHERE d.maDon = :maDon AND h.maPhuHuynh = :maPhuHuynh";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maDon' => $maDon, ':maPhuHuynh' => $maPhuHuynh]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getStudentInfo($maHocSinh) {
+        $sql = "SELECT h.maLop, l.maTruong 
+                FROM hocsinh h
+                LEFT JOIN lophoc l ON h.maLop = l.maLop
+                WHERE h.maHocSinh = :maHocSinh";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maHocSinh' => $maHocSinh]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    private function determineOverallStatus($don) {
+        if ($don['loaiDon'] === 'chuyen_lop') {
+            $status = $don['trangThaiLop'] ?? 'Chờ duyệt';
+            return match($status) {
+                'Từ chối' => 'Bị từ chối',
+                'Đã duyệt' => 'Hoàn tất',
+                default => 'Chờ duyệt'
+            };
+        } else {
+            $statusDi = $don['trangThaiTruongDi'] ?? 'Chờ duyệt';
+            $statusDen = $don['trangThaiTruongDen'] ?? 'Chờ duyệt';
+            
+            if ($statusDen === 'Từ chối' || $statusDi === 'Từ chối') {
+                return 'Bị từ chối';
+            } elseif ($statusDi === 'Đã duyệt' && $statusDen === 'Đã duyệt') {
+                return 'Hoàn tất';
+            } else {
+                return 'Chờ duyệt';
+            }
+        }
+    }
+    public function getMaPhuHuynhByMaNguoiDung($maNguoiDung) {
+        $sql = "SELECT maPhuHuynh FROM phuhuynh WHERE maNguoiDung = :maNguoiDung";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maNguoiDung' => $maNguoiDung]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $result ? $result['maPhuHuynh'] : null;
+    }
+    // Thêm vào class DonChuyenLopTruongModel
+    public function updateStudentInfo($maDon) {
+        try {
+            // Lấy thông tin đơn
+            $sql = "SELECT d.*, h.maLop as currentMaLop, h.maNguoiDung, nd.maTruong as currentMaTruong
+                    FROM donchuyenloptruong d
+                    JOIN hocsinh h ON d.maHocSinh = h.maHocSinh
+                    JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+                    WHERE d.maDon = :maDon";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([':maDon' => $maDon]);
+            $don = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$don) {
+                error_log("ERROR: Cannot find don with maDon=$maDon");
+                return false;
+            }
+            
+            $maHocSinh = $don['maHocSinh'];
+            $maNguoiDung = $don['maNguoiDung'];
+            $loaiDon = $don['loaiDon'];
+            
+            error_log("DEBUG updateStudentInfo: maDon=$maDon, loaiDon=$loaiDon, maHocSinh=$maHocSinh, maNguoiDung=$maNguoiDung");
+            
+            if ($loaiDon === 'chuyen_lop') {
+                // Đơn chuyển lớp - chỉ cập nhật lớp
+                if ($don['trangThaiLop'] === 'Đã duyệt' && $don['maLopDen']) {
+                    $sqlUpdate = "UPDATE hocsinh SET maLop = :maLopDen WHERE maHocSinh = :maHocSinh";
+                    $stmtUpdate = $this->conn->prepare($sqlUpdate);
+                    $result = $stmtUpdate->execute([
+                        ':maLopDen' => $don['maLopDen'],
+                        ':maHocSinh' => $maHocSinh
+                    ]);
+                    error_log("DEBUG: Updated class for student $maHocSinh to class {$don['maLopDen']}, result: " . ($result ? 'SUCCESS' : 'FAILED'));
+                    return $result;
+                }
+            } else {
+                // Đơn chuyển trường - chỉ cập nhật khi CẢ HAI đã duyệt
+                if ($don['trangThaiTruongDi'] === 'Đã duyệt' && $don['trangThaiTruongDen'] === 'Đã duyệt') {
+                    
+                    // 1. CẬP NHẬT TRƯỜNG TRONG BẢNG NGUOIDUNG
+                    if ($don['maTruongDen'] && $maNguoiDung) {
+                        $sqlUpdateNguoiDung = "UPDATE nguoidung SET maTruong = :maTruongDen WHERE maNguoiDung = :maNguoiDung";
+                        $stmtUpdateNguoiDung = $this->conn->prepare($sqlUpdateNguoiDung);
+                        $resultNguoiDung = $stmtUpdateNguoiDung->execute([
+                            ':maTruongDen' => $don['maTruongDen'],
+                            ':maNguoiDung' => $maNguoiDung
+                        ]);
+                        
+                        error_log("DEBUG: Updated school in nguoidung for user $maNguoiDung to school {$don['maTruongDen']}, result: " . ($resultNguoiDung ? 'SUCCESS' : 'FAILED'));
+                        
+                        if (!$resultNguoiDung) {
+                            return false; // Nếu cập nhật nguoidung thất bại thì rollback
+                        }
+                    }
+                    
+                    // 2. CẬP NHẬT LỚP TRONG BẢNG HOCSINH (nếu có lớp tương ứng)
+                    if ($don['maLopHienTai'] && $don['maTruongDen']) {
+                        // Tìm lớp tương ứng trong trường mới
+                        $sqlFindClass = "SELECT l2.maLop 
+                                    FROM lophoc l1 
+                                    JOIN lophoc l2 ON l1.tenLop = l2.tenLop 
+                                    WHERE l1.maLop = :maLopHienTai 
+                                    AND l2.maTruong = :maTruongDen
+                                    LIMIT 1";
+                        $stmtFind = $this->conn->prepare($sqlFindClass);
+                        $stmtFind->execute([
+                            ':maLopHienTai' => $don['maLopHienTai'],
+                            ':maTruongDen' => $don['maTruongDen']
+                        ]);
+                        $newClass = $stmtFind->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($newClass) {
+                            $sqlUpdateHocSinh = "UPDATE hocsinh SET maLop = :maLopMoi WHERE maHocSinh = :maHocSinh";
+                            $stmtUpdateHocSinh = $this->conn->prepare($sqlUpdateHocSinh);
+                            $resultHocSinh = $stmtUpdateHocSinh->execute([
+                                ':maLopMoi' => $newClass['maLop'],
+                                ':maHocSinh' => $maHocSinh
+                            ]);
+                            error_log("DEBUG: Updated class for student $maHocSinh to class {$newClass['maLop']}, result: " . ($resultHocSinh ? 'SUCCESS' : 'FAILED'));
+                        } else {
+                            error_log("WARNING: No matching class found in new school for student $maHocSinh, keeping current class");
+                            // Nếu không tìm thấy lớp tương ứng, có thể set maLop = NULL hoặc giữ nguyên
+                            // Tùy thuộc vào logic nghiệp vụ của bạn
+                        }
+                    }
+                    
+                    return true; // Cập nhật nguoidung thành công
+                    
+                } else {
+                    error_log("DEBUG: School transfer not completed yet - waiting for both approvals");
+                    return true; // Chưa đến lúc cập nhật
+                }
+            }
+            
+            return true; // Trường hợp không cần cập nhật vẫn trả về true
+            
+        } catch (PDOException $e) {
+            error_log("ERROR in updateStudentInfo: " . $e->getMessage());
+            return false;
+        }
     }
 }

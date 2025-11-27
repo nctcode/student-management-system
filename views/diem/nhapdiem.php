@@ -57,7 +57,6 @@ for ($i = $namHocHienTai + 1; $i >= $namHocHienTai - 5; $i--) {
                     <div class="form-group">
                         <label for="hocKy"><strong>Chọn Học kỳ:</strong></label>
                         <select id="hocKy" class="form-control" required>
-                            <option value="">Chọn Học kỳ</option>
                             <option value="HK1">Học kỳ 1</option>
                             <option value="HK2">Học kỳ 2</option>
                         </select>
@@ -78,9 +77,9 @@ for ($i = $namHocHienTai + 1; $i >= $namHocHienTai - 5; $i--) {
             </div>
             <br>
             <div class="d-flex justify-content-end">
-            <button type="button" id="btnXemBangDiem" class="btn btn-primary" disabled>
-                <i class="fas fa-eye"></i> Xem bảng điểm
-            </button>
+                <button type="button" id="btnXemBangDiem" class="btn btn-primary" disabled>
+                    <i class="fas fa-eye"></i> Xem bảng điểm
+                </button>
             </div>
         </div>
     </div>
@@ -90,22 +89,33 @@ for ($i = $namHocHienTai + 1; $i >= $namHocHienTai - 5; $i--) {
             <h5 class="m-0 font-weight-bold text-primary">Bảng điểm</h5>
         </div>
         <div class="card-body">
+            <div class="mb-3 p-3 bg-light rounded border">
+                <label class="font-weight-bold">Hiển thị cột điểm:</label>
+                <br>
+                <div class="form-check form-check-inline ml-2">
+                    <input class="form-check-input" type="checkbox" id="checkMieng" checked>
+                    <label class="form-check-label" for="checkMieng">Điểm Miệng</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="check15Phut" checked>
+                    <label class="form-check-label" for="check15Phut">Điểm 15 Phút</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="check1Tiet" checked>
+                    <label class="form-check-label" for="check1Tiet">Điểm 1 Tiết</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="checkCuoiKy" checked>
+                    <label class="form-check-label" for="checkCuoiKy">Điểm Cuối Kỳ</label>
+                </div>
+            </div>
             <form method="POST" action="index.php?controller=diem&action=luu" id="formLuuDiem">
                 <div id="hiddenInputsContainer"></div>
                 
-                <div class="table-responsive">
+                <div class="table-responsive table-responsive-sticky">
                     <table class="table table-bordered" id="dataTableDiem" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>STT</th>
-                                <th>Mã HS</th>
-                                <th>Họ tên</th>
-                                <th>Điểm Miệng</th>
-                                <th>Điểm 15 Phút</th>
-                                <th>Điểm 1 Tiết</th>
-                                <th>Điểm Cuối Kỳ</th>
-                            </tr>
-                        </thead>
+                        <thead id="diemTableHead">
+                            </thead>
                         <tbody id="tbodyDiem">
                             </tbody>
                     </table>
@@ -125,4 +135,4 @@ for ($i = $namHocHienTai + 1; $i >= $namHocHienTai - 5; $i--) {
 </div>
 
 <script src="assets/js/diem.js"></script>
-<link href="assets/css/diem.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/diem.css">

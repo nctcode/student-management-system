@@ -11,19 +11,23 @@ class DangKyBanHocController {
             session_start();
         }
         
+        // 1. Kiểm tra đăng nhập
         if (!isset($_SESSION['user'])) {
             header('Location: index.php?controller=auth&action=login');
             exit;
         }
         
-        // Kiểm tra vai trò và khối
+        // 2. Kiểm tra vai trò (Chỉ HOCSINH)
         if ($_SESSION['user']['vaiTro'] != 'HOCSINH') {
             $_SESSION['error'] = "Chỉ học sinh mới được đăng ký ban học!";
             header('Location: index.php?controller=home&action=student');
             exit;
         }
         
-        if (($_SESSION['user']['khoi'] ?? null) != 11) {
+        // 3. Kiểm tra khối (Chỉ khối 11)
+        // Sử dụng ?? 0 để tránh lỗi nếu session không có key 'khoi'
+        $khoi = $_SESSION['user']['khoi'] ?? 0;
+        if ($khoi != 11) {
             $_SESSION['error'] = "Chỉ học sinh khối 11 mới được đăng ký ban học cho lớp 12!";
             header('Location: index.php?controller=home&action=student');
             exit;
@@ -40,16 +44,20 @@ class DangKyBanHocController {
         
         // Lấy danh sách ban học còn chỉ tiêu
         $danhSachBan = $this->model->getDanhSachBanConChiTieu();
+        
+        // Kiểm tra xem học sinh này đã đăng ký chưa
         $daDangKy = $this->model->kiemTraDaDangKy($maHocSinh);
         $thongTinDangKy = null;
         
+        // Nếu đã đăng ký, lấy thông tin chi tiết để hiển thị
         if ($daDangKy) {
             $thongTinDangKy = $this->model->getThongTinDangKy($maHocSinh);
         }
         
+        // Các biến giao diện
         $title = "Đăng ký Ban học";
-        // BIẾN QUAN TRỌNG: Đặt biến này để file header.php hiển thị sidebar
-        $showSidebar = true; 
+        $showSidebar = true; // Biến này để header hiển thị sidebar
+        
         require_once 'views/dangkybanhoc/index.php';
     }
     
@@ -60,34 +68,54 @@ class DangKyBanHocController {
             
             // --- VALIDATION SERVER-SIDE ---
             
-            // 1. Kiểm tra học sinh đã đăng ký chưa (Ngăn chặn đăng ký trùng lặp)
+            // 1. Validate dữ liệu đầu vào
+            if (empty($maBan)) {
+                $_SESSION['error'] = "Vui lòng chọn một ban học!";
+                header('Location: index.php?controller=dangkybanhoc&action=index');
+                exit;
+            }
+
+            // 2. Kiểm tra học sinh đã đăng ký chưa (Ngăn chặn đăng ký trùng lặp)
             if ($this->model->kiemTraDaDangKy($maHocSinh)) {
                 $_SESSION['error'] = "Bạn đã đăng ký ban học rồi và không thể thay đổi.";
                 header('Location: index.php?controller=dangkybanhoc&action=index');
                 exit;
             }
 
-            // 2. Việc kiểm tra chỉ tiêu đã được xử lý bằng logic Transaction/Atomic Update 
-            //    trong Model (dangKyBanHoc). Không cần kiểm tra lặp lại ở đây.
-            
             // --- THỰC HIỆN ĐĂNG KÝ ---
-            
+            // Logic trừ chỉ tiêu đã được xử lý Atomic trong Model
             $result = $this->model->dangKyBanHoc($maHocSinh, $maBan);
             
             if ($result === true) {
                 $_SESSION['success'] = "Đăng ký ban học thành công!";
-                header('Location: index.php?controller=dangkybanhoc&action=index'); 
+                // QUAN TRỌNG: Chuyển hướng sang trang success
+                header('Location: index.php?controller=dangkybanhoc&action=success'); 
                 exit;
             } else {
-                // Trường hợp thất bại bao gồm: lỗi DB, hoặc ban học hết chỉ tiêu ngay lúc đăng ký (race condition)
-                $_SESSION['error'] = "Có lỗi xảy ra trong quá trình xử lý, vui lòng thử lại!";
+                // Trường hợp thất bại (Lỗi DB hoặc Hết chỉ tiêu)
+                $_SESSION['error'] = "Đăng ký thất bại! Có thể ban học đã hết chỉ tiêu hoặc có lỗi hệ thống.";
                 header('Location: index.php?controller=dangkybanhoc&action=index');
                 exit;
             }
         } else {
+            // Nếu không phải POST request
             header('Location: index.php?controller=dangkybanhoc&action=index');
             exit;
         }
+    }
+
+    // Hàm hiển thị trang thành công
+    public function success() {
+        // Kiểm tra nếu không có session success thì đá về trang chủ (tránh truy cập trực tiếp)
+        if (!isset($_SESSION['success'])) {
+             header('Location: index.php?controller=dangkybanhoc&action=index');
+             exit;
+        }
+
+        $title = "Đăng ký thành công";
+        $showSidebar = true;
+        
+        require_once 'views/dangkybanhoc/success.php';
     }
 }
 ?>
