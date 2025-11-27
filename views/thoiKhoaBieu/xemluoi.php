@@ -28,42 +28,84 @@
         </div>
         <div class="card-body">
             <form method="GET" id="tkbForm" action="index.php" class="mb-4">
-            <input type="hidden" name="controller" value="thoikhoabieu">
-            <input type="hidden" name="action" value="xemluoi">
-            <div class="form-row align-items-center">
-                
-                <?php 
-                // QTV, BGH, GV (chọn lớp khác để xem TKB lớp) được chọn lớp
-                if (in_array($userRole, ['GIAOVIEN', 'QTV', 'BGH'])): 
-                ?>
-                <div class="col-md-4 mb-2">
-                    <label class="mr-2">Chọn lớp (hoặc để trống xem Lịch Dạy):</label>
-                    <select name="maLop" class="form-control" onchange="document.getElementById('tkbForm').submit()">
-                        <option value="">
-                            <?= $userRole === 'GIAOVIEN' ? '-- Lịch Dạy Của Tôi --' : '-- Chọn lớp --' ?>
-                        </option>
-                        <?php foreach ($danhSachLop as $lop): ?>
-                            <option value="<?= htmlspecialchars($lop['maLop']) ?>" 
-                                <?= ($maLop == $lop['maLop']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($lop['tenLop']) ?> - Khối <?= htmlspecialchars($lop['tenKhoi'] ?? '') ?>
+                <input type="hidden" name="controller" value="thoikhoabieu">
+                <input type="hidden" name="action" value="xemluoi">
+                <div class="form-row align-items-center">
+                    
+                    <?php 
+                    // PHUHUYNH: Hiển thị dropdown chọn học sinh nếu có nhiều con
+                    if ($userRole === 'PHUHUYNH' && !empty($danhSachCon) && count($danhSachCon) > 1): 
+                    ?>
+                    <div class="col-md-4 mb-2">
+                        <label class="mr-2">Chọn học sinh:</label>
+                        <select name="maHocSinh" class="form-control" onchange="document.getElementById('tkbForm').submit()">
+                            <option value="">-- Chọn học sinh --</option>
+                            <?php 
+                            $maHocSinhHienTai = $_GET['maHocSinh'] ?? '';
+                            foreach ($danhSachCon as $con): 
+                                if (is_array($con) && isset($con['maHocSinh'])): 
+                            ?>
+                                <option value="<?= htmlspecialchars($con['maHocSinh']) ?>" 
+                                    <?= ($maHocSinhHienTai == $con['maHocSinh']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($con['hoTen'] ?? 'Học sinh') ?> 
+                                    - Lớp <?= htmlspecialchars($con['tenLop'] ?? '') ?>
+                                </option>
+                            <?php 
+                                endif;
+                            endforeach; 
+                            ?>
+                        </select>
+                    </div>
+                    <?php 
+                    // PHUHUYNH có 1 con: giữ maHocSinh dạng hidden
+                    elseif ($userRole === 'PHUHUYNH' && !empty($danhSachCon) && count($danhSachCon) === 1): 
+                    ?>
+                        <input type="hidden" name="maHocSinh" value="<?= htmlspecialchars($danhSachCon[0]['maHocSinh'] ?? '') ?>">
+                    <?php 
+                    endif; 
+                    ?>
+                    
+                    <?php 
+                    // QTV, BGH, GV (chọn lớp khác để xem TKB lớp) được chọn lớp
+                    if (in_array($userRole, ['GIAOVIEN', 'QTV', 'BGH'])): 
+                    ?>
+                    <div class="col-md-4 mb-2">
+                        <label class="mr-2">Chọn lớp (hoặc để trống xem Lịch Dạy):</label>
+                        <select name="maLop" class="form-control" onchange="document.getElementById('tkbForm').submit()">
+                            <option value="">
+                                <?= $userRole === 'GIAOVIEN' ? '-- Lịch Dạy Của Tôi --' : '-- Chọn lớp --' ?>
                             </option>
-                        <?php endforeach; ?>
-                    </select>
+                            <?php foreach ($danhSachLop as $lop): ?>
+                                <option value="<?= htmlspecialchars($lop['maLop']) ?>" 
+                                    <?= ($maLop == $lop['maLop']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($lop['tenLop']) ?> - Khối <?= htmlspecialchars($lop['tenKhoi'] ?? '') ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php 
+                    // HS/PH: Giữ lại maLop dưới dạng hidden input để filter TKB theo lớp của họ
+                    elseif (in_array($userRole, ['HOCSINH', 'PHUHUYNH'])): 
+                    ?>
+                        <input type="hidden" name="maLop" value="<?= htmlspecialchars($maLop) ?>">
+                    <?php endif; ?>
+                    
+                    <div class="col-md-4 mb-2">
+                        <label class="mr-2">Chọn tuần:</label>
+                        <input type="week" name="tuan" value="<?= htmlspecialchars($_GET['tuan'] ?? date('Y-\WW')) ?>" 
+                            class="form-control" onchange="document.getElementById('tkbForm').submit()">
+                    </div>
                 </div>
-                <?php 
-                // HS/PH: Giữ lại maLop dưới dạng hidden input để filter TKB theo lớp của họ
-                elseif (in_array($userRole, ['HOCSINH', 'PHUHUYNH'])): 
-                ?>
-                    <input type="hidden" name="maLop" value="<?= htmlspecialchars($maLop) ?>">
-                <?php endif; ?>
-                
-                <div class="col-md-4 mb-2">
-                    <label class="mr-2">Chọn tuần:</label>
-                    <input type="week" name="tuan" value="<?= htmlspecialchars($_GET['tuan'] ?? date('Y-\WW')) ?>" 
-                           class="form-control" onchange="document.getElementById('tkbForm').submit()">
-                </div>
+            </form>
+
+            <?php 
+            // Hiển thị thông báo nếu phụ huynh có nhiều con nhưng chưa chọn
+            if ($userRole === 'PHUHUYNH' && !empty($danhSachCon) && count($danhSachCon) > 1 && empty($maLop)): 
+            ?>
+            <div class="alert alert-info">
+                <strong>Thông báo:</strong> Bạn có <?= count($danhSachCon) ?> học sinh. Vui lòng chọn một học sinh để xem thời khóa biểu.
             </div>
-        </form>
+            <?php endif; ?>
 
             <?php if (!empty($maLop) && !empty($chiTietLop) && !$isViewingSelfSchedule): ?>
             <div class="row mb-4">

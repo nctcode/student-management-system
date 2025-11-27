@@ -128,8 +128,10 @@ class DonChuyenLopTruongController {
         error_log("DEBUG getMaTruongFilter - Role: $role, maTruongUser: " . ($maTruongUser ?? 'NULL'));
         
         if ($role === 'BGH') {
+            // BGH chỉ thấy đơn của trường mình
             return $maTruongUser;
         } elseif ($role === 'QTV') {
+            // QTV có thể chọn trường để xem
             return isset($_GET['school']) && is_numeric($_GET['school']) ? intval($_GET['school']) : null;
         }
         
@@ -186,18 +188,54 @@ class DonChuyenLopTruongController {
 
         $maDon = intval($_POST['maDon'] ?? 0);
         $side  = $_POST['side'] ?? ''; 
-        $maTruong = $this->getCurrentSchoolId(); // Lấy mã trường đang duyệt
+        $maTruong = $this->getCurrentSchoolId();
+
+        error_log("DEBUG APPROVE: maDon=$maDon, side=$side, maTruong=" . ($maTruong ?? 'NULL'));
 
         if ($maDon <= 0 || !$side || !$maTruong) {
-             $_SESSION['error'] = "Lỗi: Dữ liệu không hợp lệ hoặc không xác định được trường.";
+            $_SESSION['error'] = "Lỗi: Dữ liệu không hợp lệ hoặc không xác định được trường.";
             header('Location: ?controller=donchuyenloptruong&action=danhsach'); 
             exit;
         }
 
-        if ($this->model->approve($maDon, $side)) {
-            $_SESSION['success'] = "Duyệt đơn #$maDon thành công.";
+        // Kiểm tra quyền duyệt
+        $don = $this->model->getById($maDon);
+        if (!$don) {
+            $_SESSION['error'] = "Không tìm thấy đơn #$maDon.";
+            header('Location: ?controller=donchuyenloptruong&action=danhsach'); 
+            exit;
+        }
+
+        error_log("DEBUG APPROVE - Don details: " . print_r($don, true));
+
+        // Kiểm tra logic duyệt
+        if ($don['loaiDon'] === 'chuyen_truong') {
+            if ($side === 'truongden' && $don['maTruongDen'] != $maTruong) {
+                $_SESSION['error'] = "Bạn không có quyền duyệt đơn này với vai trò trường đến.";
+                header('Location: ?controller=donchuyenloptruong&action=danhsach'); 
+                exit;
+            }
+            if ($side === 'truongdi' && $don['maTruongHienTai'] != $maTruong) {
+                $_SESSION['error'] = "Bạn không có quyền duyệt đơn này với vai trò trường đi.";
+                header('Location: ?controller=donchuyenloptruong&action=danhsach'); 
+                exit;
+            }
         } else {
-            $_SESSION['error'] = "Lỗi khi duyệt đơn #$maDon.";
+            if ($side === 'lop' && $don['maTruongHienTai'] != $maTruong) {
+                $_SESSION['error'] = "Bạn không có quyền duyệt đơn chuyển lớp này.";
+                header('Location: ?controller=donchuyenloptruong&action=danhsach'); 
+                exit;
+            }
+        }
+
+        // Thực hiện duyệt
+        $result = $this->model->approve($maDon, $side);
+        error_log("DEBUG APPROVE - Model result: " . ($result ? 'SUCCESS' : 'FAILED'));
+
+        if ($result) {
+            $_SESSION['success'] = "Duyệt đơn #$maDon thành công và đã cập nhật thông tin học sinh.";
+        } else {
+            $_SESSION['error'] = "Lỗi khi duyệt đơn #$maDon. Vui lòng thử lại hoặc liên hệ quản trị viên.";
         }
         
         $qs = $maTruong ? '&school=' . $maTruong : '';

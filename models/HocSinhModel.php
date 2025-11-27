@@ -123,7 +123,7 @@ class HocSinhModel {
         $stmt = $conn->prepare($sql);
         $stmt->execute([$maNguoiDung]);
         
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     // Lấy tất cả học sinh (cho admin)

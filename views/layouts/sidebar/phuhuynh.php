@@ -4,22 +4,16 @@
             <h5>Menu Phụ Huynh</h5>
         </div>
         <ul class="sidebar-menu">
-            <li>
-                <a href="index.php?controller=home&action=parent" class="active">
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=home&action=parent">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
-            <li>
-                <a href="#">
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=diem&action=xemdiem">
                     <i class="fas fa-clipboard-list"></i>
                     <span>Kết quả học tập</span>
-                </a>
-            </li>
-            <li>
-                <a href="index.php?controller=diem&action=xemdiem">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Xem điểm</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -28,14 +22,8 @@
                     <span>Thời khóa biểu</span>
                 </a>
             </li>
-            <li>
-                <a href="#">
-                    <i class="fas fa-calendar-check"></i>
-                    <span>Chuyên cần</span>
-                </a>
-            </li>
-            <li>
-                <a href="index.php?controller=hocphi&action=index">
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=hocphi&action=index">
                     <i class="fas fa-money-bill-wave"></i>
                     <span>Học phí</span>
                 </a>
@@ -66,12 +54,6 @@
                 </div>
             </li>
             <?php endif; ?>
-            <li>
-                <a href="#">
-                    <i class="fas fa-book"></i>
-                    <span>Bài tập về nhà</span>
-                </a>
-            </li>
             <li class="nav-item">
                 <a href="index.php?controller=thongbao&action=danhsach" class="nav-link">
                     <i class="nav-icon fas fa-bullhorn"></i>
@@ -83,8 +65,8 @@
                     </span>
                 </a>
             </li>
-            <li>
-                <a href="index.php?controller=tuyensinh&action=hosocuatoi">
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=tuyensinh&action=hosocuatoi">
                     <i class="fas fa-user-graduate"></i>
                     <span>Hồ sơ tuyển sinh</span>
                 </a>

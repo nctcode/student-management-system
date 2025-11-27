@@ -232,15 +232,32 @@ class ThoiKhoaBieuController {
                 $hocSinh = $this->hocSinhModel->getHocSinhByNguoiDung($maNguoiDung);
                 if ($hocSinh && $hocSinh['maLop']) {
                     $maLop = $hocSinh['maLop'];
-                    $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop, $ngayApDungTuan); // <-- Truyền ngày áp dụng
+                    $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop, $ngayApDungTuan);
                 }
                 break;
                 
             case 'PHUHUYNH':
-                $hocSinh = $this->hocSinhModel->getHocSinhByPhuHuynh($maNguoiDung);
-                if ($hocSinh && $hocSinh['maLop']) {
-                    $maLop = $hocSinh['maLop'];
-                    $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop, $ngayApDungTuan); // <-- Truyền ngày áp dụng
+                $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maNguoiDung);
+                
+                // XỬ LÝ PHỤ HUYNH CÓ NHIỀU CON
+                if (!empty($danhSachCon)) {
+                    $maHocSinhFromGet = $_GET['maHocSinh'] ?? null;
+                    
+                    if ($maHocSinhFromGet) {
+                        // Tìm học sinh được chọn trong danh sách con
+                        foreach ($danhSachCon as $con) {
+                            if ($con['maHocSinh'] == $maHocSinhFromGet && $con['maLop']) {
+                                $maLop = $con['maLop'];
+                                $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop, $ngayApDungTuan);
+                                break;
+                            }
+                        }
+                    } else if (count($danhSachCon) === 1) {
+                        // Nếu chỉ có 1 con, lấy lớp của con đầu tiên
+                        $maLop = $danhSachCon[0]['maLop'] ?? '';
+                        $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop, $ngayApDungTuan);
+                    }
+                    // Nếu có nhiều con và chưa chọn con nào, $maLop sẽ rỗng -> hiển thị form chọn
                 }
                 break;
                 
@@ -249,9 +266,9 @@ class ThoiKhoaBieuController {
                 $maGiaoVien = $giaoVien['maGiaoVien'] ?? null;
                 
                 if (!empty($maLop)) {
-                    $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop, $ngayApDungTuan); // <-- Truyền ngày áp dụng
+                    $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop, $ngayApDungTuan);
                 } elseif ($maGiaoVien) {
-                    $thoiKhoaBieu = $this->tkbModel->getLichDayByGiaoVien($maGiaoVien, $ngayApDungTuan); // <-- Truyền ngày áp dụng
+                    $thoiKhoaBieu = $this->tkbModel->getLichDayByGiaoVien($maGiaoVien, $ngayApDungTuan);
                     $maLop = ''; 
                 }
                 break;
@@ -259,7 +276,7 @@ class ThoiKhoaBieuController {
             case 'QTV':
             case 'BGH':
                 if (!empty($maLop)) {
-                    $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop, $ngayApDungTuan); // <-- Truyền ngày áp dụng
+                    $thoiKhoaBieu = $this->tkbModel->getTKBTheoLop($maLop, $ngayApDungTuan);
                 }
                 break;
                 

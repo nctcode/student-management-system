@@ -175,7 +175,7 @@ class DiemController {
                         $valid = true;
                         $hocSinhInfo = $con;
                         $maHocSinhChon = $con['maHocSinh'];
-                        $maLopChon = $con['maLop']; 
+                        $maLopChon = $con['maLop']; // THÊM DÒNG NÀY
                         break;
                     }
                 }
@@ -187,7 +187,7 @@ class DiemController {
             } else if (count($danhSachCon) === 1) {
                 $hocSinhInfo = $danhSachCon[0];
                 $maHocSinhChon = $hocSinhInfo['maHocSinh'];
-                $maLopChon = $hocSinhInfo['maLop'];
+                $maLopChon = $hocSinhInfo['maLop']; // THÊM DÒNG NÀY
             }
         }
 
