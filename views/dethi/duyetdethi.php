@@ -64,7 +64,7 @@ function hienThiTrangThai($trangThai)
                         <input type="hidden" name="controller" value="dethi">
                         <input type="hidden" name="action" value="duyet">
 
-                        <select name="maKhoi" class="form-select mb-3" required>
+                        <select name="maKhoi" class="form-select mb-3">
                             <option value="">-- Khối học --</option>
                             <?php foreach ($khoiHocList as $khoi): ?>
                                 <option value="<?= $khoi['maKhoi'] ?>" <?= ($maKhoi == $khoi['maKhoi']) ? 'selected' : '' ?>>
@@ -73,7 +73,7 @@ function hienThiTrangThai($trangThai)
                             <?php endforeach; ?>
                         </select>
 
-                        <select name="maNienKhoa" class="form-select mb-3" required>
+                        <select name="maNienKhoa" class="form-select mb-3">
                             <option value="">-- Học kỳ --</option>
                             <?php foreach ($nienKhoaList as $nk): ?>
                                 <option value="<?= $nk['maNienKhoa'] ?>" <?= ($maNienKhoa == $nk['maNienKhoa']) ? 'selected' : '' ?>>
@@ -272,7 +272,7 @@ function hienThiTrangThai($trangThai)
 
                 // Bắt sự kiện nhập lý do: cập nhật trạng thái nút Duyệt
                 ghiChu.addEventListener('input', updateDuyetState);
-            } 
+            }
 
             // Khởi tạo trạng thái nút Duyệt
             updateDuyetState();

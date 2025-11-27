@@ -2,11 +2,8 @@
 require_once 'views/layouts/header.php';
 require_once 'views/layouts/sidebar/totruong.php';
 
-if (isset($_SESSION['message'])) {
-    $message = $_SESSION['message']['text'] ?? '';
-    $type    = $_SESSION['message']['status'] ?? 'success';
-    unset($_SESSION['message']);
-}
+$message = $_SESSION['message'] ?? null;
+unset($_SESSION['message']);
 
 function hienThiTrangThai($t)
 {
@@ -65,9 +62,17 @@ if (!empty($exams)) {
     </div>
 
     <!-- Thông báo -->
-    <?php if (!empty($message)): ?>
-        <div class="alert alert-<?= $type ?> text-center"><?= htmlspecialchars($message) ?></div>
-    <?php endif; ?>
+    <?php
+    /*
+if (!empty($message)): 
+?>
+    <div class="alert alert-<?= $type ?> text-center">
+        <?= htmlspecialchars($message) ?>
+    </div>
+<?php 
+endif;
+*/
+    ?>
 
     <!-- Bảng Đã duyệt / Từ chối -->
     <div class="row">
@@ -196,4 +201,27 @@ if (!empty($exams)) {
 
 </div>
 
+<!-- MODAL THÔNG BÁO -->
+<?php if ($message): ?>
+    <div class="modal fade" id="thongBaoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header <?= ($message['status'] == 'success') ? 'bg-success' : 'bg-danger' ?> text-white">
+                    <h5 class="modal-title">Thông báo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body"><?= htmlspecialchars($message['text']) ?></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var modal = new bootstrap.Modal(document.getElementById('thongBaoModal'));
+            modal.show();
+        });
+    </script>
+<?php endif; ?>
 <?php require_once 'views/layouts/footer.php'; ?>

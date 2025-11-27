@@ -156,6 +156,14 @@ class DeThiController
         $khoiHocModel = new DeThiModel();
         $khoiHocList = $khoiHocModel->getAllKhoiHoc();
 
+        // Kiểm tra chọn Khối, Học kỳ
+        if ((isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) && (empty($maKhoi) || empty($maNienKhoa))) {
+            $_SESSION['message'] = [
+                'status' => 'danger',
+                'text'   => 'Vui lòng chọn đầy đủ Khối và Học kỳ!'
+            ];
+        }
+
         $nienKhoaModel = new DeThiModel();
         $nienKhoaList = $nienKhoaModel->getAllNienKhoa();
 
@@ -224,6 +232,14 @@ class DeThiController
         $maKhoi = $_GET['maKhoi'] ?? null;
         $maNienKhoa = $_GET['maNienKhoa'] ?? null;
         $maDeThi = $_GET['maDeThi'] ?? null;
+
+         // Kiểm tra chọn Khối, Học kỳ
+        if ((isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) && (empty($maKhoi) || empty($maNienKhoa))) {
+            $_SESSION['message'] = [
+                'status' => 'danger',
+                'text'   => 'Vui lòng chọn đầy đủ Khối và Học kỳ!'
+            ];
+        }
 
         // Chỉ lấy danh sách đề thi khi đã chọn khối hoặc học kỳ
         $exams = [];

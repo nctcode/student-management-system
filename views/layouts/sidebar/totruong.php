@@ -17,6 +17,12 @@
                 </a>
             </li>
             <li>
+                <a href="index.php?controller=dethi&action=lichSuDuyetDeThi">
+                    <i class="fas fa-history me-2"></i>
+                    <span>Lịch sử duyệt</span>
+                </a>
+            </li>
+            <li>
                 <a href="index.php?controller=dethi&action=phancong">
                     <i class="fas fa-user-edit"></i>
                     <span>Phân công giáo viên ra đề</span>
