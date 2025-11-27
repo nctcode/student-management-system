@@ -262,7 +262,7 @@ class ThoiKhoaBieuController {
                 break;
                 
             case 'GIAOVIEN':
-                $giaoVien = $this->giaoVienModel->getGiaoVienByNguoiDung($maNguoiDung);
+                $giaoVien = $this->giaoVienModel->getGiaoVienByMaNguoiDung($maNguoiDung);
                 $maGiaoVien = $giaoVien['maGiaoVien'] ?? null;
                 
                 if (!empty($maLop)) {
