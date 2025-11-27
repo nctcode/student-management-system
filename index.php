@@ -1,14 +1,25 @@
 <?php
-// Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Simple router
+$servername = "localhost";
+$username = "root";            
+$password = "";                 
+$dbname = "qlhs"; 
+
+// Tạo kết nối
+$conn = new mysqli($servername, $username, $password, $dbname);
+$conn->set_charset("utf8"); 
+
+// Kiểm tra kết nối
+if ($conn->connect_error) {
+    die("Lỗi kết nối Database: " . $conn->connect_error);
+}
+
 $controller = $_GET['controller'] ?? 'home';
 $action = $_GET['action'] ?? 'index';
 
-// Cho phép auth controller không cần đăng nhập
 $publicControllers = ['auth'];
 
 if (!in_array($controller, $publicControllers) && !isset($_SESSION['user'])) {
@@ -16,27 +27,42 @@ if (!in_array($controller, $publicControllers) && !isset($_SESSION['user'])) {
     exit;
 }
 
-// Include controller
-$controllerFile = "controllers/" . ucfirst($controller) . "Controller.php";
+// Đường dẫn file Controller
+$controllerName = ucfirst($controller) . "Controller";
+$controllerFile = "controllers/" . $controllerName . ".php";
+
+// Kiểm tra file tồn tại
 if (file_exists($controllerFile)) {
     require_once $controllerFile;
     
-    $controllerClass = ucfirst($controller) . "Controller";
-    if (class_exists($controllerClass)) {
-        $controllerInstance = new $controllerClass();
+    // Kiểm tra class tồn tại
+    if (class_exists($controllerName)) {
         
+        $controllerInstance = new $controllerName($conn);
+        
+        // Kiểm tra action (hàm) tồn tại
         if (method_exists($controllerInstance, $action)) {
             $controllerInstance->$action();
         } else {
-            die("Action không tồn tại: $action");
+            // Xử lý lỗi Action không tồn tại
+            echo "<h3 style='color:red; text-align:center;'>Lỗi: Action '$action' không tồn tại trong $controllerName!</h3>";
         }
     } else {
-        die("Controller không tồn tại: $controllerClass");
+        echo "<h3 style='color:red; text-align:center;'>Lỗi: Class '$controllerName' không tìm thấy!</h3>";
     }
 } else {
-    // Fallback - hiển thị trang chủ
-    require_once 'controllers/HomeController.php';
-    $home = new HomeController();
-    $home->index();
+
+    $fallbackFile = 'controllers/HomeController.php';
+    if (file_exists($fallbackFile)) {
+        require_once $fallbackFile;
+        if (class_exists('HomeController')) {
+            $home = new HomeController($conn);
+            $home->index();
+        } else {
+            echo "Lỗi: Không tìm thấy class HomeController.";
+        }
+    } else {
+        echo "<h3 style='color:red; text-align:center;'>Lỗi 404: Trang bạn tìm không tồn tại (Controller: $controller).</h3>";
+    }
 }
 ?>
