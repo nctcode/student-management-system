@@ -17,13 +17,20 @@ class ProfileController {
             exit;
         }
 
-        // Lấy ID người dùng từ session
+        // Lấy ID người dùng và vai trò từ session
         $userId = $_SESSION['user']['maNguoiDung'];
+        $userRole = $_SESSION['user']['vaiTro'];
         
-        // Gọi model để lấy thông tin chi tiết
-        $userInfo = $this->model->getUserById($userId);
+        // Gọi model để lấy thông tin chi tiết theo vai trò
+        $userInfo = $this->model->layThongTinChiTietTheoVaiTro($userId, $userRole);
 
-        // Nạp file view và truyền dữ liệu $userInfo sang
+        // Lấy thêm thông tin cho TOTRUONG
+        if ($userRole == 'TOTRUONG' && isset($userInfo['maToTruong'])) {
+            $danhSachGiaoVien = $this->model->layGiaoVienTrongTo($userInfo['maToTruong']);
+            $thongTinTo = $this->model->layThongTinToChuyenMon($userInfo['maToTruong']);
+        }
+
+        // Nạp file view và truyền dữ liệu
         include __DIR__ . '/../views/profile/index.php';
     }
 }

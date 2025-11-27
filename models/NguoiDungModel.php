@@ -301,6 +301,128 @@ class NguoiDungModel {
             return false;
         }
     }
+    // Lấy thông tin chi tiết theo vai trò
+    public function layThongTinChiTietTheoVaiTro($maNguoiDung, $vaiTro) {
+        $sql = "SELECT nd.*, tk.tenDangNhap, tk.vaiTro, tk.trangThai as trangThaiTaiKhoan";
+        
+        // Thêm các trường cụ thể theo vai trò
+        switch($vaiTro) {
+            case 'HOCSINH':
+                $sql .= ", hs.maHocSinh, hs.maLop, hs.ngayNhapHoc, hs.trangThai as trangThaiHocSinh,
+                         l.tenLop, k.tenKhoi, ph.hoTen as tenPhuHuynh";
+                $sql .= " FROM nguoidung nd 
+                         LEFT JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan 
+                         LEFT JOIN hocsinh hs ON nd.maNguoiDung = hs.maNguoiDung
+                         LEFT JOIN lophoc l ON hs.maLop = l.maLop
+                         LEFT JOIN khoi k ON l.maKhoi = k.maKhoi
+                         LEFT JOIN phuhuynh phs ON hs.maPhuHuynh = phs.maPhuHuynh
+                         LEFT JOIN nguoidung ph ON phs.maNguoiDung = ph.maNguoiDung";
+                break;
+                
+            case 'GIAOVIEN':
+                $sql .= ", gv.maGiaoVien, gv.chuyenMon, gv.loaiGiaoVien, gv.maMonHoc,
+                         mh.tenMonHoc, tt.toChuyenMon";
+                $sql .= " FROM nguoidung nd 
+                         LEFT JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan 
+                         LEFT JOIN giaovien gv ON nd.maNguoiDung = gv.maNguoiDung
+                         LEFT JOIN monhoc mh ON gv.maMonHoc = mh.maMonHoc
+                         LEFT JOIN totruongchuyenmon tt ON gv.maToTruong = tt.maToTruong";
+                break;
+                
+            case 'PHUHUYNH':
+                $sql .= ", ph.maPhuHuynh, ph.ngheNghiep, ph.moiQuanHe";
+                $sql .= " FROM nguoidung nd 
+                         LEFT JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan 
+                         LEFT JOIN phuhuynh ph ON nd.maNguoiDung = ph.maNguoiDung";
+                break;
+                
+            case 'BGH':
+                $sql .= ", bgh.maBanGiamHieu";
+                $sql .= " FROM nguoidung nd 
+                         LEFT JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan 
+                         LEFT JOIN bangiamhieu bgh ON nd.maNguoiDung = bgh.maNguoiDung";
+                break;
+                
+            case 'QTV':
+                $sql .= ", qtv.maQuanTriVien";
+                $sql .= " FROM nguoidung nd 
+                         LEFT JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan 
+                         LEFT JOIN quantrivien qtv ON nd.maNguoiDung = qtv.maNguoiDung";
+                break;
+                
+            case 'TOTRUONG':
+                $sql .= ", tt.maToTruong, tt.toChuyenMon, tt.maMonHoc,
+                         mh.tenMonHoc, COUNT(gv.maGiaoVien) as soLuongGiaoVien";
+                $sql .= " FROM nguoidung nd 
+                         LEFT JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan 
+                         LEFT JOIN totruongchuyenmon tt ON nd.maNguoiDung = tt.maNguoiDung
+                         LEFT JOIN monhoc mh ON tt.maMonHoc = mh.maMonHoc
+                         LEFT JOIN giaovien gv ON tt.maToTruong = gv.maToTruong";
+                break;
+                
+            default:
+                $sql .= " FROM nguoidung nd 
+                         LEFT JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan";
+        }
+        
+        $sql .= " WHERE nd.maNguoiDung = ?";
+        
+        // Thêm GROUP BY cho TOTRUONG để đếm số lượng giáo viên
+        if ($vaiTro == 'TOTRUONG') {
+            $sql .= " GROUP BY tt.maToTruong";
+        }
+        
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$maNguoiDung]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Lỗi lấy thông tin chi tiết: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    // Lấy danh sách giáo viên trong tổ chuyên môn (dành cho TOTRUONG)
+    public function layGiaoVienTrongTo($maToTruong) {
+        $sql = "SELECT gv.maGiaoVien, nd.hoTen, nd.email, nd.soDienThoai, 
+                       gv.chuyenMon, gv.loaiGiaoVien, mh.tenMonHoc
+                FROM giaovien gv
+                LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN monhoc mh ON gv.maMonHoc = mh.maMonHoc
+                WHERE gv.maToTruong = ?
+                ORDER BY nd.hoTen";
+        
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$maToTruong]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Lỗi lấy danh sách giáo viên trong tổ: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    // Lấy thông tin chi tiết về tổ chuyên môn
+    public function layThongTinToChuyenMon($maToTruong) {
+        $sql = "SELECT tt.*, mh.tenMonHoc, 
+                       COUNT(DISTINCT gv.maGiaoVien) as soGiaoVien,
+                       COUNT(DISTINCT mh.maMonHoc) as soMonHoc
+                FROM totruongchuyenmon tt
+                LEFT JOIN monhoc mh ON tt.maMonHoc = mh.maMonHoc
+                LEFT JOIN giaovien gv ON tt.maToTruong = gv.maToTruong
+                WHERE tt.maToTruong = ?
+                GROUP BY tt.maToTruong";
+        
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$maToTruong]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Lỗi lấy thông tin tổ chuyên môn: " . $e->getMessage());
+            return null;
+        }
+    }
+
     // Lấy tất cả thông tin của 1 người dùng bằng ID
     public function getUserById($id) {
         $sql = "SELECT * FROM nguoidung WHERE maNguoiDung = :id";
@@ -308,5 +430,6 @@ class NguoiDungModel {
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+    
 }
 ?>
