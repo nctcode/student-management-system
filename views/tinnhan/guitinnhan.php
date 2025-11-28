@@ -13,7 +13,7 @@
         <div class="col-md-6">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h5 class="m-0 font-weight-bold text-primary">CHỌN ĐỐI TƯỢNG NHẬN TIN NHẮN</h5>
+                    <h5 class="m-0 font-weight-bold text-primary">Chọn đối tượng nhận tin nhắn</h5>
                 </div>
                 <div class="card-body">
                     <div class="form-group">
@@ -26,7 +26,7 @@
                             <label class="form-check-label" for="checkPhuHuynh">Phụ huynh</label>
                         </div>
                     </div>
-                    
+                    <br>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
@@ -45,9 +45,9 @@
                         </div>
                     </div>
                     <br>
-                    <div id="danhSachHocSinh" class="danh-sach-container">
-                        <h6 class="font-weight-bold text-center">DANH SÁCH HỌC SINH</h6>
-                        <div class="table-responsive">
+                    <div id="danhSachHocSinh" style="display: none;">
+                        <div class="danh-sach-scroll">
+                            <h6 class="font-weight-bold text-center" id="titleHocSinh">DANH SÁCH HỌC SINH</h6>
                             <table class="table table-bordered table-sm" id="tableHocSinh">
                                 <thead>
                                     <tr>
@@ -64,9 +64,9 @@
                         <div id="paginationHS" class="pagination-container mt-2"></div>
                     </div>
                     <br>
-                    <div id="danhSachPhuHuynh" class="danh-sach-container" style="display: none;">
-                        <h6 class="font-weight-bold text-center">DANH SÁCH PHỤ HUYNH</h6>
-                        <div class="table-responsive">
+                    <div id="danhSachPhuHuynh" style="display: none;">
+                        <div class="danh-sach-scroll">
+                            <h6 class="font-weight-bold text-center">DANH SÁCH PHỤ HUYNH</h6>
                             <table class="table table-bordered table-sm" id="tablePhuHuynh">
                                 <thead>
                                     <tr>
@@ -96,32 +96,64 @@
         <div class="col-md-6">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h5 class="m-0 font-weight-bold text-primary">GỬI TIN NHẮN</h5>
+                    <h5 class="m-0 font-weight-bold text-primary">Gửi tin nhắn</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" enctype="multipart/form-data" id="formGuiTinNhan">
                         <div class="form-group">
-                            <label><strong>Người nhận</strong></label>
+                            <label><strong>Người nhận (*)</strong></label>
                             <div class="border rounded p-2 bg-light" id="danhSachNguoiNhan" style="min-height: 40px;">
                                 </div>
                             <input type="hidden" name="nguoiNhan" id="hiddenNguoiNhan">
                         </div>
-
+                        <br>
                         <div class="form-group">
-                            <label><strong>Tiêu đề</strong></label>
+                            <label><strong>Tiêu đề (*)</strong></label>
                             <input type="text" name="tieuDe" class="form-control" required placeholder="Nhập tiêu đề tin nhắn">
                         </div>
-
-                        <div class="form-group">
-                            <label><strong>Nội dung tin nhắn</strong></label>
-                            <textarea name="noiDung" class="form-control" rows="6" required 
+                        <br>
+                        <div class="form-group position-relative">
+                            <label><strong>Nội dung tin nhắn (*)</strong></label>
+                            <emoji-picker style="display: none; position: absolute; z-index: 1050; right: 20px; bottom: 150px;"></emoji-picker>
+                            <textarea name="noiDung"  id="noiDungTinNhan" class="form-control" rows="6" required 
                                       placeholder="Nhập nội dung tin nhắn..." 
-                                      onkeyup="demKyTu(this)"></textarea>
-                            <small class="form-text text-muted">
-                                <span id="soKyTu">0</span>/1000 ký tự
-                            </small>
+                                      onkeyup="demKyTu(this)">
+                            </textarea>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <small class="form-text text-muted">
+                                    <span id="soKyTu">0</span>/1000 ký tự
+                                </small>
+                                <button type="button" id="emojiBtn" class="btn btn-light btn-sm" title="Chèn biểu tượng">😊</button>
+                            </div>
+                            <script>
+                                tinymce.init({
+                                    selector: 'textarea[name="noiDung"]',
+                                    plugins: 'autolink lists link image charmap preview anchor pagebreak',
+                                    toolbar: 'undo redo | bold italic underline | ' + 
+                                            'alignleft aligncenter alignright | ' +
+                                            'bullist numlist outdent indent | link',
+                                    menubar: false,
+                                    height: 250,
+                                    setup: function(editor) {
+                                        editor.on('keyup', function(e) {
+                                            var content = editor.getContent({ format: 'text' });
+                                            var fakeTextarea = { value: content };
+                                            if (window.demKyTu) { 
+                                                window.demKyTu(fakeTextarea);
+                                            }
+                                        });
+                                        editor.on('Change', function(e) {
+                                            var content = editor.getContent({ format: 'text' });
+                                            var fakeTextarea = { value: content };
+                                            if (window.demKyTu) {
+                                                window.demKyTu(fakeTextarea);
+                                            }
+                                        });
+                                    }
+                                });
+                            </script>
                         </div>
-
+                        <br>
                         <div class="form-group">
                             <label><strong>Đính kèm file</strong></label>
                             <div id="danhSachFile" class="mb-2">
@@ -135,7 +167,7 @@
                                 • Không gửi nội dung không phù hợp
                             </small>
                         </div>
-
+                        <br>
                         <div class="d-flex justify-content-end">
                             <button type="button" class="btn btn-danger btn-lg" onclick="history.back()">
                                 <i class="fas fa-times"></i> Hủy
@@ -150,6 +182,45 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const picker = document.querySelector('emoji-picker');
+    const emojiBtn = document.getElementById('emojiBtn');
+    const textarea = document.querySelector('textarea[name="noiDung"]');
+
+    if(textarea) {
+        if (!window.tinymce || !tinymce.get(textarea.id)) {
+            textarea.focus();
+        }
+    }
+
+    if (picker && emojiBtn && textarea) {
+        picker.addEventListener('emoji-click', event => {
+            if (window.tinymce && tinymce.get(textarea.id)) {
+                tinymce.get(textarea.id).insertContent(event.detail.unicode);
+            } else {
+                textarea.value += event.detail.unicode;
+            }
+            picker.style.display = 'none';
+        });
+
+        emojiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = picker.style.display === 'none';
+            picker.style.display = isHidden ? 'block' : 'none';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (picker.style.display === 'block') {
+                if (!picker.contains(e.target) && e.target !== emojiBtn) {
+                    picker.style.display = 'none';
+                }
+            }
+        });
+    }
+});
+</script>
 
 <link rel="stylesheet" href="assets/css/tinnhan.css">
 <script src="assets/js/tinnhan.js"></script>

@@ -10,9 +10,8 @@ class HomeModel
     }
 
     //Thống kê cho Tổ trưởng chuyên môn
-    public function getLeaderStats($maNguoiDung)
+    public function getLeaderStats($maToTruong = null)
     {
-
         $conn = $this->db->getConnection();
 
         $stats = [
@@ -21,32 +20,27 @@ class HomeModel
             'rejected_exams' => 0
         ];
 
-        $sql = "
-        SELECT 
-            CASE d.trangThai
-                WHEN 'CHO_DUYET' THEN 'pending_exams'
-                WHEN 'DA_DUYET' THEN 'approved_exams'
-                WHEN 'TU_CHOI' THEN 'rejected_exams'
-                ELSE 'pending_exams'
-            END AS status_group,
-            COUNT(*) AS total
-        FROM dethi d
-        INNER JOIN toTruongChuyenMon t ON d.maMonHoc = t.maMonHoc
-        WHERE t.maNguoiDung = ?
-        GROUP BY status_group
-    ";
+        // Truy vấn tổng số đề thi theo trạng thái
+        $sql = "SELECT 
+                CASE 
+                    WHEN trangThai IS NULL OR trangThai = 'CHO_DUYET' THEN 'pending_exams'
+                    WHEN trangThai = 'DA_DUYET' THEN 'approved_exams'
+                    WHEN trangThai = 'TU_CHOI' THEN 'rejected_exams'
+                END AS status_group,
+                COUNT(*) as total
+            FROM dethi
+            GROUP BY status_group";
 
         $stmt = $conn->prepare($sql);
-
-        // Truyền đúng param, không hardcode SQL
-        $stmt->execute([$maNguoiDung]);
+        $stmt->execute();
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $stats[$row['status_group']] = (int)$row['total'];
+            $stats[$row['status_group']] = $row['total'];
         }
 
         return $stats;
     }
+
 
 
     // Thống kê cho Admin
@@ -499,28 +493,6 @@ class HomeModel
     }
 
     // =====================================================KIET================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     // Lấy tổng quan hệ thống

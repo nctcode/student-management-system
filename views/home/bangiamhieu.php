@@ -80,17 +80,19 @@ $roleName = 'Ban giám hiệu';
                             </div>
                             <div class="card-body">
                                 <div class="list-group">
-                                    <a href="index.php?controller=quanlynguoidung&action=index" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-users me-2"></i>Quản lý nhân sự
-                                    </a>
-                                    <a href="index.php?controller=tuyensinh&action=index" class="list-group-item list-group-item-action">
+                                    <a href="index.php?controller=tuyensinh&action=danhsachhoso" class="list-group-item list-group-item-action">
                                         <i class="fas fa-user-graduate me-2"></i>Tuyển sinh & Đào tạo
                                     </a>
-                                    <a href="index.php?controller=hocphi&action=index" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-money-bill-wave me-2"></i>Tài chính & Học phí
+                                    <!-- Thêm mục mới cho phân công giáo viên -->
+                                    <a href="index.php?controller=PhanCongGVBMCN&action=index" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-chalkboard-teacher me-2"></i>Phân công giáo viên
                                     </a>
-                                    <a href="index.php?controller=duyetdethi&action=index" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-check-circle me-2"></i>Duyệt đề thi
+                                    <a href="index.php?controller=PhanCongGVBMCN&action=viewCurrentAssignments" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-list-alt me-2"></i>Xem phân công hiện tại
+                                    </a>
+                                    <!-- Thêm mục mới cho phê duyệt chuyển lớp/trường -->
+                                    <a href="index.php?controller=donchuyenloptruong&action=index" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-exchange-alt me-2"></i>Phê duyệt chuyển lớp/trường
                                     </a>
                                 </div>
                             </div>
@@ -103,17 +105,8 @@ $roleName = 'Ban giám hiệu';
                             </div>
                             <div class="card-body">
                                 <div class="list-group">
-                                    <a href="#" class="list-group-item list-group-item-action">
+                                    <a href="index.php?controller=ThongKe&action=index" class="list-group-item list-group-item-action">
                                         <i class="fas fa-chart-bar me-2"></i>Báo cáo học tập
-                                    </a>
-                                    <a href="#" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-chart-pie me-2"></i>Thống kê tài chính
-                                    </a>
-                                    <a href="#" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-clipboard-check me-2"></i>Đánh giá giáo viên
-                                    </a>
-                                    <a href="#" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-file-alt me-2"></i>Báo cáo tổng hợp
                                     </a>
                                 </div>
                             </div>

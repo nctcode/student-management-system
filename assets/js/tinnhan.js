@@ -133,7 +133,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         pageData.forEach(item => {
             const tr = document.createElement('tr');
+<<<<<<< HEAD
             
+=======
+>>>>>>> acbda302907f6fa74659484b7256c34d8bbfd5b8
             const maNguoiDung = item.maNguoiDung;
             const ten = item.hoTen;
             const isChecked = danhSachDaChon.some(ng => ng.maNguoiDung === maNguoiDung);

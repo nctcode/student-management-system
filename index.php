@@ -4,6 +4,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 // Simple router
 $controller = $_GET['controller'] ?? 'home';
 $action = $_GET['action'] ?? 'index';
@@ -30,6 +32,18 @@ if (file_exists($controllerFile)) {
             switch ($controller) {
                 case 'donchuyenloptruong':
                     switch ($action) {
+                        case 'index':
+                        case 'store':
+                        case 'create':
+                        case 'danhsachdoncuatoi':
+                        case 'chitietdoncuatoi':
+                        case 'danhsach':
+                        case 'approve':
+                        case 'reject':
+                        case 'ajax_chitiet':
+                        case 'ajax_getlop':
+                            $controllerInstance->$action();
+                            break;
                         case 'detail':
                         case 'pheduyetdon':
                         case 'cancel':
@@ -48,6 +62,7 @@ if (file_exists($controllerFile)) {
                         case 'student':
                         case 'parent':
                         case 'principal':
+                        case 'leader':
                             $controllerInstance->$action();
                             break;
                         default:
@@ -121,27 +136,147 @@ if (file_exists($controllerFile)) {
                     }
                     break;
                 
+                // Trong phần case 'tinnhan' của index.php
                 case 'tinnhan':
-                    $controller = new TinNhanController();
                     switch ($action) {
                         case 'guitinnhan':
-                            $controller->guitinnhan();
+                            $controllerInstance->guitinnhan();
                             break;
                         case 'chitiettinnhan':
                             $maHoiThoai = $_GET['maHoiThoai'] ?? '';
-                            $controller->chitiettinnhan($maHoiThoai);
+                            $controllerInstance->chitiettinnhan($maHoiThoai);
                             break;
                         case 'getHocSinhByLop':
-                            $controller->getHocSinhByLop();
+                            $controllerInstance->getHocSinhByLop();
                             break;
                         case 'getPhuHuynhByLop':
-                            $controller->getPhuHuynhByLop();
+                            $controllerInstance->getPhuHuynhByLop();
+                            break;
+                        case 'guitinnhangiaovien':
+                            $controllerInstance->guitinnhangiaovien();
+                            break;
+                        case 'getAllGiaoVien': // THÊM DÒNG NÀY
+                            $controllerInstance->getAllGiaoVien();
+                            break;
+                        case 'getGiaoVienByLop': // THÊM DÒNG NÀY
+                            $controllerInstance->getGiaoVienByLop();
                             break;
                         default:
-                            $controller->index();
+                            $controllerInstance->index();
                     }
                     break;
-                    
+                
+                case 'diem':
+                    switch ($action) {
+                        case 'xemdiem':
+                            $controllerInstance->xemdiem();
+                            break;
+                        case 'nhapdiem':
+                            $controllerInstance->nhapdiem();
+                            break;
+                        case 'taibangdiem':
+                            $controllerInstance->taibangdiem();
+                            break;
+                        default:
+                            $controllerInstance->$action();
+                    }
+                    break;
+
+                case 'chuyencan':
+                    $controllerInstance->$action();
+                    break; 
+                
+                case 'baitap':
+                    switch ($action) {
+                        case 'danhsach':
+                            $controllerInstance->danhsach();
+                            break;
+                        case 'luu': 
+                            $controllerInstance->luu();
+                            break;
+                        case 'chitiet':
+                            $maBaiTap = $_GET['maBaiTap'] ?? 0;
+                            $controllerInstance->chitiet($maBaiTap);
+                            break;
+                        case 'taiTatCaBaiNop':
+                            $maBaiTap = $_GET['maBaiTap'] ?? 0;
+                            $controllerInstance->taiTatCaBaiNop($maBaiTap);
+                            break;
+                        case 'danhsach_hs': 
+                            $controllerInstance->danhsach_hs();
+                            break;
+                        case 'chitiet_hs':
+                            $maBaiTap = $_GET['maBaiTap'] ?? 0;
+                            $controllerInstance->chitiet_hs($maBaiTap);
+                            break;
+                        case 'nopbai':
+                            $controllerInstance->nopbai();
+                            break;
+                        case 'xoaFileNop':
+                            $controllerInstance->xoaFileNop();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
+                
+                case 'thongbao':
+                    switch ($action) {
+                        case 'dangthongbao':
+                        case 'xulydangthongbao':
+                        case 'danhsach':
+                        case 'chitiet':
+                        case 'xoa':
+                        case 'loadNotifications':
+                        case 'markAsRead':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->danhsach();
+                    }
+                    break;
+                
+                case 'ketquahoctap':
+                    switch ($action) {
+                        case 'thongke':
+                            $controllerInstance->thongke();
+                            break;
+                        default:
+                            $controllerInstance->thongke();
+                    }
+                    break;
+                
+                case 'dangkybanhoc':
+                    switch ($action) {
+                        case 'index':
+                            $controllerInstance->index();
+                            break;
+                        case 'store':
+                            $controllerInstance->store();
+                            break;
+                        case 'success':
+                            $controllerInstance->success();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;    
+                
+                case 'quanlytaikhoan':
+                    switch ($action) {
+                        case 'index':
+                        case 'create':
+                        case 'store':
+                        case 'edit':
+                        case 'update':
+                        case 'delete':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
+
                 default:
                     $controllerInstance->$action();
             }

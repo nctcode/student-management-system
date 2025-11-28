@@ -19,7 +19,6 @@ $roleName = 'Tổ trưởng chuyên môn';
 
                 <!-- Thống kê đề thi -->
                 <div class="row">
-                    <!-- chờ duyệt -->
                     <div class="col-md-4 mb-3">
                         <div class="card bg-warning text-white h-100">
                             <div class="card-body">
@@ -33,7 +32,6 @@ $roleName = 'Tổ trưởng chuyên môn';
                             </div>
                         </div>
                     </div>
-                    <!-- đã duyệt -->
                     <div class="col-md-4 mb-3">
                         <div class="card bg-success text-white h-100">
                             <div class="card-body">
@@ -47,8 +45,6 @@ $roleName = 'Tổ trưởng chuyên môn';
                             </div>
                         </div>
                     </div>
-
-                    <!-- từ chối -->
                     <div class="col-md-4 mb-3">
                         <div class="card bg-danger text-white h-100">
                             <div class="card-body">

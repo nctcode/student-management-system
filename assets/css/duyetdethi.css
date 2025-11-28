@@ -1,4 +1,5 @@
 /* --- Container chính của trang --- */
+<<<<<<< HEAD
 .container-main { 
     padding: 40px; 
     max-width: 1200px; 
@@ -6,6 +7,19 @@
 }
 
 /* Responsive: màn hình nhỏ sidebar ẩn hoặc thành top menu */
+=======
+
+.container-main {
+    padding: 40px;
+    max-width: 1200px;
+    margin-left: 260px;
+    /* nếu sidebar cố định 260px */
+}
+
+
+/* Responsive: màn hình nhỏ sidebar ẩn hoặc thành top menu */
+
+>>>>>>> acbda302907f6fa74659484b7256c34d8bbfd5b8
 @media (max-width: 992px) {
     .container-main {
         margin-left: 0;
@@ -13,6 +27,7 @@
     }
 }
 
+<<<<<<< HEAD
 /* --- Tiêu đề trang --- */
 .title { 
     text-align: center; 
@@ -69,10 +84,82 @@ input[type="checkbox"] {
 .answers span { 
     display: inline-block; 
     width: 25%; 
+=======
+
+/* --- Tiêu đề trang --- */
+
+.title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 28px;
+    margin-bottom: 30px;
+}
+
+
+/* --- Box chứa form và bảng --- */
+
+.box {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.box h6 {
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+
+/* --- Table --- */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    vertical-align: top;
+}
+
+th {
+    background-color: #f5f5f5;
+    text-align: left;
+}
+
+
+/* --- Checkbox --- */
+
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+
+/* --- Button --- */
+
+.btn-action {
+    margin: 10px;
+    min-width: 100px;
+}
+
+
+/* --- Câu trả lời --- */
+
+.answers span {
+    display: inline-block;
+    width: 25%;
+>>>>>>> acbda302907f6fa74659484b7256c34d8bbfd5b8
 }
 
 
 /* Responsive bảng và button */
+<<<<<<< HEAD
 @media (max-width: 768px) {
     table th, table td { 
         padding: 6px 8px; 
@@ -89,3 +176,17 @@ input[type="checkbox"] {
 
 
 
+=======
+
+@media (max-width: 768px) {
+    table th,
+    table td {
+        padding: 6px 8px;
+        font-size: 14px;
+    }
+    .btn-action {
+        min-width: 80px;
+        font-size: 14px;
+    }
+}
+>>>>>>> acbda302907f6fa74659484b7256c34d8bbfd5b8

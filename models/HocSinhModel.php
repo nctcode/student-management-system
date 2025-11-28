@@ -64,26 +64,47 @@ class HocSinhModel {
     }
 
     // Lấy thông tin học sinh theo mã học sinh
+    // public function getHocSinhById($maHocSinh) {
+    //     $conn = $this->db->getConnection();
+        
+    //     $sql = "SELECT h.*, nd.hoTen, nd.ngaySinh, nd.gioiTinh, nd.soDienThoai, nd.email, nd.diaChi
+    //             FROM hocsinh h
+    //             JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+    //             WHERE h.maHocSinh = ?";
+        
+    //     $stmt = $conn->prepare($sql);
+    //     $stmt->execute([$maHocSinh]);
+        
+    //     $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+    //     // Debug
+    //     error_log("Query getHocSinhById: maHocSinh = " . $maHocSinh);
+    //     error_log("Result: " . print_r($result, true));
+        
+    //     return $result;
+    // }
+
     public function getHocSinhById($maHocSinh) {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT h.*, nd.hoTen, nd.ngaySinh, nd.gioiTinh, nd.soDienThoai, nd.email, nd.diaChi
+        $sql = "SELECT 
+                    h.maHocSinh, 
+                    h.maLop,
+                    nd.hoTen as tenHocSinh,
+                    l.tenLop,
+                    l.maTruong,
+                    t.tenTruong
                 FROM hocsinh h
                 JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN lophoc l ON h.maLop = l.maLop
+                LEFT JOIN truong t ON l.maTruong = t.maTruong
                 WHERE h.maHocSinh = ?";
         
         $stmt = $conn->prepare($sql);
         $stmt->execute([$maHocSinh]);
         
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        // Debug
-        error_log("Query getHocSinhById: maHocSinh = " . $maHocSinh);
-        error_log("Result: " . print_r($result, true));
-        
-        return $result;
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
     // Lấy học sinh theo phụ huynh (cho phụ huynh xem TKB của con)
     public function getHocSinhByPhuHuynh($maNguoiDung) {
         $conn = $this->db->getConnection();
@@ -102,7 +123,7 @@ class HocSinhModel {
         $stmt = $conn->prepare($sql);
         $stmt->execute([$maNguoiDung]);
         
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     // Lấy tất cả học sinh (cho admin)
@@ -126,5 +147,22 @@ class HocSinhModel {
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getSoLuongHocSinhByLop($maLop) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as siSo FROM hocsinh WHERE maLop = ?";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$maLop]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['siSo'] ?? 0;
+        } catch (Exception $e) {
+            error_log("Lỗi CSDL khi lấy sĩ số: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
 }
 ?>

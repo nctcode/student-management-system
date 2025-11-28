@@ -95,6 +95,9 @@ $roleName = 'Phụ huynh';
                                     <a href="#" class="list-group-item list-group-item-action">
                                         <i class="fas fa-book me-2"></i>Bài tập về nhà
                                     </a>
+                                    <a href="index.php?controller=tracuuhoso&action=traCuuHoSo" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-book me-2"></i>Tra cứu hồ sơ
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -158,6 +161,30 @@ $roleName = 'Phụ huynh';
                                         <p class="mb-1">Đăng ký cho học sinh tham gia câu lạc bộ ngoại khóa</p>
                                     </a>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Trong phần chức năng nhanh, sửa lại -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Chức năng nhanh</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <a href="index.php?controller=donchuyenloptruong&action=guidon" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-file-alt me-2"></i>Gửi đơn chuyển lớp/trường
+                                </a>
+                                <a href="index.php?controller=donchuyenloptruong&action=danhsachdoncuatoi" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-list me-2"></i>Xem đơn chuyển của tôi
+                                </a>
+                                <a href="index.php?controller=hocphi&action=index" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Học phí & thanh toán
+                                </a>
+                                <a href="index.php?controller=tinnhan&action=index" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-comments me-2"></i>Nhắn tin cho giáo viên
+                                </a>
                             </div>
                         </div>
                     </div>
