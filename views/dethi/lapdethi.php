@@ -113,36 +113,46 @@ function hienThiTrangThai($trangThai)
     </div>
 
     <!-- MODAL THÔNG BÁO -->
+    <?php if ($message): ?>
     <div class="modal fade" id="thongBaoModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header <?= ($message && $message['status']=='success')?'bg-success':'bg-danger' ?> text-white">
+                <div class="modal-header <?= ($message['status']=='success')?'bg-success':'bg-danger' ?> text-white">
                     <h5 class="modal-title">Thông báo</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body"><?= $message ? htmlspecialchars($message['text']) : '' ?></div>
+                <div class="modal-body"><?= htmlspecialchars($message['text']) ?></div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button class="btn btn-secondary" id="btnOkModal">Đóng</button>
                 </div>
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const btnXem = document.getElementById('btnXemDeThi');
-    const btnDong = document.getElementById('btnDongDanhSach');
-    const danhSach = document.getElementById('danhSachDeThiContainer');
+const btnXem = document.getElementById('btnXemDeThi');
+const btnDong = document.getElementById('btnDongDanhSach');
+const danhSach = document.getElementById('danhSachDeThiContainer');
 
-    btnXem.addEventListener('click', ()=>{ danhSach.style.display='block'; window.scrollTo(0,danhSach.offsetTop); });
-    btnDong.addEventListener('click', ()=>{ danhSach.style.display='none'; });
+btnXem.addEventListener('click', ()=>{ danhSach.style.display='block'; window.scrollTo(0,danhSach.offsetTop); });
+btnDong.addEventListener('click', ()=>{ danhSach.style.display='none'; });
 
-    <?php if ($message): ?>
-        var modal = new bootstrap.Modal(document.getElementById('thongBaoModal'));
-        modal.show();
-    <?php endif; ?>
+<?php if ($message): ?>
+    var modal = new bootstrap.Modal(document.getElementById('thongBaoModal'));
+    modal.show();
+
+    // Nếu message là not_assigned, redirect khi nhấn OK
+    document.getElementById('btnOkModal').addEventListener('click', function() {
+        modal.hide();
+        <?php if ($message['status'] === 'not_assigned'): ?>
+            window.location.href = "index.php?controller=home&action=teacher";
+        <?php endif; ?>
+    });
+<?php endif; ?>
 </script>
 </body>
 </html>

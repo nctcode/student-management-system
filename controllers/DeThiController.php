@@ -22,7 +22,25 @@ class DeThiController
 
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
 
-        // Lấy danh sách đề thi của giáo viên
+        // Lấy thông tin giáo viên
+        $giaoVien = $this->model->getGiaoVienByMaNguoiDung($maNguoiDung);
+        if (!$giaoVien) {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'Không tìm thấy giáo viên'];
+            require_once 'views/dethi/lapdethi.php';
+            return;
+        }
+
+        // Kiểm tra giáo viên có được phân công tạo đề thi không
+        $duocPhanCong = $this->model->giaoVienDuocPhanCong($giaoVien['maGiaoVien']);
+
+        if (!$duocPhanCong) {
+            // Nếu chưa phân công → hiện popup thông báo
+            $_SESSION['message'] = ['status' => 'not_assigned', 'text' => 'Bạn chưa được phân công tạo đề thi'];
+            require_once 'views/dethi/lapdethi.php';
+            return;
+        }
+
+        // Nếu được phân công → lấy danh sách đề thi
         $deThiList = $this->model->getDeThiByGiaoVien($maNguoiDung);
 
         // Gọi view
@@ -30,6 +48,11 @@ class DeThiController
         require_once 'views/layouts/sidebar/giaovien.php';
         require_once 'views/dethi/lapdethi.php';
     }
+
+
+    ///////////////////////////////////////////////////////////////////////
+    ////////////////////////////LẬP ĐỀ THI///////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
 
     // Xử lý tạo đề thi
     public function store()
@@ -46,6 +69,16 @@ class DeThiController
         $giaoVien = $this->model->getGiaoVienByMaNguoiDung($maNguoiDung);
         if (!$giaoVien) {
             $_SESSION['message'] = ['status' => 'error', 'text' => 'Không tìm thấy giáo viên'];
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        // KIỂM TRA PHÂN CÔNG GIÁO VIÊN
+        if (!$this->model->giaoVienDuocPhanCong($giaoVien['maGiaoVien'])) {
+            $_SESSION['message'] = [
+                'status' => 'error',
+                'text' => 'Bạn chưa được phân công tạo đề thi'
+            ];
             header('Location: index.php?controller=deThi&action=index');
             exit;
         }
@@ -233,7 +266,7 @@ class DeThiController
         $maNienKhoa = $_GET['maNienKhoa'] ?? null;
         $maDeThi = $_GET['maDeThi'] ?? null;
 
-         // Kiểm tra chọn Khối, Học kỳ
+        // Kiểm tra chọn Khối, Học kỳ
         if ((isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) && (empty($maKhoi) || empty($maNienKhoa))) {
             $_SESSION['message'] = [
                 'status' => 'danger',

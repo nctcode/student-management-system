@@ -19,6 +19,10 @@ class DethiModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    ///////////////////////////////////////////////////////////////////////
+    ////////////////////////////LẬP ĐỀ THI///////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+
     // Tạo đề thi mới
     public function createDeThi($data)
     {
@@ -43,6 +47,14 @@ class DethiModel
         $stmt = $this->conn->prepare($sql);
         $stmt->execute(['maGiaoVien' => $giaoVien['maGiaoVien']]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function giaoVienDuocPhanCong($maGiaoVien)
+    {
+        $sql = "SELECT 1 FROM phancongrade WHERE maGiaoVien = :maGiaoVien LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute(['maGiaoVien' => $maGiaoVien]);
+        return $stmt->fetchColumn() ? true : false;
     }
 
 
