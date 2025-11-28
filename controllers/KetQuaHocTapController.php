@@ -6,6 +6,9 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+
 
 
 class KetQuaHocTapController
@@ -147,19 +150,31 @@ class KetQuaHocTapController
             $row = 1;
             $sheet->setCellValue("A$row", "Học sinh: {$hs['hoTen']}")
                 ->setCellValue("B$row", "Lớp: {$hs['tenLop']}");
+            $sheet->getStyle("A$row:B$row")->getFont()->setBold(true); // In đậm dòng học sinh/lớp
             $row += 2;
 
             // Header
             $headers = ['Môn', 'Miệng', '15 phút', '1 tiết', 'Giữa kỳ', 'Cuối kỳ', 'Trung Bình'];
             $sheet->fromArray($headers, NULL, "A$row");
 
-            // Bôi đậm header
-            $sheet->getStyle("A$row:G$row")->getFont()->setBold(true);
-            $sheet->getStyle("A$row:G$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $colEnd = $sheet->getHighestColumn();
+
+            // In đậm tất cả header
+            $sheet->getStyle("A$row:$colEnd$row")->getFont()->setBold(true);
+            // Căn giữa header
+            $sheet->getStyle("A$row:$colEnd$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            // Tô màu nền header
+            $sheet->getStyle("A$row:$colEnd$row")->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('D9E1F2');
+            // Viền header
+            $sheet->getStyle("A$row:$colEnd$row")->getBorders()->getAllBorders()
+                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
 
             $row++;
 
-            foreach ($monHoc as $m) {
+            // Dữ liệu môn học
+            foreach ($monHoc as $mIndex => $m) {
                 $maMH = $m['maMonHoc'];
                 $ct = $chiTietDiem[$hs['maHocSinh']][$maMH] ?? [];
                 $sheet->fromArray([
@@ -171,28 +186,65 @@ class KetQuaHocTapController
                     $ct['CUOI_KY'] ?? 0,
                     $ct['DIEM_TB'] ?? 0
                 ], NULL, "A$row");
+
+                $colEnd = $sheet->getHighestColumn();
+
+                // Căn giữa số
+                $sheet->getStyle("B$row:G$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                // In đậm số điểm cột Trung Bình
+                $sheet->getStyle("G$row")->getFont()->setBold(true);
+
+                // Viền
+                $sheet->getStyle("A$row:$colEnd$row")->getBorders()
+                    ->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+                // Xen kẽ màu dòng
+                if ($mIndex % 2 == 0) {
+                    $sheet->getStyle("A$row:$colEnd$row")->getFill()
+                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setRGB('F2F2F2');
+                }
+
                 $row++;
             }
 
             // Trung bình học kỳ
             $diemTB_mon = array_map(fn($m) => $chiTietDiem[$hs['maHocSinh']][$m['maMonHoc']]['DIEM_TB'] ?? 0, $monHoc);
             $tbMon = count($diemTB_mon) ? round(array_sum($diemTB_mon) / count($diemTB_mon), 2) : 0;
+
             $sheet->fromArray(["Trung bình học kỳ", $tbMon], NULL, "A$row");
+
+            $colEnd = $sheet->getHighestColumn();
+
+            // In đậm số điểm (cột B)
+            $sheet->getStyle("B$row")->getFont()->setBold(true);
+
+            // Viền và căn giữa số
+            $sheet->getStyle("A$row:$colEnd$row")->getBorders()->getAllBorders()
+                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+            $sheet->getStyle("B$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
             $row++;
 
-            // Học lực/hạnh kiểm
             // Học lực/hạnh kiểm
             $hkData = $hkMap[$hs['maHocSinh']] ?? ['hocLuc' => '', 'hanhKiem' => '', 'xepLoai' => ''];
-            $sheet->fromArray(["Học lực", $this->hienThiExcel($hkData['hocLuc'])], NULL, "A$row");
-            $row++;
-            $sheet->fromArray(["Hạnh kiểm", $this->hienThiExcel($hkData['hanhKiem'])], NULL, "A$row");
-            $row++;
-            $sheet->fromArray(["Loại",$this->hienThiExcel($hkData['xepLoai'])], NULL, "A$row");
-            $row++;
+            $info = [
+                ["Học lực", $this->hienThiExcel($hkData['hocLuc'])],
+                ["Hạnh kiểm", $this->hienThiExcel($hkData['hanhKiem'])],
+                ["Loại", $this->hienThiExcel($hkData['xepLoai'])]
+            ];
+            foreach ($info as $item) {
+                $sheet->fromArray($item, NULL, "A$row");
+                $colEnd = $sheet->getHighestColumn();
+                $sheet->getStyle("A$row:$colEnd$row")->getBorders()->getAllBorders()
+                    ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+                $sheet->getStyle("B$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $row++;
+            }
 
-
-            // Tự động điều chỉnh width cột
-            foreach (range('A', 'G') as $col) {
+            // Auto width
+            foreach (range('A', $sheet->getHighestColumn()) as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
         }
@@ -200,7 +252,6 @@ class KetQuaHocTapController
         $writer = new Xlsx($spreadsheet);
         $filename = "ThongKe_HocKy_{$hocKy}.xlsx";
 
-        // Xóa buffer trước khi gửi file
         if (ob_get_contents()) ob_end_clean();
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

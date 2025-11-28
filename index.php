@@ -22,11 +22,11 @@ if (!in_array($controller, $publicControllers) && !isset($_SESSION['user'])) {
 $controllerFile = "controllers/" . ucfirst($controller) . "Controller.php";
 if (file_exists($controllerFile)) {
     require_once $controllerFile;
-    
+
     $controllerClass = ucfirst($controller) . "Controller";
     if (class_exists($controllerClass)) {
         $controllerInstance = new $controllerClass();
-        
+
         if (method_exists($controllerInstance, $action)) {
             // Xử lý các action cần tham số
             switch ($controller) {
@@ -54,7 +54,7 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->$action();
                     }
                     break;
-                
+
                 case 'home':
                     switch ($action) {
                         case 'admin':
@@ -135,7 +135,7 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->xemluoi();
                     }
                     break;
-                
+
                 // Trong phần case 'tinnhan' của index.php
                 case 'tinnhan':
                     switch ($action) {
@@ -165,7 +165,7 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
-                
+
                 case 'diem':
                     switch ($action) {
                         case 'xemdiem':
@@ -184,14 +184,14 @@ if (file_exists($controllerFile)) {
 
                 case 'chuyencan':
                     $controllerInstance->$action();
-                    break; 
-                
+                    break;
+
                 case 'baitap':
                     switch ($action) {
                         case 'danhsach':
                             $controllerInstance->danhsach();
                             break;
-                        case 'luu': 
+                        case 'luu':
                             $controllerInstance->luu();
                             break;
                         case 'chitiet':
@@ -202,7 +202,7 @@ if (file_exists($controllerFile)) {
                             $maBaiTap = $_GET['maBaiTap'] ?? 0;
                             $controllerInstance->taiTatCaBaiNop($maBaiTap);
                             break;
-                        case 'danhsach_hs': 
+                        case 'danhsach_hs':
                             $controllerInstance->danhsach_hs();
                             break;
                         case 'chitiet_hs':
@@ -219,7 +219,7 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
-                
+
                 case 'thongbao':
                     switch ($action) {
                         case 'dangthongbao':
@@ -235,17 +235,20 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->danhsach();
                     }
                     break;
-                
+
                 case 'ketquahoctap':
                     switch ($action) {
                         case 'thongke':
                             $controllerInstance->thongke();
                             break;
+                        case 'xuatExcel': 
+                            $controllerInstance->xuatExcel();
+                            break;
                         default:
                             $controllerInstance->thongke();
                     }
                     break;
-                
+ 
                 case 'dangkybanhoc':
                     switch ($action) {
                         case 'index':
@@ -260,8 +263,8 @@ if (file_exists($controllerFile)) {
                         default:
                             $controllerInstance->index();
                     }
-                    break;    
-                
+                    break;
+
                 case 'quanlytaikhoan':
                     switch ($action) {
                         case 'index':
@@ -292,4 +295,3 @@ if (file_exists($controllerFile)) {
     $home = new HomeController();
     $home->index();
 }
-?>
