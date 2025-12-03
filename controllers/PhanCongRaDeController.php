@@ -21,9 +21,14 @@ class PhanCongRaDeController
     {
         $danhSachKhoi = $this->model->getKhoi();
         $danhSachMonHoc = $this->model->getMonHoc();
+        
+        // THÊM: Lấy danh sách học kỳ
+        $danhSachNienKhoa = $this->model->getAllNienKhoa();
+        
+        // Lấy học kỳ hiện tại làm mặc định
+        $nienKhoaHienTai = $this->model->getNienKhoaHienTai();
 
         include __DIR__ . '/../views/phancongrade/create.php';
-        exit();
     }
 
     public function store()
@@ -37,7 +42,8 @@ class PhanCongRaDeController
                 'hanNopDe' => $_POST['hanNopDe'] ?? null,
                 'soLuongDe' => $_POST['soLuongDe'] ?? 1,
                 'noiDung' => $_POST['noiDung'] ?? '',
-                'ghiChu' => $_POST['ghiChu'] ?? ''
+                'ghiChu' => $_POST['ghiChu'] ?? '',
+                'maNienKhoa' => $_POST['maNienKhoa'] ?? null // THÊM DÒNG NÀY
             ];
 
             if (empty($data['maGiaoVien'])) {
@@ -52,6 +58,13 @@ class PhanCongRaDeController
         }
     }
 
+    // Thêm phương thức lấy học kỳ
+    public function getNienKhoa() {
+        $danhSachNienKhoa = $this->model->getAllNienKhoa();
+        header('Content-Type: application/json');
+        echo json_encode($danhSachNienKhoa);
+        exit;
+    }
     public function edit()
     {
         if (!isset($_GET['id'])) {

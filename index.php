@@ -302,9 +302,14 @@ if (file_exists($controllerFile)) {
                 case 'dethi':
                     switch ($action) {
                         case 'index':
+                        case 'create':
+                        case 'edit':
+                        case 'update':
+                        case 'delete':
+                            $controllerInstance->$action();
+                            break;
                         case 'store':
                         case 'capNhatTrangThai':
-                            $controllerInstance->$action();
                         case 'duyet':
                         case 'lichSuDuyetDeThi':
                             $controllerInstance->$action();

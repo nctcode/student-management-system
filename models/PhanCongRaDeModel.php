@@ -12,11 +12,14 @@ class PhanCongRaDeModel
 
     public function getAllPhanCong()
     {
-        $sql = "SELECT 
+        $sql = "SELECT DISTINCT
                     dt.maDeThi,
                     dt.tieuDe, 
                     k.tenKhoi, 
                     mh.tenMonHoc, 
+                    nk.hocKy,
+                    nk.namHoc,
+                    dt.maNienKhoa,
                     GROUP_CONCAT(DISTINCT nd.hoTen SEPARATOR ', ') AS tenGiaoVien,
                     MIN(pc.hanNopDe) as hanNopDe,
                     dt.ngayNop, 
@@ -25,11 +28,18 @@ class PhanCongRaDeModel
                 LEFT JOIN phancongrade pc ON dt.maDeThi = pc.maDeThi
                 LEFT JOIN khoi k ON dt.maKhoi = k.maKhoi
                 LEFT JOIN monhoc mh ON dt.maMonHoc = mh.maMonHoc
+                LEFT JOIN nienkhoa nk ON dt.maNienKhoa = nk.maNienKhoa
                 LEFT JOIN giaovien gv ON pc.maGiaoVien = gv.maGiaoVien
                 LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
                 WHERE dt.trangThai IS NULL OR dt.trangThai != 'HUY'
-                GROUP BY dt.maDeThi, dt.tieuDe, k.tenKhoi, mh.tenMonHoc, dt.ngayNop, dt.trangThai
-                ORDER BY pc.hanNopDe DESC, dt.maDeThi DESC";
+                GROUP BY dt.maDeThi, dt.tieuDe, k.tenKhoi, mh.tenMonHoc, 
+                        nk.hocKy, nk.namHoc, dt.maNienKhoa, dt.ngayNop, dt.trangThai
+                ORDER BY nk.namHoc DESC, 
+                CASE nk.hocKy 
+                    WHEN 'HK1' THEN 1
+                    WHEN 'HK2' THEN 2
+                    WHEN 'CA_NAM' THEN 3
+                END DESC, pc.hanNopDe DESC";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
@@ -69,14 +79,14 @@ class PhanCongRaDeModel
         try {
             $this->conn->beginTransaction();
 
-            // Insert vào bảng dethi
+            // SỬA: Thêm maNienKhoa vào insert
             $sqlDeThi = "INSERT INTO dethi (tieuDe, maKhoi, maMonHoc, soLuongDe, noiDung, trangThai, maGiaoVien, maNienKhoa) 
-                         VALUES (:tieuDe, :maKhoi, :maMonHoc, :soLuongDe, :noiDung, 'Chờ nộp', :maGiaoVien, :maNienKhoa)";
+                        VALUES (:tieuDe, :maKhoi, :maMonHoc, :soLuongDe, :noiDung, 'Chờ nộp', :maGiaoVien, :maNienKhoa)";
 
             $stmtDeThi = $this->conn->prepare($sqlDeThi);
             
-            // Lấy năm học hiện tại
-            $maNienKhoa = 1; // Mặc định hoặc lấy từ hệ thống
+            // SỬA: Lấy maNienKhoa từ form
+            $maNienKhoa = $data['maNienKhoa'] ?? null;
             
             // Sử dụng giáo viên đầu tiên làm người tạo
             $maGiaoVien = !empty($data['maGiaoVien']) ? $data['maGiaoVien'][0] : null;
@@ -88,7 +98,7 @@ class PhanCongRaDeModel
                 ':soLuongDe' => $data['soLuongDe'],
                 ':noiDung' => $data['noiDung'],
                 ':maGiaoVien' => $maGiaoVien,
-                ':maNienKhoa' => $maNienKhoa
+                ':maNienKhoa' => $maNienKhoa // THÊM
             ]);
 
             $maDeThi = $this->conn->lastInsertId();
@@ -229,4 +239,33 @@ class PhanCongRaDeModel
             return false;
         }
     }
+    public function getNienKhoaHienTai()
+    {
+        $sql = "SELECT maNienKhoa, hocKy, namHoc 
+                FROM nienkhoa 
+                WHERE ngayBatDau <= CURDATE() 
+                AND ngayKetThuc >= CURDATE()
+                LIMIT 1";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getAllNienKhoa()
+    {
+        $sql = "SELECT maNienKhoa, hocKy, namHoc, ngayBatDau, ngayKetThuc 
+                FROM nienkhoa 
+                ORDER BY namHoc DESC, 
+                CASE hocKy 
+                    WHEN 'HK1' THEN 1
+                    WHEN 'HK2' THEN 2
+                    WHEN 'CA_NAM' THEN 3
+                END";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }

@@ -87,6 +87,7 @@ $fileIcon = getFileIcon($deThi['noiDung'] ?? '');
         <?php endif; ?>
 
         <!-- Card thông tin chính -->
+        <!-- Card thông tin chính -->
         <div class="row">
             <div class="col-md-8">
                 <div class="card mb-4">
@@ -103,11 +104,21 @@ $fileIcon = getFileIcon($deThi['noiDung'] ?? '');
                                     </tr>
                                     <tr>
                                         <th>Môn học:</th>
-                                        <td><?php echo htmlspecialchars($deThi['monHoc'] ?? 'N/A'); ?></td>
+                                        <td>
+                                            <?php 
+                                            // Sửa từ 'monHoc' thành 'tenMonHoc' (trường thực tế trong query)
+                                            echo htmlspecialchars($deThi['tenMonHoc'] ?? ($deThi['monHoc'] ?? 'N/A')); 
+                                            ?>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th>Giáo viên:</th>
-                                        <td><?php echo htmlspecialchars($deThi['hoTen'] ?? 'N/A'); ?></td>
+                                        <td>
+                                            <?php 
+                                            // Sửa từ 'hoTen' thành 'tenGiaoVien' (trường thực tế trong query)
+                                            echo htmlspecialchars($deThi['tenGiaoVien'] ?? ($deThi['hoTen'] ?? 'N/A')); 
+                                            ?>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th>Khối:</th>
@@ -116,6 +127,30 @@ $fileIcon = getFileIcon($deThi['noiDung'] ?? '');
                                             $maKhoi = $deThi['maKhoi'] ?? 0;
                                             $khoiMap = [5 => '10', 6 => '11', 7 => '12', 1 => '6', 2 => '7', 3 => '8', 4 => '9'];
                                             echo 'Khối ' . ($khoiMap[$maKhoi] ?? $maKhoi);
+                                            ?>
+                                        </td>
+                                    </tr>
+                                    <!-- THÊM: Hiển thị học kỳ -->
+                                    <tr>
+                                        <th>Học kỳ:</th>
+                                        <td>
+                                            <?php
+                                            if (!empty($deThi['hocKy']) && !empty($deThi['namHoc'])) {
+                                                // Hiển thị dạng: HK1 (2024-2025)
+                                                $hocKyText = '';
+                                                switch($deThi['hocKy']) {
+                                                    case 'HK1': $hocKyText = 'Học kỳ 1'; break;
+                                                    case 'HK2': $hocKyText = 'Học kỳ 2'; break;
+                                                    case 'CA_NAM': $hocKyText = 'Cả năm'; break;
+                                                    default: $hocKyText = $deThi['hocKy'];
+                                                }
+                                                echo htmlspecialchars($hocKyText . ' (' . $deThi['namHoc'] . ')');
+                                            } elseif (!empty($deThi['maNienKhoa'])) {
+                                                // Nếu chỉ có mã niên khóa
+                                                echo 'Niên khóa #' . $deThi['maNienKhoa'];
+                                            } else {
+                                                echo '<span class="text-muted">N/A</span>';
+                                            }
                                             ?>
                                         </td>
                                     </tr>
@@ -253,6 +288,19 @@ $fileIcon = getFileIcon($deThi['noiDung'] ?? '');
                                 <td><strong>Mã niên khóa:</strong></td>
                                 <td><?php echo $deThi['maNienKhoa'] ?? 'N/A'; ?></td>
                             </tr>
+                            <!-- THÊM: Hiển thị học kỳ và năm học -->
+                            <?php if (!empty($deThi['hocKy'])): ?>
+                            <tr>
+                                <td><strong>Học kỳ:</strong></td>
+                                <td><?php echo htmlspecialchars($deThi['hocKy']); ?></td>
+                            </tr>
+                            <?php endif; ?>
+                            <?php if (!empty($deThi['namHoc'])): ?>
+                            <tr>
+                                <td><strong>Năm học:</strong></td>
+                                <td><?php echo htmlspecialchars($deThi['namHoc']); ?></td>
+                            </tr>
+                            <?php endif; ?>
                         </table>
                     </div>
                 </div>

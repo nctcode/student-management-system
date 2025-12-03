@@ -61,6 +61,56 @@ if (!isset($deThi) || empty($deThi)) {
                                 <td><strong><?php echo htmlspecialchars($deThi['tieuDe'] ?? 'N/A'); ?></strong></td>
                             </tr>
                             <tr>
+                                <th>Học kỳ:</th>
+                                <td>
+                                    <?php 
+                                    // Lấy thông tin học kỳ
+                                    $maNienKhoa = $deThi['maNienKhoa'] ?? null;
+                                    $hocKy = $deThi['hocKy'] ?? '';
+                                    $namHoc = $deThi['namHoc'] ?? '';
+                                    
+                                    // Nếu không có thông tin từ join, lấy từ maNienKhoa
+                                    if (empty($hocKy) && $maNienKhoa) {
+                                        switch($maNienKhoa) {
+                                            case 2:
+                                                $hocKy = 'HK1';
+                                                break;
+                                            case 3:
+                                                $hocKy = 'HK2';
+                                                break;
+                                            case 1:
+                                                $hocKy = 'CA_NAM';
+                                                break;
+                                        }
+                                    }
+                                    
+                                    // Hiển thị học kỳ
+                                    $hocKyText = '';
+                                    switch($hocKy) {
+                                        case 'HK1':
+                                            $hocKyText = 'Học kỳ 1';
+                                            break;
+                                        case 'HK2':
+                                            $hocKyText = 'Học kỳ 2';
+                                            break;
+                                        case 'CA_NAM':
+                                            $hocKyText = 'Cả năm';
+                                            break;
+                                        default:
+                                            $hocKyText = !empty($hocKy) ? $hocKy : 'Chưa xác định';
+                                    }
+                                    
+                                    echo '<strong>' . $hocKyText . '</strong>';
+                                    
+                                    // Hiển thị năm học nếu có
+                                    if (!empty($namHoc)) {
+                                        echo '<br><span class="text-muted">' . htmlspecialchars($namHoc) . '</span>';
+                                    }
+                                
+                                    ?>
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Khối:</th>
                                 <td>
                                     <?php 

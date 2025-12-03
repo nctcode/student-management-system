@@ -388,34 +388,59 @@ class DeThiController
             exit;
         }
 
-        $maMonHoc = $toTruong['maMonHoc'];
+        // Lấy các tham số lọc
         $maKhoi = $_GET['maKhoi'] ?? null;
         $maNienKhoa = $_GET['maNienKhoa'] ?? null;
+        $maMonHoc = $_GET['maMonHoc'] ?? null; // THÊM DÒNG NÀY
         $maDeThi = $_GET['maDeThi'] ?? null;
 
-        // Lấy danh sách đề thi chưa duyệt
-        $exams = $this->model->getDeThi($maMonHoc, $maKhoi, $maNienKhoa);
+        // SỬA: Sử dụng môn học đã chọn, nếu không có thì dùng môn của tổ trưởng
+        $maMonHocFilter = $maMonHoc ?? $toTruong['maMonHoc'];
+
+        // SỬA: Truyền thêm maMonHoc vào phương thức getDeThi
+        $exams = $this->model->getDeThi($maMonHocFilter, $maKhoi, $maNienKhoa);
+        
         $examDetail = $maDeThi ? $this->model->getDeThiById($maDeThi) : null;
 
-        // --- Lấy danh sách Khối và Niên khóa ---
+        // Lấy danh sách Khối
         $khoiHocModel = new DeThiModel();
         $khoiHocList = $khoiHocModel->getAllKhoiHoc();
 
-        // Kiểm tra chọn Khối, Học kỳ
-        if ((isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) && (empty($maKhoi) || empty($maNienKhoa))) {
-            $_SESSION['message'] = [
-                'status' => 'danger',
-                'text'   => 'Vui lòng chọn đầy đủ Khối và Học kỳ!'
-            ];
-        }
-
+        // Lấy danh sách Niên khóa
         $nienKhoaModel = new DeThiModel();
         $nienKhoaList = $nienKhoaModel->getAllNienKhoa();
 
+        // THÊM: Lấy danh sách môn học
+        $monHocList = $this->getMonHocList();
+
+        // Kiểm tra chọn Khối, Học kỳ
+       
+
+        // Truyền các biến ra view
         require_once 'views/layouts/header.php';
         require_once 'views/layouts/sidebar/totruong.php';
         require_once 'views/dethi/duyetdethi.php';
         require_once 'views/layouts/footer.php';
+    }
+
+    // THÊM phương thức lấy danh sách môn học
+    private function getMonHocList()
+    {
+        try {
+            // Kiểm tra kết nối
+            if (!$this->conn) {
+                $db = new Database();
+                $this->conn = $db->getConnection();
+            }
+            
+            $sql = "SELECT maMonHoc, tenMonHoc FROM monhoc ORDER BY tenMonHoc";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Lỗi lấy danh sách môn học: " . $e->getMessage());
+            return [];
+        }
     }
 
 

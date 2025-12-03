@@ -16,13 +16,13 @@ require_once __DIR__ . '/../layouts/sidebar/totruong.php';
             <div class="card-body">
                 <form method="POST" action="index.php?controller=phancongrade&action=store">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="tieuDe" class="form-label">Tiêu đề đề thi *</label>
                             <input type="text" class="form-control" id="tieuDe" name="tieuDe" 
                                    required placeholder="Ví dụ: Đề thi học kỳ 1 Toán 10">
                         </div>
 
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-2 mb-3">
                             <label for="maKhoi" class="form-label">Khối *</label>
                             <select class="form-select" id="maKhoi" name="maKhoi" required>
                                 <option value="">-- Chọn khối --</option>
@@ -45,7 +45,47 @@ require_once __DIR__ . '/../layouts/sidebar/totruong.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        <div class="col-md-3 mb-3">
+                        <label class="form-label">Học kỳ *</label>
+                        <select name="maNienKhoa" class="form-select" required id="selectNienKhoa">
+                            <option value="">-- Chọn học kỳ --</option>
+                            <?php if (!empty($danhSachNienKhoa)): ?>
+                                <?php foreach ($danhSachNienKhoa as $nk): 
+                                    // Map học kỳ theo yêu cầu: 2=HK1, 3=HK2
+                                    $hocKyText = '';
+                                    switch($nk['hocKy']) {
+                                        case 'HK1':
+                                            $hocKyText = 'Học kỳ 1';
+                                            break;
+                                        case 'HK2':
+                                            $hocKyText = 'Học kỳ 2';
+                                            break;
+                                        case 'CA_NAM':
+                                            $hocKyText = 'Cả năm';
+                                            break;
+                                        default:
+                                            $hocKyText = $nk['hocKy'];
+                                    }
+                                    
+                                    $selected = '';
+                                    if (isset($nienKhoaHienTai) && $nienKhoaHienTai['maNienKhoa'] == $nk['maNienKhoa']) {
+                                        $selected = 'selected';
+                                    }
+                                ?>
+                                    <option value="<?= $nk['maNienKhoa'] ?>" <?= $selected ?>>
+                                        <?= $hocKyText ?> - <?= $nk['namHoc'] ?>
+                                        <?php if ($nk['maNienKhoa'] == 2): ?>
+                                            (HK1)
+                                        <?php elseif ($nk['maNienKhoa'] == 3): ?>
+                                            (HK2)
+                                        <?php endif; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
                     </div>
+                    </div>
+                    
 
                     <div class="row">
                         <div class="col-md-6 mb-3">

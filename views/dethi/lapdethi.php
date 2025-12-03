@@ -87,7 +87,7 @@ function hienThiTrangThai($trangThai)
                             <div class="col-md-4">
                                 <p><strong>Tiêu đề:</strong> <?php echo htmlspecialchars($phanCong['tieuDe']); ?></p>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <p><strong>Khối:</strong> <?php echo htmlspecialchars($phanCong['tenKhoi']); ?></p>
                             </div>
                             <div class="col-md-3">
@@ -95,6 +95,36 @@ function hienThiTrangThai($trangThai)
                             </div>
                             <div class="col-md-2">
                                 <p><strong>Số đề:</strong> <?php echo htmlspecialchars($phanCong['soLuongDe'] ?? 1); ?></p>
+                            </div>
+                            <div class="col-md-2">
+                                <p><strong>Học kỳ:</strong> 
+                                    <?php 
+                                    // Hiển thị học kỳ đúng
+                                    $maNienKhoa = $phanCong['maNienKhoa'] ?? 0;
+                                    $hocKy = $phanCong['hocKy'] ?? '';
+                                    $namHoc = $phanCong['namHoc'] ?? '';
+                                    
+                                    // Mapping học kỳ
+                                    $hocKyText = '';
+                                    if ($maNienKhoa == 2) {
+                                        $hocKyText = 'Học kỳ 1';
+                                    } elseif ($maNienKhoa == 3) {
+                                        $hocKyText = 'Học kỳ 2';
+                                    } elseif (!empty($hocKy)) {
+                                        switch($hocKy) {
+                                            case 'HK1': $hocKyText = 'Học kỳ 1'; break;
+                                            case 'HK2': $hocKyText = 'Học kỳ 2'; break;
+                                            case 'CA_NAM': $hocKyText = 'Cả năm'; break;
+                                            default: $hocKyText = $hocKy;
+                                        }
+                                    }
+                                    
+                                    echo '<span class="badge bg-info">' . $hocKyText . '</span>';
+                                    if (!empty($namHoc)) {
+                                        echo '<br><small>' . $namHoc . '</small>';
+                                    }
+                                    ?>
+                                </p>
                             </div>
                         </div>
                         
@@ -185,7 +215,45 @@ function hienThiTrangThai($trangThai)
                             <label class="form-label">Học kỳ:</label>
                             <div class="form-control bg-light">
                                 <i class="fas fa-check text-success"></i>
-                                Học kỳ <?php echo isset($_SESSION['hocKyHienTai']) ? $_SESSION['hocKyHienTai'] : 1; ?>
+                                <?php 
+                                // Hiển thị học kỳ đúng từ phân công
+                                $maNienKhoa = $phanCong['maNienKhoa'] ?? 0;
+                                $hocKy = $phanCong['hocKy'] ?? '';
+                                
+                                if ($maNienKhoa == 2) {
+                                    echo 'Học kỳ 1';
+                                    echo '<input type="hidden" name="hocKy" value="1">'; // Giữ giá trị cũ cho form
+                                    echo '<input type="hidden" name="maNienKhoa" value="2">'; // THÊM: Lưu maNienKhoa
+                                } elseif ($maNienKhoa == 3) {
+                                    echo 'Học kỳ 2';
+                                    echo '<input type="hidden" name="hocKy" value="2">';
+                                    echo '<input type="hidden" name="maNienKhoa" value="3">'; // THÊM: Lưu maNienKhoa
+                                } elseif (!empty($hocKy)) {
+                                    switch($hocKy) {
+                                        case 'HK1': 
+                                            echo 'Học kỳ 1';
+                                            echo '<input type="hidden" name="hocKy" value="1">';
+                                            break;
+                                        case 'HK2': 
+                                            echo 'Học kỳ 2';
+                                            echo '<input type="hidden" name="hocKy" value="2">';
+                                            break;
+                                        case 'CA_NAM': 
+                                            echo 'Cả năm';
+                                            echo '<input type="hidden" name="hocKy" value="3">';
+                                            break;
+                                        default: 
+                                            echo $hocKy;
+                                    }
+                                } else {
+                                    echo '<span class="text-warning">Chưa xác định</span>';
+                                }
+                                
+                                // Hiển thị năm học nếu có
+                                if (!empty($phanCong['namHoc'])) {
+                                    echo '<br><small class="text-muted">' . htmlspecialchars($phanCong['namHoc']) . '</small>';
+                                }
+                                ?>
                             </div>
                         </div>
                         
@@ -284,6 +352,7 @@ function hienThiTrangThai($trangThai)
                                     <th>Mã đề</th>
                                     <th>Tiêu đề</th>
                                     <th>Môn học</th>
+                                    <th>Học kỳ</th>
                                     <th>Trạng thái</th>
                                     <th>Ngày nộp</th>
                                     <th>File</th>
@@ -296,6 +365,25 @@ function hienThiTrangThai($trangThai)
                                         <td>#<?= $deThi['maDeThi'] ?></td>
                                         <td><?= htmlspecialchars($deThi['tieuDe']) ?></td>
                                         <td><?= htmlspecialchars($deThi['monHoc']) ?></td>
+                                        <td>
+                                            <?php 
+                                            // Hiển thị học kỳ
+                                            $maNienKhoa = $deThi['maNienKhoa'] ?? 0;
+                                            $hocKy = $deThi['hocKy'] ?? '';
+                                            
+                                            if ($maNienKhoa == 2) {
+                                                echo '<span class="badge bg-primary">HK1</span>';
+                                            } elseif ($maNienKhoa == 3) {
+                                                echo '<span class="badge bg-success">HK2</span>';
+                                            } elseif (!empty($hocKy)) {
+                                                echo '<span class="badge bg-info">' . $hocKy . '</span>';
+                                            }
+                                            
+                                            if (!empty($deThi['namHoc'])) {
+                                                echo '<br><small>' . $deThi['namHoc'] . '</small>';
+                                            }
+                                            ?>
+                                        </td>
                                         <td><?= hienThiTrangThai($deThi['trangThai']) ?></td>
                                         <td>
                                             <?php 
