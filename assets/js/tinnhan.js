@@ -49,36 +49,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Hàm xử lý chính ---
 
+    // Trong file tinnhan.js - Sửa hàm loadData()
+
     async function loadData() {
-        const maLop = selectLop.value;
-        if (!maLop) {
-            clearTables();
-            return;
-        }
-
-        try {
-            if(tbodyHS) tbodyHS.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Đang tải...</td></tr>`;
-            if(tbodyPH) tbodyPH.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Đang tải...</td></tr>`;
-
-            const [hsResponse, phResponse] = await Promise.all([
-                fetch(`index.php?controller=tinnhan&action=getHocSinhByLop&maLop=${maLop}`),
-                fetch(`index.php?controller=tinnhan&action=getPhuHuynhByLop&maLop=${maLop}`)
-            ]);
-
-            dataHocSinh = await hsResponse.json();
-            dataPhuHuynh = await phResponse.json();
-            
-            currentPageHS = 1;
-            currentPagePH = 1;
-            
-            handleFilter(); 
-            
-        } catch (error) {
-            console.error('Lỗi tải danh sách:', error);
-            if(tbodyHS) tbodyHS.innerHTML = `<tr><td colspan="4" class="text-danger">Lỗi tải dữ liệu</td></tr>`;
-            if(tbodyPH) tbodyPH.innerHTML = `<tr><td colspan="7" class="text-danger">Lỗi tải dữ liệu</td></tr>`;
-        }
+    const maLop = selectLop.value;
+    if (!maLop) {
+        clearTables();
+        return;
     }
+
+    console.log('Mã lớp được chọn:', maLop); // Debug
+
+    try {
+        if(tbodyHS) tbodyHS.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Đang tải...</td></tr>`;
+        if(tbodyPH) tbodyPH.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Đang tải...</td></tr>`;
+
+        const urlParams = new URLSearchParams({
+            maLop: maLop
+        });
+
+        const hsUrl = `index.php?controller=tinnhan&action=getHocSinhByLop&${urlParams}`;
+        console.log('URL request học sinh:', hsUrl); // Debug
+
+        const [hsResponse, phResponse] = await Promise.all([
+            fetch(hsUrl),
+            fetch(`index.php?controller=tinnhan&action=getPhuHuynhByLop&${urlParams}`)
+        ]);
+
+        dataHocSinh = await hsResponse.json();
+        dataPhuHuynh = await phResponse.json();
+        
+        console.log('Dữ liệu học sinh trả về:', dataHocSinh); // Debug
+        console.log('Dữ liệu phụ huynh trả về:', dataPhuHuynh); // Debug
+        
+        currentPageHS = 1;
+        currentPagePH = 1;
+        
+        handleFilter(); 
+        
+    } catch (error) {
+        console.error('Lỗi tải danh sách:', error);
+        if(tbodyHS) tbodyHS.innerHTML = `<tr><td colspan="4" class="text-danger">Lỗi tải dữ liệu</td></tr>`;
+        if(tbodyPH) tbodyPH.innerHTML = `<tr><td colspan="7" class="text-danger">Lỗi tải dữ liệu</td></tr>`;
+    }
+}
 
     function toggleViews() {
         const dsHocSinh = document.getElementById('danhSachHocSinh');

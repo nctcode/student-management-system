@@ -29,22 +29,28 @@ class HocSinhModel {
         
         $sql = "SELECT 
                     hs.maHocSinh,
-                    nd.maNguoiDung,
-                    nd.hoTen,
+                    hs.maNguoiDung,
+                    COALESCE(nd.hoTen, CONCAT('Học sinh ', hs.maHocSinh)) as hoTen,
                     l.tenLop,
                     l.maLop,
-                    tk.vaiTro
+                    COALESCE(tk.vaiTro, 'HOCSINH') as vaiTro,
+                    hs.trangThai
                 FROM hocsinh hs
-                JOIN nguoidung nd ON hs.maNguoiDung = nd.maNguoiDung
-                JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan
-                JOIN lophoc l ON hs.maLop = l.maLop
-                WHERE l.maLop = ?
-                ORDER BY nd.hoTen";
+                LEFT JOIN lophoc l ON hs.maLop = l.maLop
+                LEFT JOIN nguoidung nd ON hs.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan
+                WHERE hs.maLop = ?
+                ORDER BY hs.maHocSinh";
         
         $stmt = $conn->prepare($sql);
         $stmt->execute([$maLop]);
         
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Debug
+        error_log("HocSinh query for maLop $maLop returned " . count($result) . " rows");
+        
+        return $result;
     }
 
     // Lấy học sinh theo mã người dùng
@@ -105,26 +111,6 @@ class HocSinhModel {
         
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    // Lấy học sinh theo phụ huynh (cho phụ huynh xem TKB của con)
-    public function getHocSinhByPhuHuynh($maNguoiDung) {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT 
-                    hs.maHocSinh,
-                    nd_hs.hoTen,
-                    l.tenLop,
-                    l.maLop
-                FROM phuhuynh ph
-                JOIN hocsinh hs ON ph.maPhuHuynh = hs.maPhuHuynh
-                JOIN nguoidung nd_hs ON hs.maNguoiDung = nd_hs.maNguoiDung
-                JOIN lophoc l ON hs.maLop = l.maLop
-                WHERE ph.maNguoiDung = ?";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$maNguoiDung]);
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
 
     // Lấy tất cả học sinh (cho admin)
     public function getAllHocSinh() {
@@ -164,5 +150,90 @@ class HocSinhModel {
         }
     }
     
+    // Thêm vào HocSinhModel.php
+
+    // Lấy danh sách lớp học theo trường
+    public function getDanhSachLopByTruong($maTruong) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT l.*, k.tenKhoi 
+                FROM lophoc l 
+                JOIN khoi k ON l.maKhoi = k.maKhoi 
+                WHERE l.maTruong = ?
+                ORDER BY k.tenKhoi, l.tenLop";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maTruong]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy học sinh theo lớp và trường
+    public function getHocSinhByLopAndTruong($maLop, $maTruong) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT 
+                    hs.maHocSinh,
+                    nd.maNguoiDung,
+                    nd.hoTen,
+                    l.tenLop,
+                    l.maLop,
+                    tk.vaiTro
+                FROM hocsinh hs
+                JOIN nguoidung nd ON hs.maNguoiDung = nd.maNguoiDung
+                JOIN taikhoan tk ON nd.maTaiKhoan = tk.maTaiKhoan
+                JOIN lophoc l ON hs.maLop = l.maLop
+                WHERE l.maLop = ? AND l.maTruong = ?
+                ORDER BY nd.hoTen";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maLop, $maTruong]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    // Lấy danh sách học sinh theo phụ huynh (dựa vào khóa ngoại maphuhuynh)
+    public function getHocSinhByPhuHuynh($maPhuHuynh) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT 
+                    hs.maHocSinh,
+                    hs.maLop,
+                    nd.hoTen,
+                    l.tenLop,
+                    k.tenKhoi
+                FROM hocsinh hs
+                JOIN nguoidung nd ON hs.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN lophoc l ON hs.maLop = l.maLop
+                LEFT JOIN khoi k ON l.maKhoi = k.maKhoi
+                WHERE hs.maPhuHuynh = ? 
+                AND hs.trangThai = 'DANG_HOC'
+                ORDER BY nd.hoTen";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maPhuHuynh]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    //    // // Lấy học sinh theo phụ huynh (cho phụ huynh xem TKB của con)
+    // public function getHocSinhByPhuHuynh($maNguoiDung) {
+    //     $conn = $this->db->getConnection();
+        
+    //     $sql = "SELECT 
+    //                 hs.maHocSinh,
+    //                 nd_hs.hoTen,
+    //                 l.tenLop,
+    //                 l.maLop
+    //             FROM phuhuynh ph
+    //             JOIN hocsinh hs ON ph.maPhuHuynh = hs.maPhuHuynh
+    //             JOIN nguoidung nd_hs ON hs.maNguoiDung = nd_hs.maNguoiDung
+    //             JOIN lophoc l ON hs.maLop = l.maLop
+    //             WHERE ph.maNguoiDung = ?";
+        
+    //     $stmt = $conn->prepare($sql);
+    //     $stmt->execute([$maNguoiDung]);
+        
+    //     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // }
 }
 ?>

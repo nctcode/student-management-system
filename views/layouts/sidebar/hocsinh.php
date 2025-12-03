@@ -36,7 +36,7 @@
                    aria-expanded="false" 
                    aria-controls="collapseTinNhan">
                     <i class="fas fa-fw fa-comments"></i>
-                    <span>Tin nhắn</span>
+                    <span>Liên hệ với giáo viên</span>
                     <i class="fas fa-fw fa-angle-right sidebar-arrow"></i>
                 </a>
                 <div id="collapseTinNhan" class="collapse" aria-labelledby="headingTinNhan" data-bs-parent="#accordionSidebar">

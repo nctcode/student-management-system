@@ -71,6 +71,13 @@
                     <span>Hồ sơ tuyển sinh</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="index.php?controller=tracuuhoso&action=traCuuHoSo" class="nav-link">
+                    <i class="fas fa-file-alt me-2"></i>
+                    <span>Tra cứu tình trạng hồ sơ</span>
+                </a>
+            </li>
+            
         </ul>
     </div>
 </nav>
