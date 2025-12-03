@@ -6,7 +6,7 @@ require_once __DIR__ . '/../layouts/sidebar/totruong.php';
 <div class="main-content" style="margin-left: 250px; padding: 20px;">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0">Tạo Phân công Ra đề Mới</h2>
+            <h2 class="mb-0">Chỉnh sửa Phân công Ra đề</h2>
             <a href="index.php?controller=phancongrade" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Quay lại
             </a>
@@ -14,12 +14,14 @@ require_once __DIR__ . '/../layouts/sidebar/totruong.php';
 
         <div class="card">
             <div class="card-body">
-                <form method="POST" action="index.php?controller=phancongrade&action=store">
+                <form method="POST" action="index.php?controller=phancongrade&action=update">
+                    <input type="hidden" name="id" value="<?php echo $deThi['maDeThi']; ?>">
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="tieuDe" class="form-label">Tiêu đề đề thi *</label>
                             <input type="text" class="form-control" id="tieuDe" name="tieuDe" 
-                                   required placeholder="Ví dụ: Đề thi học kỳ 1 Toán 10">
+                                   value="<?php echo htmlspecialchars($deThi['tieuDe']); ?>" required>
                         </div>
 
                         <div class="col-md-3 mb-3">
@@ -27,7 +29,8 @@ require_once __DIR__ . '/../layouts/sidebar/totruong.php';
                             <select class="form-select" id="maKhoi" name="maKhoi" required>
                                 <option value="">-- Chọn khối --</option>
                                 <?php foreach ($danhSachKhoi as $khoi): ?>
-                                    <option value="<?php echo $khoi['maKhoi']; ?>">
+                                    <option value="<?php echo $khoi['maKhoi']; ?>" 
+                                        <?php echo $khoi['maKhoi'] == $deThi['maKhoi'] ? 'selected' : ''; ?>>
                                         Khối <?php echo htmlspecialchars($khoi['tenKhoi']); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -39,7 +42,8 @@ require_once __DIR__ . '/../layouts/sidebar/totruong.php';
                             <select class="form-select" id="maMonHoc" name="maMonHoc" required>
                                 <option value="">-- Chọn môn học --</option>
                                 <?php foreach ($danhSachMonHoc as $monhoc): ?>
-                                    <option value="<?php echo $monhoc['maMonHoc']; ?>">
+                                    <option value="<?php echo $monhoc['maMonHoc']; ?>" 
+                                        <?php echo $monhoc['maMonHoc'] == $deThi['maMonHoc'] ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($monhoc['tenMonHoc']); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -52,43 +56,37 @@ require_once __DIR__ . '/../layouts/sidebar/totruong.php';
                             <label for="maGiaoVien" class="form-label">Phân công giáo viên *</label>
                             <select class="form-select" id="maGiaoVien" name="maGiaoVien[]" 
                                     multiple required size="5">
-                                <option value="">-- Chọn môn học trước --</option>
+                                <!-- JavaScript sẽ load danh sách GV -->
                             </select>
-                            <div class="form-text">
-                                Giữ Ctrl (hoặc Cmd trên Mac) để chọn nhiều giáo viên
-                            </div>
                         </div>
 
                         <div class="col-md-3 mb-3">
                             <label for="hanNopDe" class="form-label">Hạn nộp đề *</label>
                             <input type="datetime-local" class="form-control" id="hanNopDe" 
-                                   name="hanNopDe" required>
+                                   name="hanNopDe" value="<?php echo date('Y-m-d\TH:i', strtotime($deThi['hanNopDe'])); ?>" required>
                         </div>
 
                         <div class="col-md-3 mb-3">
                             <label for="soLuongDe" class="form-label">Số lượng đề</label>
                             <input type="number" class="form-control" id="soLuongDe" 
-                                   name="soLuongDe" min="1" max="10" value="1">
-                            <div class="form-text">Số đề cần ra (mặc định: 1)</div>
+                                   name="soLuongDe" value="<?php echo $deThi['soLuongDe']; ?>">
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="noiDung" class="form-label">Nội dung yêu cầu</label>
-                        <textarea class="form-control" id="noiDung" name="noiDung" 
-                                  rows="3" placeholder="Mô tả yêu cầu về đề thi..."></textarea>
+                        <textarea class="form-control" id="noiDung" name="noiDung" rows="3"><?php echo htmlspecialchars($deThi['noiDung']); ?></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label for="ghiChu" class="form-label">Ghi chú thêm</label>
-                        <textarea class="form-control" id="ghiChu" name="ghiChu" 
-                                  rows="2" placeholder="Ghi chú cho giáo viên..."></textarea>
+                        <textarea class="form-control" id="ghiChu" name="ghiChu" rows="2"><?php echo htmlspecialchars($deThi['ghiChu']); ?></textarea>
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">
-                        <button type="reset" class="btn btn-secondary">Nhập lại</button>
+                        <a href="index.php?controller=phancongrade" class="btn btn-secondary">Hủy</a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Lưu phân công
+                            <i class="fas fa-save"></i> Cập nhật
                         </button>
                     </div>
                 </form>
@@ -101,71 +99,39 @@ require_once __DIR__ . '/../layouts/sidebar/totruong.php';
 document.addEventListener('DOMContentLoaded', function() {
     const maMonHocSelect = document.getElementById('maMonHoc');
     const maGiaoVienSelect = document.getElementById('maGiaoVien');
+    const currentMaMonHoc = <?php echo $deThi['maMonHoc']; ?>;
+    const currentGiaoVien = <?php echo json_encode(explode(',', $deThi['dsMaGiaoVien'] ?? '')); ?>;
+    
+    // Load danh sách giáo viên khi trang load
+    loadGiaoVien(currentMaMonHoc);
     
     maMonHocSelect.addEventListener('change', function() {
-        const maMonHoc = this.value;
-        
+        loadGiaoVien(this.value);
+    });
+    
+    function loadGiaoVien(maMonHoc) {
         if (!maMonHoc) {
             maGiaoVienSelect.innerHTML = '<option value="">-- Chọn môn học trước --</option>';
             return;
         }
         
-        // Hiển thị loading
-        maGiaoVienSelect.innerHTML = '<option value="">Đang tải danh sách giáo viên...</option>';
+        maGiaoVienSelect.innerHTML = '<option value="">Đang tải...</option>';
         
-        // Debug URL
-        const url = `index.php?controller=phancongrade&action=getGiaoVienByMonHoc&id_monhoc=${maMonHoc}`;
-        console.log('URL:', url);
-        
-        // Gọi AJAX để lấy danh sách giáo viên
-        fetch(url)
-            .then(response => {
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers.get('Content-Type'));
-                
-                // Kiểm tra nếu response là HTML thay vì JSON
-                const contentType = response.headers.get('Content-Type');
-                if (contentType && contentType.includes('text/html')) {
-                    throw new Error('Server trả về HTML thay vì JSON');
-                }
-                
-                return response.text(); // Dùng text() trước để xem nội dung
-            })
-            .then(text => {
-                console.log('Raw response text:', text.substring(0, 500)); // Chỉ hiển thị 500 ký tự đầu
-                
-                try {
-                    const data = JSON.parse(text);
-                    console.log('Parsed JSON:', data);
-                    
-                    if (Array.isArray(data)) {
-                        if (data.length > 0) {
-                            let options = '<option value="">-- Chọn giáo viên --</option>';
-                            data.forEach(gv => {
-                                options += `<option value="${gv.maGiaoVien}">${gv.hoTen}</option>`;
-                            });
-                            maGiaoVienSelect.innerHTML = options;
-                        } else {
-                            maGiaoVienSelect.innerHTML = '<option value="">Không có giáo viên nào cho môn học này</option>';
-                        }
-                    } else if (data.error) {
-                        maGiaoVienSelect.innerHTML = `<option value="">Lỗi: ${data.error}</option>`;
-                    }
-                } catch (e) {
-                    console.error('Lỗi parse JSON:', e);
-                    maGiaoVienSelect.innerHTML = '<option value="">Lỗi định dạng dữ liệu</option>';
-                }
+        fetch(`index.php?controller=phancongrade&action=getGiaoVienByMonHoc&id_monhoc=${maMonHoc}`)
+            .then(response => response.json())
+            .then(data => {
+                let options = '<option value="">-- Chọn giáo viên --</option>';
+                data.forEach(gv => {
+                    const selected = currentGiaoVien.includes(gv.maGiaoVien.toString()) ? 'selected' : '';
+                    options += `<option value="${gv.maGiaoVien}" ${selected}>${gv.hoTen}</option>`;
+                });
+                maGiaoVienSelect.innerHTML = options;
             })
             .catch(error => {
-                console.error('Lỗi fetch:', error);
-                maGiaoVienSelect.innerHTML = '<option value="">Lỗi kết nối server</option>';
+                console.error('Lỗi:', error);
+                maGiaoVienSelect.innerHTML = '<option value="">Lỗi tải danh sách</option>';
             });
-    });
-    
-    // Đặt hạn nộp mặc định là ngày mai
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    document.getElementById('hanNopDe').value = tomorrow.toISOString().slice(0, 16);
+    }
 });
 </script>
 

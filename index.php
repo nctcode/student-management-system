@@ -279,6 +279,37 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
+                
+                case 'phancongrade':
+                    switch ($action) {
+                        case 'index':
+                        case 'view':
+                        case 'create':
+                        case 'getGiaoVienByMonHoc':
+                        case 'store':
+                        case 'edit':
+                        case 'update':
+                        case 'delete':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                
+                case 'dethi':
+                    switch ($action) {
+                        case 'index':
+                        case 'store':
+                        case 'capNhatTrangThai':
+                            $controllerInstance->$action();
+                        case 'duyet':
+                        case 'lichSuDuyetDeThi':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
 
                 default:
                     $controllerInstance->$action();
@@ -295,4 +326,4 @@ if (file_exists($controllerFile)) {
     $home = new HomeController();
     $home->index();
 }
-?>
+?>  
