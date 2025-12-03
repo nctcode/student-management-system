@@ -3,146 +3,172 @@ require_once 'models/Database.php';
 
 class DethiModel
 {
-    private $db;
+    private $conn;
 
     public function __construct()
     {
-        $this->db = new Database();
+        $db = new Database();
+        $this->conn = $db->getConnection();
     }
 
-    // Lấy danh sách tất cả đề thi theo khối và học kỳ (tùy chọn lọc)
-    public function getExams($maKhoi = null, $maNienKhoa = null, $maNguoiDung = null)
+    // Lấy thông tin giáo viên theo maNguoiDung
+    public function getGiaoVienByMaNguoiDung($maNguoiDung)
     {
-        $conn = $this->db->getConnection();
+        $stmt = $this->conn->prepare("SELECT * FROM giaovien WHERE maNguoiDung = :maNguoiDung LIMIT 1");
+        $stmt->execute(['maNguoiDung' => $maNguoiDung]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
-        $sql = "SELECT d.maDeThi, d.tieuDe, u.hoTen AS tenGiaoVien
-            FROM dethi d
-            INNER JOIN giaovien g ON d.maGiaoVien = g.maGiaoVien
-            INNER JOIN nguoidung u ON g.maNguoiDung = u.maNguoiDung
-            INNER JOIN khoi k ON d.maKhoi = k.maKhoi
-            INNER JOIN nienkhoa n ON d.maNienKhoa = n.maNienKhoa
-            INNER JOIN toTruongChuyenMon t ON d.maMonHoc = t.maMonHoc
-            WHERE d.trangThai = 'CHO_DUYET'";
+    ///////////////////////////////////////////////////////////////////////
+    ////////////////////////////LẬP ĐỀ THI///////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
 
-        $params = [];
+    // Tạo đề thi mới
+    public function createDeThi($data)
+    {
+        $sql = "INSERT INTO dethi (maGiaoVien, maMonHoc, maKhoi, maNienKhoa, tieuDe, noiDung, trangThai, ngayNop)
+            VALUES (:maGiaoVien, :maMonHoc, :maKhoi, :maNienKhoa, :tieuDe, :noiDung, :trangThai, :ngayNop)";
 
-        // Lọc theo Khối
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute($data);
+    }
+
+    // Lấy danh sách đề thi của giáo viên
+    public function getDeThiByGiaoVien($maNguoiDung)
+    {
+        $giaoVien = $this->getGiaoVienByMaNguoiDung($maNguoiDung);
+        if (!$giaoVien) return [];
+
+        $sql = "SELECT d.maDeThi, d.tieuDe, m.tenMonHoc as monHoc, d.trangThai, d.noiDung as fileDeThi
+                FROM dethi d
+                JOIN monhoc m ON d.maMonHoc = m.maMonHoc
+                WHERE d.maGiaoVien = :maGiaoVien
+                ORDER BY d.maDeThi DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute(['maGiaoVien' => $giaoVien['maGiaoVien']]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function giaoVienDuocPhanCong($maGiaoVien)
+    {
+        $sql = "SELECT 1 FROM phancongrade WHERE maGiaoVien = :maGiaoVien LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute(['maGiaoVien' => $maGiaoVien]);
+        return $stmt->fetchColumn() ? true : false;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////
+    ////////////////////////////DUYỆT ĐỀ THI///////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+
+    // Lấy thông tin tổ trưởng theo maNguoiDung
+    public function getToTruongByMaNguoiDung($maNguoiDung)
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM totruongchuyenmon WHERE maNguoiDung = :maNguoiDung LIMIT 1");
+        $stmt->execute(['maNguoiDung' => $maNguoiDung]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy danh sách đề thi theo môn học, khối và học kỳ 
+    public function getDeThi($maMonHoc, $maKhoi = null, $maNienKhoa = null)
+    {
+        $sql =
+            "SELECT d.maDeThi, d.tieuDe, d.trangThai, d.noiDung as fileDeThi, n.hoTen, m.tenMonHoc as monHoc, d.maMonHoc
+        FROM dethi d
+        JOIN giaovien g ON d.maGiaoVien = g.maGiaoVien
+        JOIN nguoidung n ON g.maNguoiDung = n.maNguoiDung
+        JOIN monhoc m ON d.maMonHoc = m.maMonHoc
+        WHERE d.maMonHoc = :maMonHoc AND d.trangThai = 'CHO_DUYET'";
+
+        $params = ['maMonHoc' => $maMonHoc];
+
         if ($maKhoi) {
-            $sql .= " AND d.maKhoi = ?";
-            $params[] = $maKhoi;
+            $sql .= " AND d.maKhoi = :maKhoi";
+            $params['maKhoi'] = $maKhoi;
         }
-
-        // Lọc theo Niên khóa
         if ($maNienKhoa) {
-            $sql .= " AND d.maNienKhoa = ?";
-            $params[] = $maNienKhoa;
+            $sql .= " AND d.maNienKhoa = :maNienKhoa";
+            $params['maNienKhoa'] = $maNienKhoa;
         }
 
-        // Lọc theo người dùng (tổ trưởng chuyên môn)
-        if ($maNguoiDung) {
-            $sql .= " AND t.maNguoiDung = ?";
-            $params[] = $maNguoiDung;
-        }
+        $sql .= " ORDER BY d.maDeThi DESC";
 
-        $sql .= " ORDER BY d.maDeThi ASC";
-
-        $stmt = $conn->prepare($sql);
+        $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
-    // Cập nhật trạng thái duyệt/từ chối nhiều đề thi
-    public function updateStatus($maDeThis = [], $status)
+    // Lấy tất cả khối học
+    public function getAllKhoiHoc()
     {
-        if (empty($maDeThis)) return false;
-
-        $conn = $this->db->getConnection();
-        $in = str_repeat('?,', count($maDeThis) - 1) . '?';
-        $sql = "UPDATE dethi SET trangThai = ? WHERE maDeThi IN ($in)";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(array_merge([$status], $maDeThis));
-
-        return $stmt->rowCount();
+        $stmt = $this->conn->prepare("SELECT maKhoi, tenKhoi FROM khoi ORDER BY maKhoi");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-
-    // Lấy danh sách Khối học (dùng cho combobox)
-    public function getKhoiHoc()
+    // Lấy tất cả niên khóa
+    public function getAllNienKhoa()
     {
-        $conn = $this->db->getConnection();
-        $sql = "SELECT maKhoi, tenKhoi, maNienKhoa FROM khoi ORDER BY maKhoi ASC";
-        $stmt = $conn->query($sql);
+        $stmt = $this->conn->prepare("SELECT maNienKhoa, hocKy FROM nienkhoa ORDER BY maNienKhoa, hocKy");
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lấy danh sách Học kỳ (dùng cho combobox)
-    public function getNienKhoa()
+    // Lấy chi tiết 1 đề thi
+    public function getDeThiById($maDeThi)
     {
-        $conn = $this->db->getConnection();
-        $sql = "SELECT maNienKhoa, hocKy FROM nienkhoa ORDER BY maNienKhoa ASC";
-        $stmt = $conn->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-
-    // lấy chi tiết 1 đề thi theo mã đề
-    public function getExamDetail($maDeThi)
-    {
-        $conn = $this->db->getConnection();
-
-        $sql = "SELECT d.*, d.maDeThi, u.hoTen AS tenGiaoVien, k.tenKhoi, n.hocKy, n.namHoc, m.tenMonHoc AS monHoc
-        FROM dethi d
-        INNER JOIN giaovien g ON d.maGiaoVien = g.maGiaoVien
-        INNER JOIN nguoidung u ON g.maNguoiDung = u.maNguoiDung
-        INNER JOIN khoi k ON d.maKhoi = k.maKhoi
-        INNER JOIN nienkhoa n ON d.maNienKhoa = n.maNienKhoa
-        LEFT JOIN monhoc m ON d.maMonHoc = m.maMonHoc
-        WHERE d.maDeThi = ?";
-
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$maDeThi]);
+        $stmt = $this->conn->prepare(
+            "SELECT d.*, n.hoTen, m.tenMonHoc as monHoc
+         FROM dethi d
+         JOIN giaovien g ON d.maGiaoVien = g.maGiaoVien
+         JOIN nguoidung n ON g.maNguoiDung = n.maNguoiDung
+         JOIN monhoc m ON d.maMonHoc = m.maMonHoc
+         WHERE d.maDeThi = :maDeThi
+         LIMIT 1"
+        );
+        $stmt->execute(['maDeThi' => $maDeThi]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Lấy danh sách câu hỏi và tính tổng số câu, tổng điểm
-    public function getQuestions($maDeThi)
+
+    // Cập nhật trạng thái đề thi
+    public function capNhatTrangThai($maDeThi, $trangThai, $ghiChu = null)
     {
-        $conn = $this->db->getConnection();
-        $sql = "SELECT * FROM cauhoi WHERE maDeThi = ? ORDER BY maCauHoi ASC";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$maDeThi]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sql = "UPDATE dethi SET trangThai = :trangThai, ghiChu = :ghiChu, ngayDuyet = NOW() WHERE maDeThi = :maDeThi";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            'trangThai' => $trangThai,
+            'ghiChu' => $ghiChu,
+            'maDeThi' => $maDeThi
+        ]);
     }
 
-    //Lấy trạng thái đề thi
-    public function getLichSuDuyet($maKhoi = null, $maNienKhoa = null, $maNguoiDung = null)
+
+    ///////////////////////////////////////////////////////////////////////
+    ////////////////////////////LỊCH SỬ DUYỆT ĐỀ THI///////////////////////
+    ///////////////////////////////////////////////////////////////////////
+
+
+    // Lấy lịch sử duyệt đề thi theo chuyên môn tổ trưởng, khối, niên khóa
+    public function getLichSuDuyetDeThi($maNguoiDung, $maKhoi = null, $maNienKhoa = null)
     {
-        $conn = $this->db->getConnection();
+        // Lấy thông tin tổ trưởng
+        $toTruong = $this->getToTruongByMaNguoiDung($maNguoiDung);
+        if (!$toTruong) return [];
 
-        $sql = "
-        SELECT 
-            d.maDeThi,
-            d.tieuDe,
-            nd.hoTen AS tenGiaoVien,
-            d.ngayNop,
-            d.trangThai
-        FROM 
-            dethi d
-        JOIN 
-            giaovien g ON d.maGiaoVien = g.maGiaoVien
-        JOIN 
-            nguoidung nd ON g.maNguoiDung = nd.maNguoiDung
-        JOIN 
-            toTruongChuyenMon t ON t.maMonHoc = d.maMonHoc
-        JOIN 
-            nguoidung ndTT ON t.maNguoiDung = ndTT.maNguoiDung
-        WHERE 
-            (d.trangThai = 'DA_DUYET' OR d.trangThai = 'TU_CHOI')
-    ";
+        $maMonHoc = $toTruong['maMonHoc'];
 
-        $params = [];
+        // Query chính
+        $sql = "SELECT d.maDeThi, d.tieuDe, d.trangThai, d.noiDung AS fileDeThi,
+                   n.hoTen, m.tenMonHoc, d.maKhoi, d.maNienKhoa, d.ngayDuyet AS ngayDuyet
+            FROM dethi d
+            JOIN giaovien g ON d.maGiaoVien = g.maGiaoVien
+            JOIN nguoidung n ON g.maNguoiDung = n.maNguoiDung
+            JOIN monhoc m ON d.maMonHoc = m.maMonHoc
+            WHERE d.maMonHoc = :maMonHoc
+              AND (d.trangThai = 'DA_DUYET' OR d.trangThai = 'TU_CHOI')";
+
+        $params = ['maMonHoc' => $maMonHoc];
 
         // Lọc khối
         if (!empty($maKhoi)) {
@@ -156,14 +182,11 @@ class DethiModel
             $params['maNienKhoa'] = $maNienKhoa;
         }
 
-        // Lọc theo tổ trưởng chuyên môn (theo người đăng nhập)
-        if (!empty($maNguoiDung)) {
-            $sql .= " AND t.maNguoiDung = :maNguoiDung";
-            $params['maNguoiDung'] = $maNguoiDung;
-        }
+        $sql .= " ORDER BY d.maDeThi DESC";
 
-        $stmt = $conn->prepare($sql);
+        $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

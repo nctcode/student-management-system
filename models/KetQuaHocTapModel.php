@@ -164,22 +164,28 @@ class KetQuaHocTapModel
         // Đếm tổng theo học lực và hạnh kiểm
         $thongKeHocLuc = [];
         $thongKeHanhKiem = [];
+        $thongKeXepLoai = [];
+
 
         foreach ($data as $row) {
             $hl = $row['hocLuc'];
             $hk = $row['hanhKiem'];
+            $xl = $row['xepLoai'];
 
             if (!isset($thongKeHocLuc[$hl])) $thongKeHocLuc[$hl] = 0;
             if (!isset($thongKeHanhKiem[$hk])) $thongKeHanhKiem[$hk] = 0;
+            if (!isset($thongKeXepLoai[$xl])) $thongKeXepLoai[$xl] = 0;
 
             $thongKeHocLuc[$hl]++;
             $thongKeHanhKiem[$hk]++;
+            $thongKeXepLoai[$xl]++;
         }
 
         return [
             'data' => $data, // danh sách học sinh
             'thongKeHocLuc' => $thongKeHocLuc,
-            'thongKeHanhKiem' => $thongKeHanhKiem
+            'thongKeHanhKiem' => $thongKeHanhKiem,
+            'thongKeXepLoai' => $thongKeXepLoai
         ];
     }
 }

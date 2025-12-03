@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../layouts/header.php';
-require_once __DIR__ . '/../layouts/sidebar/bangiamhieu.php'; 
+require_once __DIR__ . '/../layouts/sidebar/totruong.php'; 
 ?>
 
 <div class="container" style="padding: 20px; margin-left: 250px;">

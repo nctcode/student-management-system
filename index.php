@@ -241,6 +241,9 @@ if (file_exists($controllerFile)) {
                         case 'thongke':
                             $controllerInstance->thongke();
                             break;
+                        case 'xuatExcel': 
+                            $controllerInstance->xuatExcel();
+                            break;
                         default:
                             $controllerInstance->thongke();
                     }
