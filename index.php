@@ -238,6 +238,9 @@ if (file_exists($controllerFile)) {
                 
                 case 'ketquahoctap':
                     switch ($action) {
+                        case 'index':
+                        case 'view':
+                            $controllerInstance->$action();
                         case 'thongke':
                             $controllerInstance->thongke();
                             break;

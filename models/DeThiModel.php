@@ -189,4 +189,24 @@ class DethiModel
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    public function getPhanCongGiaoVien($maGiaoVien)
+    {
+        $sql = "SELECT pc.*, dt.tieuDe, dt.maKhoi, dt.maMonHoc, 
+                    k.tenKhoi, mh.tenMonHoc, dt.soLuongDe,
+                    pc.hanNopDe, pc.ghiChu
+                FROM phancongrade pc
+                JOIN dethi dt ON pc.maDeThi = dt.maDeThi
+                JOIN khoi k ON dt.maKhoi = k.maKhoi
+                JOIN monhoc mh ON dt.maMonHoc = mh.maMonHoc
+                WHERE pc.maGiaoVien = :maGiaoVien
+                AND dt.trangThai = 'Chờ nộp'
+                AND (pc.hanNopDe IS NULL OR pc.hanNopDe >= CURDATE())
+                ORDER BY pc.hanNopDe ASC
+                LIMIT 1";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maGiaoVien' => $maGiaoVien]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
 }

@@ -22,14 +22,14 @@
                     <span>Thời khóa biểu</span>
                 </a>
             </li>
-            <li>
-                <a href="index.php?controller=diem&action=nhapdiem">
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=diem&action=nhapdiem">
                     <i class="fas fa-fw fa-pen-to-square"></i>
                     <span>Nhập điểm</span>
                 </a>
             </li>
-            <li>
-                <a href="index.php?controller=chuyencan&action=index">
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=chuyencan&action=index">
                     <i class="fas fa-user-check"></i>
                     <span>Chuyên cần</span>
                 </a>
@@ -70,9 +70,9 @@
                 </div>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="index.php?controller=danhsachlop&action=index">
                     <i class="fas fa-chalkboard-teacher"></i>
-                    <span>Lớp chủ nhiệm</span>
+                    <span>Danh sách lớp</span>
                 </a>
             </li>
             

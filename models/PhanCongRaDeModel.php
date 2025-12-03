@@ -229,5 +229,4 @@ class PhanCongRaDeModel
             return false;
         }
     }
-    
 }

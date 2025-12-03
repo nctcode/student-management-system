@@ -1,13 +1,15 @@
 <?php
 require_once 'models/DethiModel.php';
-
+require_once 'models/Database.php';
 class DeThiController
 {
     private $model;
-
+    private $conn;
     public function __construct()
     {
         $this->model = new DethiModel();
+        $db = new Database();
+        $this->conn = $db->getConnection();
         if (!isset($_SESSION)) session_start();
     }
 
@@ -30,23 +32,233 @@ class DeThiController
             return;
         }
 
-        // Kiểm tra giáo viên có được phân công tạo đề thi không
-        $duocPhanCong = $this->model->giaoVienDuocPhanCong($giaoVien['maGiaoVien']);
-
-        if (!$duocPhanCong) {
-            // Nếu chưa phân công → hiện popup thông báo
-            $_SESSION['message'] = ['status' => 'not_assigned', 'text' => 'Bạn chưa được phân công tạo đề thi'];
-            require_once 'views/dethi/lapdethi.php';
-            return;
-        }
-
-        // Nếu được phân công → lấy danh sách đề thi
+        // KIỂM TRA PHÂN CÔNG MỚI
+        $phanCong = $this->model->getPhanCongGiaoVien($giaoVien['maGiaoVien']);
+        
+        // Lấy danh sách đề thi của giáo viên
         $deThiList = $this->model->getDeThiByGiaoVien($maNguoiDung);
 
-        // Gọi view
+        // Gọi view với thông tin phân công
         require_once 'views/layouts/header.php';
         require_once 'views/layouts/sidebar/giaovien.php';
         require_once 'views/dethi/lapdethi.php';
+    }
+
+    public function view()
+    {
+        if (!isset($_SESSION['user'])) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+
+        $maDeThi = $_GET['id'] ?? 0;
+        if ($maDeThi <= 0) {
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        $deThi = $this->model->getDeThiById($maDeThi);
+        if (!$deThi) {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'Không tìm thấy đề thi'];
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/giaovien.php';
+        require_once 'views/dethi/chitiet.php';
+        require_once 'views/layouts/footer.php';
+    }
+
+    public function edit()
+    {
+        if (!isset($_SESSION['user'])) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+
+        $maDeThi = $_GET['id'] ?? 0;
+        if ($maDeThi <= 0) {
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        $deThi = $this->model->getDeThiById($maDeThi);
+        if (!$deThi) {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'Không tìm thấy đề thi'];
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        // Kiểm tra quyền sửa (chỉ giáo viên tạo và đề thi chờ duyệt/từ chối)
+        $giaoVien = $this->model->getGiaoVienByMaNguoiDung($_SESSION['user']['maNguoiDung']);
+        if (!$giaoVien || $giaoVien['maGiaoVien'] != $deThi['maGiaoVien']) {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'Bạn không có quyền sửa đề thi này'];
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        if (!in_array($deThi['trangThai'], ['CHO_DUYET', 'TU_CHOI'])) {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'Chỉ được sửa đề thi đang chờ duyệt hoặc bị từ chối'];
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        require_once 'views/layouts/header.php';
+        require_once 'views/layouts/sidebar/giaovien.php';
+        require_once 'views/dethi/edit.php';
+        require_once 'views/layouts/footer.php';
+    }
+
+    public function update()
+    {
+        if (!isset($_SESSION['user'])) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        $maDeThi = $_POST['maDeThi'] ?? 0;
+        $tieuDe = trim($_POST['tieuDe'] ?? '');
+        $noiDungBoSung = trim($_POST['noiDungBoSung'] ?? '');
+
+        if ($maDeThi <= 0 || empty($tieuDe)) {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'Thiếu thông tin bắt buộc'];
+            header('Location: index.php?controller=deThi&action=edit&id=' . $maDeThi);
+            exit;
+        }
+
+        // Kiểm tra file upload nếu có
+        $newFileName = null;
+        if (!empty($_FILES['fileDeThi']['name'])) {
+            $fileTmp = $_FILES['fileDeThi']['tmp_name'];
+            $fileName = basename($_FILES['fileDeThi']['name']);
+            $fileSize = $_FILES['fileDeThi']['size'];
+            $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $allowedExt = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+
+            if (!in_array($fileExt, $allowedExt)) {
+                $_SESSION['message'] = ['status' => 'error', 'text' => 'Chỉ được tải lên file PDF, Word hoặc hình ảnh'];
+                header('Location: index.php?controller=deThi&action=edit&id=' . $maDeThi);
+                exit;
+            }
+
+            if ($fileSize > 10 * 1024 * 1024) {
+                $_SESSION['message'] = ['status' => 'error', 'text' => 'File không được vượt quá 10MB'];
+                header('Location: index.php?controller=deThi&action=edit&id=' . $maDeThi);
+                exit;
+            }
+
+            // Tạo thư mục nếu chưa tồn tại
+            $folder = 'uploads/dethi/';
+            if (!file_exists($folder)) mkdir($folder, 0777, true);
+
+            // Tạo tên file mới
+            $newFileName = time() . "_" . $fileName;
+            if (!move_uploaded_file($fileTmp, $folder . $newFileName)) {
+                $_SESSION['message'] = ['status' => 'error', 'text' => 'Upload file thất bại'];
+                header('Location: index.php?controller=deThi&action=edit&id=' . $maDeThi);
+                exit;
+            }
+        }
+
+        // Cập nhật database
+        try {
+            $sql = "UPDATE dethi SET tieuDe = :tieuDe, ngayNop = NOW(), trangThai = 'CHO_DUYET'";
+            $params = [
+                'tieuDe' => $tieuDe,
+                'maDeThi' => $maDeThi
+            ];
+
+            if ($newFileName) {
+                $sql .= ", noiDung = :noiDung";
+                $params['noiDung'] = $newFileName;
+            }
+
+            if (!empty($noiDungBoSung)) {
+                $sql .= ", ghiChu = :ghiChu";
+                $params['ghiChu'] = $noiDungBoSung;
+            }
+
+            $sql .= " WHERE maDeThi = :maDeThi";
+
+            $stmt = $this->conn->prepare($sql);
+            $result = $stmt->execute($params);
+
+            if ($result) {
+                $_SESSION['message'] = ['status' => 'success', 'text' => 'Cập nhật đề thi thành công'];
+            } else {
+                $_SESSION['message'] = ['status' => 'error', 'text' => 'Cập nhật đề thi thất bại'];
+            }
+        } catch (Exception $e) {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'Lỗi: ' . $e->getMessage()];
+        }
+
+        header('Location: index.php?controller=deThi&action=view&id=' . $maDeThi);
+        exit;
+    }
+
+    public function delete()
+    {
+        if (!isset($_SESSION['user'])) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        $maDeThi = $_POST['id'] ?? 0;
+        
+        if ($maDeThi <= 0) {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'ID không hợp lệ'];
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        // Kiểm tra quyền xóa
+        $deThi = $this->model->getDeThiById($maDeThi);
+        $giaoVien = $this->model->getGiaoVienByMaNguoiDung($_SESSION['user']['maNguoiDung']);
+        
+        if (!$giaoVien || $giaoVien['maGiaoVien'] != $deThi['maGiaoVien']) {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'Bạn không có quyền xóa đề thi này'];
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        if (!in_array($deThi['trangThai'], ['CHO_DUYET', 'TU_CHOI'])) {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'Chỉ được xóa đề thi đang chờ duyệt hoặc bị từ chối'];
+            header('Location: index.php?controller=deThi&action=index');
+            exit;
+        }
+
+        // Xóa file vật lý nếu có
+        if (!empty($deThi['noiDung'])) {
+            $filePath = 'uploads/dethi/' . $deThi['noiDung'];
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+        // Xóa trong database
+        $sql = "DELETE FROM dethi WHERE maDeThi = :maDeThi";
+        $stmt = $this->conn->prepare($sql);
+        $result = $stmt->execute(['maDeThi' => $maDeThi]);
+
+        if ($result) {
+            $_SESSION['message'] = ['status' => 'success', 'text' => 'Xóa đề thi thành công'];
+        } else {
+            $_SESSION['message'] = ['status' => 'error', 'text' => 'Xóa đề thi thất bại'];
+        }
+
+        header('Location: index.php?controller=deThi&action=index');
+        exit;
     }
 
 
