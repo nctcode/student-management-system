@@ -322,6 +322,19 @@ if (file_exists($controllerFile)) {
 
                 default:
                     $controllerInstance->$action();
+                
+                case 'hanhkiem':
+                    switch ($action) {
+                        case 'index':
+                        case 'save':
+                        case 'store':
+                        case 'changeHocKy':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
             }
         } else {
             die("Action không tồn tại: $action");

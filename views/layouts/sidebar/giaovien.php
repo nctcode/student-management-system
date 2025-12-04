@@ -35,6 +35,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=hanhkiem&action=index">
+                    <i class="fas fa-star"></i>
+                    <span>Hạnh Kiểm</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link collapsed" href="#" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#collapseTinNhan"
