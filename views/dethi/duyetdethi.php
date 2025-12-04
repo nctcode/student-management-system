@@ -88,8 +88,10 @@ $monHocList = $monHocList ?? [];
     </style>
 </head>
 <body>
-<?php require_once 'views/layouts/header.php'; ?>
-<?php require_once 'views/layouts/sidebar/totruong.php'; ?>
+<?php 
+require_once 'views/layouts/header.php'; 
+require_once 'views/layouts/sidebar/totruong.php'; 
+?>
 
 <div class="main-content">
     <div class="container-fluid">
@@ -250,26 +252,27 @@ $monHocList = $monHocList ?? [];
                 <div class="card">
                     <div class="card-header bg-white border-bottom">
                         <h5 class="mb-0">
-                            <i class="fas fa-list-check"></i> Danh sách đề thi chờ duyệt
+                            <i class="fas fa-list-check"></i> Danh sách đề thi ĐÃ NỘP chờ duyệt
                             <?php if (!empty($exams)): ?>
                                 <span class="count-badge bg-warning text-dark ms-2">
                                     <?= count($exams) ?> đề
                                 </span>
                             <?php endif; ?>
                         </h5>
+                        <small class="text-muted">Chỉ hiển thị các đề thi đã được giáo viên nộp lên</small>
                     </div>
                     <div class="card-body">
                         <?php if (!$maKhoi && !$maNienKhoa && !isset($maMonHoc)): ?>
                             <div class="text-center py-5">
                                 <i class="fas fa-filter fa-3x text-muted mb-3"></i>
                                 <h5 class="text-muted">Vui lòng chọn bộ lọc để hiển thị danh sách đề thi</h5>
-                                <p class="text-muted">Sử dụng bộ lọc bên trên để tìm đề thi cần duyệt</p>
+                                <p class="text-muted">Sử dụng bộ lọc bên trên để tìm đề thi đã nộp cần duyệt</p>
                             </div>
                         <?php elseif (empty($exams)): ?>
                             <div class="text-center py-5">
                                 <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                <h5 class="text-muted">Không có đề thi nào phù hợp</h5>
-                                <p class="text-muted">Không tìm thấy đề thi chờ duyệt với bộ lọc đã chọn</p>
+                                <h5 class="text-muted">Không có đề thi đã nộp nào phù hợp</h5>
+                                <p class="text-muted">Không tìm thấy đề thi đã nộp chờ duyệt với bộ lọc đã chọn</p>
                                 <a href="?controller=dethi&action=duyet" class="btn btn-outline-primary">
                                     <i class="fas fa-redo"></i> Thử bộ lọc khác
                                 </a>
@@ -289,31 +292,35 @@ $monHocList = $monHocList ?? [];
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($exams as $exam): ?>
+                                        <?php foreach ($exams as $exam): 
+                                            // Kiểm tra dữ liệu có tồn tại không
+                                            $hoTen = isset($exam['hoTen']) ? htmlspecialchars($exam['hoTen']) : 'N/A';
+                                            $monHoc = isset($exam['tenMonHoc']) ? htmlspecialchars($exam['tenMonHoc']) : (isset($exam['monHoc']) ? htmlspecialchars($exam['monHoc']) : 'N/A');
+                                        ?>
                                             <tr class="<?= ($exam['maDeThi'] == ($examDetail['maDeThi'] ?? 0)) ? 'table-active' : '' ?>">
                                                 <td>
                                                     <strong>#<?= $exam['maDeThi'] ?></strong>
+                                                    <?php if (!empty($exam['ngayNop'])): ?>
+                                                        <br><small class="text-success"><i class="fas fa-paper-plane"></i> Đã nộp</small>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <i class="fas fa-user-circle text-primary me-2"></i>
-                                                        <span><?= htmlspecialchars($exam['hoTen']) ?></span>
+                                                        <span><?= $hoTen ?></span>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div class="fw-medium"><?= htmlspecialchars($exam['tieuDe']) ?></div>
-                                                    <?php if (!empty($exam['monHoc'])): ?>
+                                                    <div class="fw-medium"><?= isset($exam['tieuDe']) ? htmlspecialchars($exam['tieuDe']) : 'N/A' ?></div>
+                                                    <?php if (!empty($monHoc)): ?>
                                                         <small class="text-muted">
                                                             <i class="fas fa-book text-secondary"></i>
-                                                            <?= htmlspecialchars($exam['monHoc']) ?>
+                                                            <?= $monHoc ?>
                                                         </small>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <?php 
-                                                    // Hiển thị tên môn học từ database thay vì hardcode
-                                                    echo htmlspecialchars($exam['monHoc'] ?? 'N/A');
-                                                    ?>
+                                                    <?= $monHoc ?>
                                                 </td>
                                                 <td>
                                                     <?php if (!empty($exam['ngayNop'])): 
@@ -331,20 +338,20 @@ $monHocList = $monHocList ?? [];
                                                             <?php endif; ?>
                                                         </small>
                                                     <?php else: ?>
-                                                        <span class="text-muted">Chưa nộp</span>
+                                                        <span class="text-danger"><i class="fas fa-exclamation-circle"></i> Chưa nộp</span>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <?= hienThiTrangThai($exam['trangThai']) ?>
+                                                    <?= isset($exam['trangThai']) ? hienThiTrangThai($exam['trangThai']) : hienThiTrangThai('') ?>
                                                 </td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm" role="group">
                                                         <a href="?controller=dethi&action=duyet&maKhoi=<?= $maKhoi ?>&maNienKhoa=<?= $maNienKhoa ?>&maMonHoc=<?= $maMonHoc ?? '' ?>&maDeThi=<?= $exam['maDeThi'] ?>" 
-                                                           class="btn btn-outline-primary" 
-                                                           title="Xem chi tiết">
+                                                        class="btn btn-outline-primary" 
+                                                        title="Xem chi tiết">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
-                                                        <?php if ($exam['trangThai'] == 'CHO_DUYET'): ?>
+                                                        <?php if (($exam['trangThai'] ?? '') == 'CHO_DUYET' && !empty($exam['ngayNop'])): ?>
                                                             <button type="button" 
                                                                     class="btn btn-outline-success" 
                                                                     onclick="duyetDeThi(<?= $exam['maDeThi'] ?>)"
@@ -366,17 +373,24 @@ $monHocList = $monHocList ?? [];
         </div>
 
         <!-- Chi tiết đề thi (bên phải hoặc modal) -->
-        <?php if ($examDetail): ?>
+        <?php if ($examDetail): 
+            // Đảm bảo dữ liệu tồn tại
+            $examDetail['hoTen'] = $examDetail['hoTen'] ?? ($examDetail['tenGiaoVien'] ?? 'N/A');
+            $examDetail['monHoc'] = $examDetail['monHoc'] ?? ($examDetail['tenMonHoc'] ?? 'N/A');
+            $examDetail['tieuDe'] = $examDetail['tieuDe'] ?? 'N/A';
+            $examDetail['noiDung'] = $examDetail['noiDung'] ?? ($examDetail['fileDeThi'] ?? '');
+            $examDetail['ngayNop'] = $examDetail['ngayNop'] ?? null;
+        ?>
         <div class="row mt-4">
             <div class="col-md-12">
                 <div class="card card-exam">
                     <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="fas fa-file-alt"></i> Chi tiết đề thi
-                            <span class="badge bg-light text-dark ms-2">#<?= $examDetail['maDeThi'] ?></span>
+                            <span class="badge bg-light text-dark ms-2">#<?= $examDetail['maDeThi'] ?? 'N/A' ?></span>
                         </h5>
                         <div>
-                            <?= hienThiTrangThai($examDetail['trangThai']) ?>
+                            <?= hienThiTrangThai($examDetail['trangThai'] ?? '') ?>
                         </div>
                     </div>
                     <div class="card-body">
@@ -530,19 +544,25 @@ $monHocList = $monHocList ?? [];
                                                 <i class="fas fa-comment-dots"></i> Lý do từ chối
                                             </label>
                                             <textarea id="ghiChu" name="ghiChu" class="form-control" 
-                                                      rows="3" placeholder="Nhập lý do từ chối chi tiết..."></textarea>
+                                                    rows="3" placeholder="Nhập lý do từ chối chi tiết..."></textarea>
                                             <div id="errorMessage" class="text-danger mt-2" style="display:none;">
                                                 <i class="fas fa-exclamation-circle"></i> Vui lòng nhập lý do từ chối!
                                             </div>
                                         </div>
 
                                         <div class="d-grid gap-2">
-                                            <button type="button" id="btnDuyet" class="btn btn-success btn-action">
-                                                <i class="fas fa-check"></i> Phê duyệt đề thi
-                                            </button>
-                                            <button type="button" id="btnTuChoi" class="btn btn-danger btn-action">
-                                                <i class="fas fa-times"></i> Từ chối đề thi
-                                            </button>
+                                            <?php if (!empty($examDetail['ngayNop'])): ?>
+                                                <button type="button" id="btnDuyet" class="btn btn-success btn-action">
+                                                    <i class="fas fa-check"></i> Phê duyệt đề thi
+                                                </button>
+                                                <button type="button" id="btnTuChoi" class="btn btn-danger btn-action">
+                                                    <i class="fas fa-times"></i> Từ chối đề thi
+                                                </button>
+                                            <?php else: ?>
+                                                <div class="alert alert-warning">
+                                                    <i class="fas fa-exclamation-triangle"></i> Không thể duyệt đề thi chưa được nộp
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                     </form>
                                 </div>
@@ -568,8 +588,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formDuyet');
     const hanhDongInput = document.getElementById('hanhDongInput');
 
-    // Duyệt nhanh (từ danh sách)
+    // Duyệt nhanh (từ danh sách) - CHỈ DUYỆT ĐỀ ĐÃ NỘP
     window.duyetDeThi = function(maDeThi) {
+        // Kiểm tra xem đề thi đã nộp chưa
+        const row = document.querySelector(`tr[data-id="${maDeThi}"]`);
+        if (!row) {
+            alert('Không tìm thấy đề thi #' + maDeThi);
+            return;
+        }
+        
+        const ngayNop = row.querySelector('.ngay-nop').innerText;
+        if (ngayNop.includes('Chưa nộp')) {
+            alert('Không thể duyệt đề thi chưa được nộp!');
+            return;
+        }
+        
         if (confirm('Bạn có chắc chắn muốn duyệt đề thi #' + maDeThi + ' không?')) {
             window.location.href = `index.php?controller=dethi&action=capNhatTrangThaiNhanh&maDeThi=${maDeThi}&hanhDong=duyet`;
         }
@@ -677,6 +710,11 @@ document.addEventListener('DOMContentLoaded', function() {
         window.print();
     });
 });
+
+console.log('Current font for body:', window.getComputedStyle(document.body).fontFamily);
+console.log('Current font for .main-content:', window.getComputedStyle(document.querySelector('.main-content')).fontFamily);
 </script>
+<script src="assets/js/active-menu.js"></script>
+<?php require_once 'views/layouts/footer.php'; ?>
 </body>
 </html>

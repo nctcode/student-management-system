@@ -29,6 +29,7 @@ class PhanCongRaDeController
         $nienKhoaHienTai = $this->model->getNienKhoaHienTai();
 
         include __DIR__ . '/../views/phancongrade/create.php';
+        exit();
     }
 
     public function store()

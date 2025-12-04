@@ -302,6 +302,7 @@ if (file_exists($controllerFile)) {
                 case 'dethi':
                     switch ($action) {
                         case 'index':
+                        case 'view':
                         case 'create':
                         case 'edit':
                         case 'update':

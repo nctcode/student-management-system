@@ -19,7 +19,6 @@ function hienThiTrangThai($trangThai)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lập đề thi</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #f8f9fa; }
@@ -569,6 +568,24 @@ function xemChiTiet(maDeThi) {
         }
     });
 <?php endif; ?>
+
+console.log('Current URL:', window.location.href);
+console.log('Controller:', '<?php echo $_GET["controller"] ?? "" ?>');
+console.log('Action:', '<?php echo $_GET["action"] ?? "" ?>');
+
+// Thêm active bằng JavaScript (tạm thời)
+document.addEventListener('DOMContentLoaded', function() {
+    const currentUrl = window.location.href;
+    const menuLinks = document.querySelectorAll('.sidebar-menu a');
+    
+    menuLinks.forEach(link => {
+        if (link.href === currentUrl) {
+            console.log('Found active link:', link);
+            link.classList.add('active');
+        }
+    });
+});
+
 </script>
 </body>
 </html>

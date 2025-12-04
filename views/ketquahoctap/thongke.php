@@ -4,7 +4,9 @@ require_once 'views/layouts/sidebar/giaovien.php';
 
 $hocKy = $_GET['hocKy'] ?? '';
 $tieuChi = $_GET['tieuChi'] ?? '';
-
+// Xác định controller và action hiện tại
+$currentController = $_GET['controller'] ?? '';
+$currentAction = $_GET['action'] ?? '';
 function hienThi($text)
 {
     switch ($text) {
@@ -287,3 +289,5 @@ function hienThi($text)
   <?php if ($hocKy && $tieuChi): ?>
     <?php include 'views/ketquahoctap/bieudothongke.php'; ?>
   <?php endif; ?>
+
+  <script src="assets/js/active-menu.js"></script>

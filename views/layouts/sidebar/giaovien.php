@@ -75,14 +75,12 @@
                     <span>Danh sách lớp</span>
                 </a>
             </li>
-            
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=dethi&action=index">
                     <i class="fas fa-file-alt"></i> 
                     <span>Tạo đề thi</span>
                 </a>
             </li>
-            
             <li class="nav-item">
                 <a href="index.php?controller=thongbao&action=danhsach" class="nav-link">
                     <i class="nav-icon fas fa-bullhorn"></i>
@@ -94,7 +92,6 @@
                     </span>
                 </a>
             </li>
-            
         </ul>
     </div>
 </nav>

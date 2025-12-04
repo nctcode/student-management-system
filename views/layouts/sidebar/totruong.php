@@ -4,6 +4,12 @@
             <h5>Menu Tổ Trưởng Chuyên Môn</h5>
         </div>
         <ul class="sidebar-menu">
+            <?php
+            // Lấy controller và action hiện tại
+            $currentController = $_GET['controller'] ?? 'home';
+            $currentAction = $_GET['action'] ?? 'index';
+            ?>
+            
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=home&action=leader">
                     <i class="fas fa-home"></i>
