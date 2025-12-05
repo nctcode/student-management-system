@@ -101,22 +101,6 @@ $maDeThi = $_GET['maDeThi'] ?? '';
                         </select>
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label"><i class="fas fa-book"></i> Môn học</label>
-                        <select name="maMonHoc" class="form-select">
-                            <option value="">-- Tất cả môn học --</option>
-                            <?php if (!empty($monHocList) && is_array($monHocList)): ?>
-                                <?php foreach ($monHocList as $mon): ?>
-                                    <option value="<?= htmlspecialchars($mon['maMonHoc']) ?>" 
-                                        <?= (isset($_GET['maMonHoc']) && $_GET['maMonHoc'] == $mon['maMonHoc']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($mon['tenMonHoc']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <option value="">Đang tải môn học...</option>
-                            <?php endif; ?>
-                        </select>
-                    </div>
 
                     <div class="col-md-3 d-flex align-items-end">
                         <div class="d-flex gap-2 w-100">

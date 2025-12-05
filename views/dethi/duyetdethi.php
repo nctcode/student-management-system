@@ -158,20 +158,6 @@ require_once 'views/layouts/sidebar/totruong.php';
                         </select>
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label"><i class="fas fa-book"></i> Môn học</label>
-                        <select name="maMonHoc" class="form-select">
-                            <option value="">-- Tất cả môn học --</option>
-                            <?php if (!empty($monHocList)): ?>
-                                <?php foreach ($monHocList as $mon): ?>
-                                    <option value="<?= $mon['maMonHoc'] ?>" <?= (isset($maMonHoc) && $maMonHoc == $mon['maMonHoc']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($mon['tenMonHoc']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-
                     <div class="col-md-3 d-flex align-items-end">
                         <div class="w-100">
                             <button class="btn btn-success w-100" type="submit">
