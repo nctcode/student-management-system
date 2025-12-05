@@ -11,15 +11,15 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=diem&action=xemdiem">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span>Kết quả học tập</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=thoikhoabieu&action=xemluoi">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Thời khóa biểu</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=diem&action=xemdiem">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Kết quả học tập</span>
                 </a>
             </li>
             <li class="nav-item">

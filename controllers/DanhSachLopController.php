@@ -116,6 +116,7 @@ class DanhSachLopController {
         require_once $sidebarPath;
         require_once 'views/danhsachlop/danh_sach_hoc_sinh.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 
     /**
@@ -190,6 +191,7 @@ class DanhSachLopController {
         require_once $sidebarPath;
         require_once 'views/danhsachlop/chi_tiet_hoc_sinh.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 }
 ?>

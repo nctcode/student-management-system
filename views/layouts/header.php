@@ -1,15 +1,17 @@
 <?php
-function getRoleName($role) {
-    $roles = [
-        'QTV' => 'Quản trị viên',
-        'GIAOVIEN' => 'Giáo viên',
-        'HOCSINH' => 'Học sinh',
-        'PHUHUYNH' => 'Phụ huynh',
-        'BGH' => 'Ban giám hiệu',
-        'TOTRUONG' => 'Tổ trưởng chuyên môn',
-        'GUEST' => 'Khách'
-    ];
-    return $roles[$role] ?? $role;
+if (!function_exists('getRoleName')) {
+    function getRoleName($role) {
+        $roles = [
+            'QTV' => 'Quản trị viên',
+            'GIAOVIEN' => 'Giáo viên',
+            'HOCSINH' => 'Học sinh',
+            'PHUHUYNH' => 'Phụ huynh',
+            'BGH' => 'Ban giám hiệu',
+            'TOTRUONG' => 'Tổ trưởng chuyên môn',
+            'GUEST' => 'Khách'
+        ];
+        return $roles[$role] ?? $role;
+    }
 }
 
 // Lấy số thông báo chưa đọc
