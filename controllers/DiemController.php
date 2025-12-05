@@ -145,6 +145,7 @@ class DiemController {
 
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+        $maPhuHuynh = $_SESSION['user']['maPhuHuynh'] ?? null;
 
         $danhSachCon = []; 
         $maHocSinhChon = null; 
@@ -158,7 +159,7 @@ class DiemController {
                 $maLopChon = $hocSinhInfo['maLop']; 
             }
         } elseif ($userRole === 'PHUHUYNH') {
-            $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maNguoiDung);
+            $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maPhuHuynh);
 
             if (empty($danhSachCon)) {
                 $_SESSION['error'] = "Tài khoản của bạn không được liên kết với hồ sơ học sinh nào!";
@@ -246,6 +247,7 @@ class DiemController {
 
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+        $maPhuHuynh = $_SESSION['user']['maPhuHuynh'] ?? null;
 
         $hocSinhInfo = null;
         $maHocSinhChon = null;
@@ -258,7 +260,7 @@ class DiemController {
                 $maLopChon = $hocSinhInfo['maLop'];
             }
         } elseif ($userRole === 'PHUHUYNH') {
-            $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maNguoiDung);
+            $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maPhuHuynh);
             $maHocSinhFromGet = $_GET['maHocSinh'] ?? null;
             
             if ($maHocSinhFromGet) {

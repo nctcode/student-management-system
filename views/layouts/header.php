@@ -1,15 +1,17 @@
 <?php
-function getRoleName($role) {
-    $roles = [
-        'QTV' => 'Quản trị viên',
-        'GIAOVIEN' => 'Giáo viên',
-        'HOCSINH' => 'Học sinh',
-        'PHUHUYNH' => 'Phụ huynh',
-        'BGH' => 'Ban giám hiệu',
-        'TOTRUONG' => 'Tổ trưởng chuyên môn',
-        'GUEST' => 'Khách'
-    ];
-    return $roles[$role] ?? $role;
+if (!function_exists('getRoleName')) {
+    function getRoleName($role) {
+        $roles = [
+            'QTV' => 'Quản trị viên',
+            'GIAOVIEN' => 'Giáo viên',
+            'HOCSINH' => 'Học sinh',
+            'PHUHUYNH' => 'Phụ huynh',
+            'BGH' => 'Ban giám hiệu',
+            'TOTRUONG' => 'Tổ trưởng chuyên môn',
+            'GUEST' => 'Khách'
+        ];
+        return $roles[$role] ?? $role;
+    }
 }
 
 // Lấy số thông báo chưa đọc
@@ -62,6 +64,12 @@ if (isset($_SESSION['user'])) {
     <script src="https://cdn.tiny.cloud/1/phzgc5fpe6tw4kpsx3qymxa2vd9r6rgbdipsroc4ufsscz71/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
     <style>
+    /* Đảm bảo font chữ nhất quán */
+    body, .main-header, .sidebar, .content-area, 
+    .notification-menu, .user-menu, .card,
+    h1, h2, h3, h4, h5, h6, p, span, div, table, td, th {
+        font-family: 'Inter', sans-serif !important;
+    }
     /* Modern Notification Styles */
     .notification-dropdown {
         position: relative;

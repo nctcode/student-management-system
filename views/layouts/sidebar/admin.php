@@ -38,25 +38,25 @@
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=thoikhoabieu&action=taotkb">
                     <i class="fas fa-calendar-alt"></i>
-                    <span>Tạo thời khóa biểu</span>
+                    <span>Quản lý thời khóa biểu</span>
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=thoikhoabieu&action=quanlytkb">
                     <i class="fas fa-list-alt"></i>
                     <span>Quản lý TKB</span>
                 </a>
-            </li>
-            <li class="nav-item">
+            </li> -->
+            <!-- <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="fas fa-school"></i>
                     <span>Quản lý lớp học</span>
                 </a>
-            </li>
+            </li> -->
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=tuyensinh&action=danhsachhoso">
                     <i class="fas fa-user-graduate"></i>
-                    <span>Tuyển sinh</span>
+                    <span>Quản lý tuyển sinh</span>
                 </a>
             </li>
         </ul>

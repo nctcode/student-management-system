@@ -22,11 +22,11 @@ if (!in_array($controller, $publicControllers) && !isset($_SESSION['user'])) {
 $controllerFile = "controllers/" . ucfirst($controller) . "Controller.php";
 if (file_exists($controllerFile)) {
     require_once $controllerFile;
-
+    
     $controllerClass = ucfirst($controller) . "Controller";
     if (class_exists($controllerClass)) {
         $controllerInstance = new $controllerClass();
-
+        
         if (method_exists($controllerInstance, $action)) {
             // Xử lý các action cần tham số
             switch ($controller) {
@@ -54,7 +54,7 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->$action();
                     }
                     break;
-
+                
                 case 'home':
                     switch ($action) {
                         case 'admin':
@@ -135,7 +135,7 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->xemluoi();
                     }
                     break;
-
+                
                 // Trong phần case 'tinnhan' của index.php
                 case 'tinnhan':
                     switch ($action) {
@@ -165,7 +165,7 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
-
+                
                 case 'diem':
                     switch ($action) {
                         case 'xemdiem':
@@ -184,14 +184,14 @@ if (file_exists($controllerFile)) {
 
                 case 'chuyencan':
                     $controllerInstance->$action();
-                    break;
-
+                    break; 
+                
                 case 'baitap':
                     switch ($action) {
                         case 'danhsach':
                             $controllerInstance->danhsach();
                             break;
-                        case 'luu':
+                        case 'luu': 
                             $controllerInstance->luu();
                             break;
                         case 'chitiet':
@@ -202,7 +202,7 @@ if (file_exists($controllerFile)) {
                             $maBaiTap = $_GET['maBaiTap'] ?? 0;
                             $controllerInstance->taiTatCaBaiNop($maBaiTap);
                             break;
-                        case 'danhsach_hs':
+                        case 'danhsach_hs': 
                             $controllerInstance->danhsach_hs();
                             break;
                         case 'chitiet_hs':
@@ -219,7 +219,7 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
-
+                
                 case 'thongbao':
                     switch ($action) {
                         case 'dangthongbao':
@@ -235,9 +235,12 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->danhsach();
                     }
                     break;
-
+                
                 case 'ketquahoctap':
                     switch ($action) {
+                        case 'index':
+                        case 'view':
+                            $controllerInstance->$action();
                         case 'thongke':
                             $controllerInstance->thongke();
                             break;
@@ -248,7 +251,7 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->thongke();
                     }
                     break;
- 
+                
                 case 'dangkybanhoc':
                     switch ($action) {
                         case 'index':
@@ -263,8 +266,8 @@ if (file_exists($controllerFile)) {
                         default:
                             $controllerInstance->index();
                     }
-                    break;
-
+                    break;    
+                
                 case 'quanlytaikhoan':
                     switch ($action) {
                         case 'index':
@@ -279,9 +282,59 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
+                
+                case 'phancongrade':
+                    switch ($action) {
+                        case 'index':
+                        case 'view':
+                        case 'create':
+                        case 'getGiaoVienByMonHoc':
+                        case 'store':
+                        case 'edit':
+                        case 'update':
+                        case 'delete':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                
+                case 'dethi':
+                    switch ($action) {
+                        case 'index':
+                        case 'view':
+                        case 'create':
+                        case 'edit':
+                        case 'update':
+                        case 'delete':
+                            $controllerInstance->$action();
+                            break;
+                        case 'store':
+                        case 'capNhatTrangThai':
+                        case 'duyet':
+                        case 'lichSuDuyetDeThi':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
 
                 default:
                     $controllerInstance->$action();
+                
+                case 'hanhkiem':
+                    switch ($action) {
+                        case 'index':
+                        case 'save':
+                        case 'store':
+                        case 'changeHocKy':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
             }
         } else {
             die("Action không tồn tại: $action");
@@ -295,3 +348,4 @@ if (file_exists($controllerFile)) {
     $home = new HomeController();
     $home->index();
 }
+?>  

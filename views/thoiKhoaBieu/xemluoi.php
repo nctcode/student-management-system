@@ -31,71 +31,65 @@
                 <input type="hidden" name="controller" value="thoikhoabieu">
                 <input type="hidden" name="action" value="xemluoi">
                 <div class="form-row align-items-center">
-                    
-                    <?php 
-                    // PHUHUYNH: Hiển thị dropdown chọn học sinh nếu có nhiều con
-                    if ($userRole === 'PHUHUYNH' && !empty($danhSachCon) && count($danhSachCon) > 1): 
-                    ?>
-                    <div class="col-md-4 mb-2">
-                        <label class="mr-2">Chọn học sinh:</label>
-                        <select name="maHocSinh" class="form-control" onchange="document.getElementById('tkbForm').submit()">
-                            <option value="">-- Chọn học sinh --</option>
-                            <?php 
-                            $maHocSinhHienTai = $_GET['maHocSinh'] ?? '';
-                            foreach ($danhSachCon as $con): 
-                                if (is_array($con) && isset($con['maHocSinh'])): 
-                            ?>
-                                <option value="<?= htmlspecialchars($con['maHocSinh']) ?>" 
-                                    <?= ($maHocSinhHienTai == $con['maHocSinh']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($con['hoTen'] ?? 'Học sinh') ?> 
-                                    - Lớp <?= htmlspecialchars($con['tenLop'] ?? '') ?>
-                                </option>
-                            <?php 
-                                endif;
-                            endforeach; 
-                            ?>
-                        </select>
-                    </div>
-                    <?php 
-                    // PHUHUYNH có 1 con: giữ maHocSinh dạng hidden
-                    elseif ($userRole === 'PHUHUYNH' && !empty($danhSachCon) && count($danhSachCon) === 1): 
-                    ?>
-                        <input type="hidden" name="maHocSinh" value="<?= htmlspecialchars($danhSachCon[0]['maHocSinh'] ?? '') ?>">
-                    <?php 
-                    endif; 
-                    ?>
-                    
-                    <?php 
-                    // QTV, BGH, GV (chọn lớp khác để xem TKB lớp) được chọn lớp
-                    if (in_array($userRole, ['GIAOVIEN', 'QTV', 'BGH'])): 
-                    ?>
-                    <div class="col-md-4 mb-2">
-                        <label class="mr-2">Chọn lớp (hoặc để trống xem Lịch Dạy):</label>
-                        <select name="maLop" class="form-control" onchange="document.getElementById('tkbForm').submit()">
-                            <option value="">
-                                <?= $userRole === 'GIAOVIEN' ? '-- Lịch Dạy Của Tôi --' : '-- Chọn lớp --' ?>
+                
+                <?php 
+                // PHUHUYNH: Hiển thị dropdown chọn học sinh nếu có nhiều con
+                if ($userRole === 'PHUHUYNH' && !empty($danhSachCon)): 
+                ?>
+                <div class="col-md-3 mb-2">
+                    <label class="mr-2">Chọn học sinh:</label>
+                    <select name="maHocSinh" class="form-control" onchange="document.getElementById('tkbForm').submit()">
+                        <option value="">-- Chọn học sinh --</option>
+                        <?php 
+                        $maHocSinhHienTai = $_GET['maHocSinh'] ?? '';
+                        foreach ($danhSachCon as $con): 
+                            // Chỉ hiển thị nếu có maHocSinh
+                            if (isset($con['maHocSinh'])): 
+                        ?>
+                            <option value="<?= htmlspecialchars($con['maHocSinh']) ?>" 
+                                <?= ($maHocSinhHienTai == $con['maHocSinh']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($con['hoTen'] ?? 'Học sinh') ?> 
+                                - Lớp <?= htmlspecialchars($con['tenLop'] ?? '') ?>
                             </option>
-                            <?php foreach ($danhSachLop as $lop): ?>
-                                <option value="<?= htmlspecialchars($lop['maLop']) ?>" 
-                                    <?= ($maLop == $lop['maLop']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($lop['tenLop']) ?> - Khối <?= htmlspecialchars($lop['tenKhoi'] ?? '') ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <?php 
-                    // HS/PH: Giữ lại maLop dưới dạng hidden input để filter TKB theo lớp của họ
-                    elseif (in_array($userRole, ['HOCSINH', 'PHUHUYNH'])): 
-                    ?>
-                        <input type="hidden" name="maLop" value="<?= htmlspecialchars($maLop) ?>">
-                    <?php endif; ?>
-                    
-                    <div class="col-md-4 mb-2">
-                        <label class="mr-2">Chọn tuần:</label>
-                        <input type="week" name="tuan" value="<?= htmlspecialchars($_GET['tuan'] ?? date('Y-\WW')) ?>" 
-                            class="form-control" onchange="document.getElementById('tkbForm').submit()">
-                    </div>
+                        <?php 
+                            endif;
+                        endforeach; 
+                        ?>
+                    </select>
                 </div>
+
+                <?php 
+                // PHUHUYNH có 1 con: giữ maHocSinh dạng hidden
+                if (count($danhSachCon) === 1 && isset($danhSachCon[0]['maHocSinh'])): 
+                ?>
+                    <input type="hidden" name="maHocSinh" value="<?= htmlspecialchars($danhSachCon[0]['maHocSinh']) ?>">
+                <?php endif; ?>
+
+                <?php endif; ?>
+                
+                <!-- XÓA TOÀN BỘ PHẦN CHỌN LỚP CHO QTV, BGH, GV -->
+                <?php 
+                // GIỮ LẠI maLop dưới dạng hidden input cho tất cả vai trò (nếu có)
+                if (!empty($maLop)): 
+                ?>
+                    <input type="hidden" name="maLop" value="<?= htmlspecialchars($maLop) ?>">
+                <?php endif; ?>
+                
+                <!-- THÊM: Phần chọn tuần cho tất cả người dùng -->
+                <div class="col-md-4 mb-2">
+                    <label class="mr-2">Chọn tuần:</label>
+                    <input type="week" name="tuan" value="<?= htmlspecialchars($_GET['tuan'] ?? date('Y-\WW')) ?>" 
+                        class="form-control" onchange="document.getElementById('tkbForm').submit()">
+                </div>
+                
+                <!-- THÊM: Nút xem tuần hiện tại -->
+                <div class="col-md-4 mb-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-primary btn-block" 
+                            onclick="window.location.href='index.php?controller=thoikhoabieu&action=xemluoi<?= !empty($queryStringNoTuan) ? "&" . $queryStringNoTuan : "" ?>'">
+                        <i class="fas fa-calendar-week"></i> Tuần hiện tại
+                    </button>
+                </div>
+            </div>
             </form>
 
             <?php 
@@ -128,7 +122,8 @@
                                             <strong>Giáo viên CN:</strong> <?= htmlspecialchars($chiTietLop['tenGiaoVien'] ?? 'Chưa phân công') ?>
                                         </div>
                                         <div class="col-md-3">
-                                            <strong>Sĩ số:</strong> <?= htmlspecialchars($chiTietLop['siSo']) ?> học sinh
+                                            <strong>Tuần xem:</strong> <?= $tuanDuocChon ?? 'Hiện tại' ?> 
+                                            (<?= date('d/m/Y', strtotime($ngayApDungTuan ?? date('Y-m-d'))) ?>)
                                         </div>
                                     </div>
                                 </div>
@@ -140,7 +135,14 @@
             <?php endif; ?>
 
             <?php if (empty($thoiKhoaBieu) && (!empty($maLop) || $isViewingSelfSchedule)): ?>
-                <div class="alert alert-info">Chưa có thời khóa biểu/lịch dạy cho lựa chọn này.</div>
+                <div class="alert alert-info">
+                    Chưa có thời khóa biểu/lịch dạy cho 
+                    <?php if (!empty($tuanDuocChon)): ?>
+                        tuần <?= $tuanDuocChon ?>.
+                    <?php else: ?>
+                        lựa chọn này.
+                    <?php endif; ?>
+                </div>
             <?php elseif (empty($maLop) && in_array($userRole, ['QTV', 'BGH'])): ?>
                 <div class="alert alert-warning">Vui lòng chọn lớp để xem thời khóa biểu.</div>
             <?php elseif (!empty($thoiKhoaBieu)): ?>
@@ -150,10 +152,32 @@
                 $days = ['THU_2', 'THU_3', 'THU_4', 'THU_5', 'THU_6', 'THU_7'];
                 $maxTiet = 10;
                 
+                // Tính toán ngày cho từng thứ trong tuần
+                $ngayTrongTuan = [];
+                if (!empty($ngayApDungTuan)) {
+                    $startOfWeek = new DateTime($ngayApDungTuan);
+                    foreach ($days as $index => $day) {
+                        $currentDate = clone $startOfWeek;
+                        $currentDate->modify("+{$index} days");
+                        $ngayTrongTuan[$day] = $currentDate->format('d/m/Y');
+                    }
+                }
+                
                 foreach ($thoiKhoaBieu as $tkb) {
-                    $loaiLich = $tkb['loaiLich'];
+                    $ngayHoc = $tkb['ngayHoc'] ?? '';
                     $tietBatDau = (int)$tkb['tietBatDau'];
                     $tietKetThuc = (int)$tkb['tietKetThuc'];
+                    
+                    // Tìm thứ tương ứng với ngày học
+                    $loaiLich = '';
+                    foreach ($ngayTrongTuan as $day => $dateStr) {
+                        if ($ngayHoc == date('Y-m-d', strtotime(str_replace('/', '-', $dateStr)))) {
+                            $loaiLich = $day;
+                            break;
+                        }
+                    }
+                    
+                    if (empty($loaiLich)) continue;
                     
                     // Xác định nội dung phụ cần hiển thị
                     if ($isViewingSelfSchedule) {
@@ -174,7 +198,8 @@
                         'infoText' => $infoText,
                         'infoLabel' => $infoLabel,
                         'infoClass' => $infoClass,
-                        'tietKetThuc' => $tietKetThuc // Lưu lại để dùng cho logic gộp ô (nếu cần)
+                        'tietKetThuc' => $tietKetThuc,
+                        'ngayHoc' => $ngayHoc
                     ];
 
                     // Chỉ điền nội dung vào tiết bắt đầu
@@ -185,7 +210,7 @@
                         $tkbGrid[$loaiLich][$tiet] = ['merged' => true];
                     }
 
-                    // Cập nhật maxTiet (để render bảng không quá dài)
+                    // Cập nhật maxTiet
                     $maxTiet = max($maxTiet, $tietKetThuc);
                 }
                 ?>
@@ -195,14 +220,23 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th width="8%">Tiết</th>
-                                <?php foreach ($days as $day): ?>
-                                    <th width="15%"><?= convertDay($day) ?></th>
+                                <?php 
+                                $days = ['THU_2', 'THU_3', 'THU_4', 'THU_5', 'THU_6', 'THU_7'];
+                                
+                                foreach ($days as $index => $day): 
+                                    $ngayHienThi = $ngayTrongTuan[$day] ?? '';
+                                ?>
+                                    <th width="15%" class="text-center">
+                                        <div><?= convertDay($day) ?></div>
+                                        <?php if (!empty($ngayHienThi)): ?>
+                                            <div class="small text-muted text-center"><?= $ngayHienThi ?></div>
+                                        <?php endif; ?>
+                                    </th>
                                 <?php endforeach; ?>
                             </tr>
                         </thead>
                         <tbody>
                             <?php 
-                            // Render bảng
                             for ($tiet = 1; $tiet <= $maxTiet; $tiet++): 
                             ?>
                             <tr>
@@ -213,10 +247,8 @@
                                     $cell = $tkbGrid[$day][$tiet] ?? null;
                                     
                                     if ($cell && isset($cell['merged'])) {
-                                        // Ô bị gộp, không hiển thị gì
                                         echo '';
                                     } elseif ($cell && !isset($cell['merged'])) {
-                                        // Ô bắt đầu của một tiết học
                                         echo '<div class="text-center">';
                                         echo '<strong>' . htmlspecialchars($cell['monHoc']) . '</strong>';
                                         
@@ -227,11 +259,10 @@
                                         if (!empty($cell['phongHoc'])) {
                                             echo '<br><small class="text-info">Phòng: ' . htmlspecialchars($cell['phongHoc']) . '</small>';
                                         }
+                                        
+                                        
+                                        
                                         echo '</div>';
-
-                                        // Logic colspan/rowspan (Nếu muốn gộp ô HTML, bạn phải dùng rowspan/colspan
-                                        // và logic gộp phải nằm ngoài vòng lặp table/tr/td này.
-                                        // Hiện tại, tôi giữ lại cách dùng CSS đơn giản, chỉ hiển thị nội dung ở ô bắt đầu).
                                     } else {
                                         echo '<div class="text-center text-muted">-</div>';
                                     }
@@ -243,13 +274,31 @@
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- THÊM: Thông tin tuần -->
+                <div class="mt-3">
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Tuần đang xem:</strong> <?= $tuanDuocChon ?? 'Hiện tại' ?> 
+                                <?php if (!empty($ngayApDungTuan)): ?>
+                                    (Từ <?= date('d/m/Y', strtotime($ngayApDungTuan)) ?> 
+                                    đến <?= date('d/m/Y', strtotime($ngayApDungTuan . ' +6 days')) ?>)
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <strong>Tổng số tiết:</strong> <?= count($thoiKhoaBieu) ?> buổi học
+                            </div>
+                        </div>
+                    </div>
+                </div>
             <?php endif; ?>
         </div>
     </div>
 </div>
 
 <?php
-// Hàm chuyển đổi thứ (Giữ nguyên)
+// Hàm chuyển đổi thứ
 function convertDay($loaiLich) {
     $days = [
         'THU_2' => 'Thứ 2',

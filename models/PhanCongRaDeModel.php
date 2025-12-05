@@ -12,23 +12,34 @@ class PhanCongRaDeModel
 
     public function getAllPhanCong()
     {
-        $sql = "SELECT 
+        $sql = "SELECT DISTINCT
                     dt.maDeThi,
                     dt.tieuDe, 
                     k.tenKhoi, 
                     mh.tenMonHoc, 
-                    nd.hoTen AS tenGiaoVien, 
-                    pc.hanNopDe, 
+                    nk.hocKy,
+                    nk.namHoc,
+                    dt.maNienKhoa,
+                    GROUP_CONCAT(DISTINCT nd.hoTen SEPARATOR ', ') AS tenGiaoVien,
+                    MIN(pc.hanNopDe) as hanNopDe,
                     dt.ngayNop, 
                     dt.trangThai
                 FROM dethi dt
-                JOIN phancongrade pc ON dt.maDeThi = pc.maDeThi
+                LEFT JOIN phancongrade pc ON dt.maDeThi = pc.maDeThi
                 LEFT JOIN khoi k ON dt.maKhoi = k.maKhoi
                 LEFT JOIN monhoc mh ON dt.maMonHoc = mh.maMonHoc
+                LEFT JOIN nienkhoa nk ON dt.maNienKhoa = nk.maNienKhoa
                 LEFT JOIN giaovien gv ON pc.maGiaoVien = gv.maGiaoVien
                 LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-                GROUP BY dt.maDeThi
-                ORDER BY pc.hanNopDe DESC";
+                WHERE dt.trangThai IS NULL OR dt.trangThai != 'HUY'
+                GROUP BY dt.maDeThi, dt.tieuDe, k.tenKhoi, mh.tenMonHoc, 
+                        nk.hocKy, nk.namHoc, dt.maNienKhoa, dt.ngayNop, dt.trangThai
+                ORDER BY nk.namHoc DESC, 
+                CASE nk.hocKy 
+                    WHEN 'HK1' THEN 1
+                    WHEN 'HK2' THEN 2
+                    WHEN 'CA_NAM' THEN 3
+                END DESC, pc.hanNopDe DESC";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
@@ -37,9 +48,11 @@ class PhanCongRaDeModel
 
     public function getGiaoVien()
     {
-        $sql = "SELECT gv.maGiaoVien, nd.hoTen FROM giaovien gv
+        $sql = "SELECT DISTINCT gv.maGiaoVien, nd.hoTen 
+                FROM giaovien gv
                 JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-                WHERE nd.loaiNguoiDung = 'GIAOVIEN'";
+                WHERE nd.loaiNguoiDung = 'GIAOVIEN'
+                ORDER BY nd.hoTen";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -47,7 +60,7 @@ class PhanCongRaDeModel
 
     public function getKhoi()
     {
-        $sql = "SELECT maKhoi, tenKhoi FROM khoi";
+        $sql = "SELECT maKhoi, tenKhoi FROM khoi ORDER BY tenKhoi";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -55,7 +68,7 @@ class PhanCongRaDeModel
 
     public function getMonHoc()
     {
-        $sql = "SELECT maMonHoc, tenMonHoc FROM monhoc";
+        $sql = "SELECT maMonHoc, tenMonHoc FROM monhoc ORDER BY tenMonHoc";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -66,20 +79,31 @@ class PhanCongRaDeModel
         try {
             $this->conn->beginTransaction();
 
-            $sqlDeThi = "INSERT INTO dethi (tieuDe, maKhoi, maMonHoc, soLuongDe, noiDung, trangThai) 
-                         VALUES (:tieuDe, :maKhoi, :maMonHoc, :soLuongDe, :noiDung, 'Chờ nộp')";
+            // SỬA: Thêm maNienKhoa vào insert
+            $sqlDeThi = "INSERT INTO dethi (tieuDe, maKhoi, maMonHoc, soLuongDe, noiDung, trangThai, maGiaoVien, maNienKhoa) 
+                        VALUES (:tieuDe, :maKhoi, :maMonHoc, :soLuongDe, :noiDung, 'Chờ nộp', :maGiaoVien, :maNienKhoa)";
 
             $stmtDeThi = $this->conn->prepare($sqlDeThi);
+            
+            // SỬA: Lấy maNienKhoa từ form
+            $maNienKhoa = $data['maNienKhoa'] ?? null;
+            
+            // Sử dụng giáo viên đầu tiên làm người tạo
+            $maGiaoVien = !empty($data['maGiaoVien']) ? $data['maGiaoVien'][0] : null;
+
             $stmtDeThi->execute([
                 ':tieuDe' => $data['tieuDe'],
                 ':maKhoi' => $data['maKhoi'],
                 ':maMonHoc' => $data['maMonHoc'],
                 ':soLuongDe' => $data['soLuongDe'],
-                ':noiDung' => $data['noiDung']
+                ':noiDung' => $data['noiDung'],
+                ':maGiaoVien' => $maGiaoVien,
+                ':maNienKhoa' => $maNienKhoa // THÊM
             ]);
 
             $maDeThi = $this->conn->lastInsertId();
 
+            // Insert vào bảng phancongrade cho từng giáo viên
             $sqlPhanCong = "INSERT INTO phancongrade (maDeThi, maGiaoVien, hanNopDe, ghiChu) 
                             VALUES (:maDeThi, :maGiaoVien, :hanNopDe, :ghiChu)";
 
@@ -95,20 +119,22 @@ class PhanCongRaDeModel
             }
 
             $this->conn->commit();
-            return true;
+            return $maDeThi;
         } catch (Exception $e) {
             $this->conn->rollBack();
-            error_log($e->getMessage());
+            error_log("Lỗi tạo phân công: " . $e->getMessage());
             return false;
         }
     }
+
     public function getGiaoVienByMonHoc($id_monhoc)
     {
-        $sql = "SELECT gv.maGiaoVien, nd.hoTen 
+        $sql = "SELECT DISTINCT gv.maGiaoVien, nd.hoTen 
                 FROM giaovien gv
                 JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-                LEFT JOIN monhoc mh ON gv.chuyenMon = mh.tenMonHoc
-                WHERE mh.maMonHoc = :id_monhoc";
+                LEFT JOIN monhoc mh ON gv.maMonHoc = mh.maMonHoc
+                WHERE mh.maMonHoc = :id_monhoc
+                ORDER BY nd.hoTen";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':id_monhoc' => $id_monhoc]);
@@ -119,35 +145,127 @@ class PhanCongRaDeModel
         $sql = "SELECT 
                     dt.*, 
                     k.tenKhoi, 
-                    mh.tenMonHoc, 
-                    nd.hoTen AS tenGiaoVien, 
+                    mh.tenMonHoc,
+                    GROUP_CONCAT(DISTINCT gv2.maGiaoVien) AS dsMaGiaoVien,
+                    GROUP_CONCAT(DISTINCT nd2.hoTen SEPARATOR ', ') AS dsTenGiaoVien,
                     pc.hanNopDe,
                     pc.ghiChu
                 FROM dethi dt
                 LEFT JOIN phancongrade pc ON dt.maDeThi = pc.maDeThi
                 LEFT JOIN khoi k ON dt.maKhoi = k.maKhoi
                 LEFT JOIN monhoc mh ON dt.maMonHoc = mh.maMonHoc
-                LEFT JOIN giaovien gv ON dt.maGiaoVien = gv.maGiaoVien
-                LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-                WHERE dt.maDeThi = :id";
+                LEFT JOIN giaovien gv2 ON pc.maGiaoVien = gv2.maGiaoVien
+                LEFT JOIN nguoidung nd2 ON gv2.maNguoiDung = nd2.maNguoiDung
+                WHERE dt.maDeThi = :id
+                GROUP BY dt.maDeThi";
         
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function updateTrangThaiDeThi($id, $trangThai) {
-        $ngayDuyet = ($trangThai == 'DA_DUYET') ? date('Y-m-d H:i:s') : null;
+    public function updatePhanCong($id, $data) {
+        try {
+            $this->conn->beginTransaction();
 
-        $sql = "UPDATE dethi 
-                SET trangThai = :trangThai, ngayDuyet = :ngayDuyet 
-                WHERE maDeThi = :id";
+            // Cập nhật bảng dethi
+            $sqlDeThi = "UPDATE dethi 
+                        SET tieuDe = :tieuDe,
+                            maKhoi = :maKhoi,
+                            maMonHoc = :maMonHoc,
+                            soLuongDe = :soLuongDe,
+                            noiDung = :noiDung
+                        WHERE maDeThi = :id";
+            
+            $stmtDeThi = $this->conn->prepare($sqlDeThi);
+            $stmtDeThi->execute([
+                ':tieuDe' => $data['tieuDe'],
+                ':maKhoi' => $data['maKhoi'],
+                ':maMonHoc' => $data['maMonHoc'],
+                ':soLuongDe' => $data['soLuongDe'],
+                ':noiDung' => $data['noiDung'],
+                ':id' => $id
+            ]);
+
+            // Xóa phân công cũ
+            $sqlDelete = "DELETE FROM phancongrade WHERE maDeThi = :id";
+            $stmtDelete = $this->conn->prepare($sqlDelete);
+            $stmtDelete->execute([':id' => $id]);
+
+            // Thêm phân công mới
+            $sqlPhanCong = "INSERT INTO phancongrade (maDeThi, maGiaoVien, hanNopDe, ghiChu) 
+                            VALUES (:maDeThi, :maGiaoVien, :hanNopDe, :ghiChu)";
+
+            $stmtPhanCong = $this->conn->prepare($sqlPhanCong);
+
+            foreach ($data['maGiaoVien'] as $ma_gv) {
+                $stmtPhanCong->execute([
+                    ':maDeThi' => $id,
+                    ':maGiaoVien' => $ma_gv,
+                    ':hanNopDe' => $data['hanNopDe'],
+                    ':ghiChu' => $data['ghiChu']
+                ]);
+            }
+
+            $this->conn->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Lỗi cập nhật phân công: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deletePhanCong($id)
+    {
+        try {
+            $this->conn->beginTransaction();
+
+            // Xóa các phân công ra đề liên quan
+            $sqlDeletePhanCong = "DELETE FROM phancongrade WHERE maDeThi = :id";
+            $stmtDeletePhanCong = $this->conn->prepare($sqlDeletePhanCong);
+            $stmtDeletePhanCong->execute([':id' => $id]);
+
+            // Xóa đề thi
+            $sqlDeleteDeThi = "DELETE FROM dethi WHERE maDeThi = :id";
+            $stmtDeleteDeThi = $this->conn->prepare($sqlDeleteDeThi);
+            $stmtDeleteDeThi->execute([':id' => $id]);
+
+            $this->conn->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Lỗi xóa phân công: " . $e->getMessage());
+            return false;
+        }
+    }
+    public function getNienKhoaHienTai()
+    {
+        $sql = "SELECT maNienKhoa, hocKy, namHoc 
+                FROM nienkhoa 
+                WHERE ngayBatDau <= CURDATE() 
+                AND ngayKetThuc >= CURDATE()
+                LIMIT 1";
         
         $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([
-            ':trangThai' => $trangThai,
-            ':ngayDuyet' => $ngayDuyet,
-            ':id' => $id
-        ]);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function getAllNienKhoa()
+    {
+        $sql = "SELECT maNienKhoa, hocKy, namHoc, ngayBatDau, ngayKetThuc 
+                FROM nienkhoa 
+                ORDER BY namHoc DESC, 
+                CASE hocKy 
+                    WHEN 'HK1' THEN 1
+                    WHEN 'HK2' THEN 2
+                    WHEN 'CA_NAM' THEN 3
+                END";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }
