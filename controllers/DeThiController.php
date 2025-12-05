@@ -68,6 +68,7 @@ class DeThiController
         require_once 'views/layouts/sidebar/giaovien.php';
         require_once 'views/dethi/chitiet.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 
     public function edit()
@@ -108,6 +109,7 @@ class DeThiController
         require_once 'views/layouts/sidebar/giaovien.php';
         require_once 'views/dethi/edit.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 
     public function update()

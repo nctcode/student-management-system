@@ -2,14 +2,16 @@
 $message = $_SESSION['message'] ?? null;
 unset($_SESSION['message']);
 
-function hienThiTrangThai($trangThai)
-{
-    switch ($trangThai) {
-        case 'CHO_DUYET': return '<span class="badge bg-warning">Chờ duyệt</span>';
-        case 'DA_DUYET': return '<span class="badge bg-success">Đã duyệt</span>';
-        case 'TU_CHOI': return '<span class="badge bg-danger">Từ chối</span>';
-        case 'Chờ nộp': return '<span class="badge bg-info">Chờ nộp</span>';
-        default: return '<span class="badge bg-secondary">' . $trangThai . '</span>';
+if (!function_exists('hienThiTrangThai')) {
+    function hienThiTrangThai($trangThai)
+    {
+        switch ($trangThai) {
+            case 'CHO_DUYET': return '<span class="badge bg-warning">Chờ duyệt</span>';
+            case 'DA_DUYET': return '<span class="badge bg-success">Đã duyệt</span>';
+            case 'TU_CHOI': return '<span class="badge bg-danger">Từ chối</span>';
+            case 'Chờ nộp': return '<span class="badge bg-info">Chờ nộp</span>';
+            default: return '<span class="badge bg-secondary">' . $trangThai . '</span>';
+        }
     }
 }
 ?>
@@ -170,10 +172,29 @@ function hienThiTrangThai($trangThai)
             </div>
         </div>
         <?php else: ?>
-        <div class="alert alert-warning mb-4">
-            <h5><i class="fas fa-exclamation-triangle"></i> Chưa có phân công ra đề</h5>
-            <p class="mb-0">Hiện tại bạn chưa được phân công tạo đề thi nào. Vui lòng chờ tổ trưởng phân công hoặc liên hệ với tổ trưởng chuyên môn.</p>
-        </div>
+        <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert" data-bs-autohide="true" data-bs-delay="5000">
+    <h5><i class="fas fa-exclamation-triangle me-2"></i> Chưa có phân công ra đề</h5>
+    <p class="mb-0">Hiện tại bạn chưa được phân công tạo đề thi nào. Vui lòng chờ tổ trưởng phân công hoặc liên hệ với tổ trưởng chuyên môn.</p>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tự động đóng alert sau 5 giây
+    const autoCloseAlerts = document.querySelectorAll('[data-bs-autohide="true"]');
+    
+    autoCloseAlerts.forEach(function(alert) {
+        const delay = alert.getAttribute('data-bs-delay') || 5000;
+        
+        setTimeout(function() {
+            const bsAlert = bootstrap.Alert.getInstance(alert);
+            if (bsAlert) {
+                bsAlert.close();
+            }
+        }, parseInt(delay));
+    });
+});
+</script>
         <?php endif; ?>
 
         <!-- FORM TẠO ĐỀ THI -->
