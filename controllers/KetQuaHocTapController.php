@@ -1,5 +1,15 @@
 <?php
 require_once 'models/KetQuaHocTapModel.php';
+require_once 'vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Font;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+
+
 
 class KetQuaHocTapController
 {
@@ -73,7 +83,32 @@ class KetQuaHocTapController
         // --- GỌI VIEW ---
         require 'views/ketquahoctap/thongke.php';
     }
-    public function xuatCSV()
+
+
+    // Hiển thị dễ đọc khi xuất excel
+    function hienThiExcel($text)
+    {
+        switch ($text) {
+            case 'KHA':
+                return 'Khá';
+            case 'GIOI':
+                return 'Giỏi';
+            case 'TRUNG_BINH':
+                return 'Trung bình';
+            case 'TOT':
+                return 'Tốt';
+            case 'HOAN_THANH':
+                return 'Hoàn thành';
+            case 'CHUA_HOAN_THANH':
+                return 'Chưa hoàn thành';
+            default:
+                return '';
+        }
+    }
+
+
+    // xuất Excel
+    public function xuatExcel()
     {
         if (!isset($_SESSION['user'])) {
             header('Location: index.php?controller=auth&action=login');
@@ -82,70 +117,67 @@ class KetQuaHocTapController
 
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
         $hocKy = $_GET['hocKy'] ?? '';
-        $tieuChi = $_GET['tieuChi'] ?? '';
+        if (empty($hocKy)) die('Vui lòng chọn học kỳ.');
 
-        if (empty($hocKy) || empty($tieuChi)) {
-            die('Vui lòng chọn học kỳ và tiêu chí.');
-        }
+        $hocSinh = $this->model->getHocSinhByGiaoVien($maNguoiDung);
+        $monHoc = $this->model->getMonHocByGiaoVien($maNguoiDung);
 
-        require_once 'models/KetQuaHocTapModel.php';
-        $model = new KetQuaHocTapModel();
-
-        // --- Lấy danh sách học sinh có lớp ---
-        $hocSinh = $model->getHocSinhByGiaoVien($maNguoiDung);
-
-        // --- Lấy danh sách môn học ---
-        $monHoc = $model->getMonHocByGiaoVien($maNguoiDung);
-
-        // --- Lấy điểm trung bình và chi tiết điểm ---
-        $ketQua = $model->getDiemTBTheoMon($maNguoiDung, $hocKy);
+        $ketQua = $this->model->getDiemTBTheoMon($maNguoiDung, $hocKy);
         $diemTB_HS = $ketQua['diemTB_HS'] ?? [];
 
         $chiTietDiem = [];
         foreach ($hocSinh as $hs) {
             $maHS = $hs['maHocSinh'];
-            $chiTietDiem[$maHS] = $model->getChiTietDiem($maHS, $hocKy);
-            // Thêm điểm trung bình từng môn
+            $chiTietDiem[$maHS] = $this->model->getChiTietDiem($maHS, $hocKy);
             foreach ($monHoc as $m) {
                 $maMH = $m['maMonHoc'];
                 $chiTietDiem[$maHS][$maMH]['DIEM_TB'] = $diemTB_HS[$maHS][$maMH] ?? 0;
             }
         }
 
-        // --- Lấy học lực & hạnh kiểm ---
-        $dataHK_HK = $model->getThongKeTheoHocLucHanhKiem($maNguoiDung, $hocKy, 'hocluchanhkiem')['data'] ?? [];
+        $dataHK_HK = $this->model->getThongKeTheoHocLucHanhKiem($maNguoiDung, $hocKy, 'hocluchanhkiem')['data'] ?? [];
         $hkMap = [];
         foreach ($dataHK_HK as $hk) {
-            if (isset($hk['maHocSinh'])) {
-                $hkMap[$hk['maHocSinh']] = $hk;
-            }
+            if (isset($hk['maHocSinh'])) $hkMap[$hk['maHocSinh']] = $hk;
         }
 
-        // --- Tên file ---
-        $filename = "ThongKe_HocKy_{$hocKy}.csv";
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=' . $filename);
+        $spreadsheet = new Spreadsheet();
 
-        $output = fopen('php://output', 'w');
+        foreach ($hocSinh as $index => $hs) {
+            $sheet = ($index === 0) ? $spreadsheet->getActiveSheet() : $spreadsheet->createSheet();
+            $sheet->setTitle(substr($hs['hoTen'], 0, 31));
 
-        foreach ($hocSinh as $hs) {
-            $maHS = $hs['maHocSinh'];
-            $tenHS = $hs['hoTen'];
-            $lop = $hs['tenLop'] ?? '';
+            $row = 1;
+            $sheet->setCellValue("A$row", "Học sinh: {$hs['hoTen']}")
+                ->setCellValue("B$row", "Lớp: {$hs['tenLop']}");
+            $sheet->getStyle("A$row:B$row")->getFont()->setBold(true); // In đậm dòng học sinh/lớp
+            $row += 2;
 
-            // Tiêu đề học sinh
-            fputcsv($output, ["Học sinh: $tenHS", "Lớp: $lop"]);
-            fputcsv($output, []); // dòng trống
+            // Header
+            $headers = ['Môn', 'Miệng', '15 phút', '1 tiết', 'Giữa kỳ', 'Cuối kỳ', 'Trung Bình'];
+            $sheet->fromArray($headers, NULL, "A$row");
 
-            // Header bảng điểm
-            $header = ["Môn", "Miệng", "15 phút", "1 tiết", "Giữa kỳ", "Cuối kỳ", "Trung Binh"];
-            fputcsv($output, $header);
+            $colEnd = $sheet->getHighestColumn();
 
-            // Dữ liệu từng môn
-            foreach ($monHoc as $m) {
+            // In đậm tất cả header
+            $sheet->getStyle("A$row:$colEnd$row")->getFont()->setBold(true);
+            // Căn giữa header
+            $sheet->getStyle("A$row:$colEnd$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            // Tô màu nền header
+            $sheet->getStyle("A$row:$colEnd$row")->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('D9E1F2');
+            // Viền header
+            $sheet->getStyle("A$row:$colEnd$row")->getBorders()->getAllBorders()
+                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+            $row++;
+
+            // Dữ liệu môn học
+            foreach ($monHoc as $mIndex => $m) {
                 $maMH = $m['maMonHoc'];
-                $ct = $chiTietDiem[$maHS][$maMH] ?? [];
-                fputcsv($output, [
+                $ct = $chiTietDiem[$hs['maHocSinh']][$maMH] ?? [];
+                $sheet->fromArray([
                     $m['tenMonHoc'],
                     $ct['MIENG'] ?? 0,
                     $ct['15_PHUT'] ?? 0,
@@ -153,29 +185,80 @@ class KetQuaHocTapController
                     $ct['GIUA_KY'] ?? 0,
                     $ct['CUOI_KY'] ?? 0,
                     $ct['DIEM_TB'] ?? 0
-                ]);
+                ], NULL, "A$row");
+
+                $colEnd = $sheet->getHighestColumn();
+
+                // Căn giữa số
+                $sheet->getStyle("B$row:G$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                // In đậm số điểm cột Trung Bình
+                $sheet->getStyle("G$row")->getFont()->setBold(true);
+
+                // Viền
+                $sheet->getStyle("A$row:$colEnd$row")->getBorders()
+                    ->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+                // Xen kẽ màu dòng
+                if ($mIndex % 2 == 0) {
+                    $sheet->getStyle("A$row:$colEnd$row")->getFill()
+                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setRGB('F2F2F2');
+                }
+
+                $row++;
             }
 
             // Trung bình học kỳ
-            $diemTB_mon = array_map(function ($m) use ($chiTietDiem, $maHS) {
-                return $chiTietDiem[$maHS][$m['maMonHoc']]['DIEM_TB'] ?? 0;
-            }, $monHoc);
+            $diemTB_mon = array_map(fn($m) => $chiTietDiem[$hs['maHocSinh']][$m['maMonHoc']]['DIEM_TB'] ?? 0, $monHoc);
             $tbMon = count($diemTB_mon) ? round(array_sum($diemTB_mon) / count($diemTB_mon), 2) : 0;
-            fputcsv($output, ["Trung bình học kỳ (TB tổng môn)", $tbMon]);
 
-            // Học lực & hạnh kiểm & loại
-            $hkData = $hkMap[$maHS] ?? ['hocLuc' => '', 'hanhKiem' => '', 'xepLoai' => ''];
-            fputcsv($output, ["Học lực (chú thích: điểm tổng theo môn)", $hkData['hocLuc']]);
-            fputcsv($output, ["Hạnh kiểm (chú thích: thái độ, nề nếp)", $hkData['hanhKiem']]);
-            fputcsv($output, ["Loại (chú thích: xếp loại cuối kỳ)", $hkData['xepLoai']]);
+            $sheet->fromArray(["Trung bình học kỳ", $tbMon], NULL, "A$row");
 
-            // Dòng trống tách học sinh
-            for ($i = 0; $i < 5; $i++) {
-                fputcsv($output, []);
+            $colEnd = $sheet->getHighestColumn();
+
+            // In đậm số điểm (cột B)
+            $sheet->getStyle("B$row")->getFont()->setBold(true);
+
+            // Viền và căn giữa số
+            $sheet->getStyle("A$row:$colEnd$row")->getBorders()->getAllBorders()
+                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+            $sheet->getStyle("B$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            $row++;
+
+            // Học lực/hạnh kiểm
+            $hkData = $hkMap[$hs['maHocSinh']] ?? ['hocLuc' => '', 'hanhKiem' => '', 'xepLoai' => ''];
+            $info = [
+                ["Học lực", $this->hienThiExcel($hkData['hocLuc'])],
+                ["Hạnh kiểm", $this->hienThiExcel($hkData['hanhKiem'])],
+                ["Loại", $this->hienThiExcel($hkData['xepLoai'])]
+            ];
+            foreach ($info as $item) {
+                $sheet->fromArray($item, NULL, "A$row");
+                $colEnd = $sheet->getHighestColumn();
+                $sheet->getStyle("A$row:$colEnd$row")->getBorders()->getAllBorders()
+                    ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+                $sheet->getStyle("B$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $row++;
+            }
+
+            // Auto width
+            foreach (range('A', $sheet->getHighestColumn()) as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
             }
         }
 
-        fclose($output);
+        $writer = new Xlsx($spreadsheet);
+        $filename = "ThongKe_HocKy_{$hocKy}.xlsx";
+
+        if (ob_get_contents()) ob_end_clean();
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
         exit;
     }
 }

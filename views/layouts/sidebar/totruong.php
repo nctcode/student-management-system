@@ -4,6 +4,12 @@
             <h5>Menu Tổ Trưởng Chuyên Môn</h5>
         </div>
         <ul class="sidebar-menu">
+            <?php
+            // Lấy controller và action hiện tại
+            $currentController = $_GET['controller'] ?? 'home';
+            $currentAction = $_GET['action'] ?? 'index';
+            ?>
+            
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=home&action=leader">
                     <i class="fas fa-home"></i>
@@ -11,15 +17,21 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=duyetdethi&action=duyet">
+                <a class="nav-link" href="index.php?controller=phancongrade&action=index">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Phân công giáo viên ra đề</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=dethi&action=duyet">
                     <i class="fas fa-file-alt"></i>
                     <span>Duyệt đề thi</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=dethi&action=phancong">
-                    <i class="fas fa-user-edit"></i>
-                    <span>Phân công giáo viên ra đề</span>
+                <a class="nav-link" href="index.php?controller=dethi&action=lichSuDuyetDeThi">
+                    <i class="fas fa-history me-2"></i>
+                    <span>Lịch sử duyệt</span>
                 </a>
             </li>
             <li class="nav-item">

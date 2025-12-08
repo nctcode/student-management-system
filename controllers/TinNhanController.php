@@ -61,6 +61,7 @@ class TinNhanController {
         require_once 'views/layouts/footer.php';
     }
 
+    // Trong phương thức guitinnhan() - sửa phần lấy danh sách lớp
     public function guitinnhan() {
         $this->checkAuth();
         
@@ -76,8 +77,17 @@ class TinNhanController {
         $title = "Gửi Tin Nhắn - QLHS";
         $showSidebar = true;
 
-        // Lấy danh sách học sinh và lớp học
-        $danhSachLop = $this->hocSinhModel->getDanhSachLop();
+        // Lấy mã trường của người dùng hiện tại
+        $maTruong = $_SESSION['user']['maTruong'] ?? null;
+        
+        // Lấy danh sách lớp theo trường (nếu là giáo viên)
+        if ($userRole === 'GIAOVIEN' && $maTruong) {
+            $danhSachLop = $this->hocSinhModel->getDanhSachLopByTruong($maTruong);
+        } else {
+            // QTV, BGH có thể xem tất cả lớp
+            $danhSachLop = $this->hocSinhModel->getDanhSachLop();
+        }
+        
         $danhSachHocSinh = [];
         $danhSachPhuHuynh = [];
 

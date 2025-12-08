@@ -1,9 +1,9 @@
 <?php
-// Nhóm các tiết học theo lớp
+// Nhóm các buổi học theo lớp
 $lopHocList = [];
-foreach ($danhSachTietHoc as $tiet) {
-    $lopHocList[$tiet['maLop']]['tenLop'] = $tiet['tenLop'];
-    $lopHocList[$tiet['maLop']]['tietHoc'][] = $tiet;
+foreach ($danhSachBuoiHoc as $buoi) {
+    $lopHocList[$buoi['maLop']]['tenLop'] = $buoi['tenLop'];
+    $lopHocList[$buoi['maLop']]['buoiHoc'][] = $buoi;
 }
 ?>
 
@@ -36,17 +36,17 @@ foreach ($danhSachTietHoc as $tiet) {
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label for="maTietHoc"><strong>Chọn Buổi học:</strong></label>
-                        <select id="maTietHoc" class="form-control" required disabled>
-                            <option value="">Vui lòng chọn lớp trước</option>
-                        </select>
+                        <label for="ngayDiemDanh"><strong>Chọn Ngày:</strong></label>
+                        <input type="date" id="ngayDiemDanh" 
+                            class="form-control" value="<?= date('Y-m-d') ?>">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label for="ngayDiemDanh"><strong>Chọn Ngày:</strong></label>
-                        <input type="date" id="ngayDiemDanh" 
-                               class="form-control" value="<?= date('Y-m-d') ?>" required>
+                        <label for="maBuoiHoc"><strong>Chọn Buổi học:</strong></label>
+                        <select id="maBuoiHoc" class="form-control" required disabled>
+                            <option value="">Chọn lớp và ngày trước</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -63,8 +63,7 @@ foreach ($danhSachTietHoc as $tiet) {
         <div class="card-header py-3 d-flex flex-wrap justify-content-between align-items-center">
             <div>
                 <h5 class="m-0 font-weight-bold text-primary">Bảng điểm danh</h5>
-                <div id="cardSubTitleDiemDanh" class="mt-1 text-muted small">
-                    </div>
+                <div id="cardSubTitleDiemDanh" class="mt-1 text-muted small"></div>
             </div>
             
             <div class="mt-2 mt-md-0">
@@ -92,8 +91,7 @@ foreach ($danhSachTietHoc as $tiet) {
                                 <th>Ghi chú</th>
                             </tr>
                         </thead>
-                        <tbody id="tbodyDiemDanh">
-                            </tbody>
+                        <tbody id="tbodyDiemDanh"></tbody>
                     </table>
                 </div>
 
@@ -111,6 +109,6 @@ foreach ($danhSachTietHoc as $tiet) {
 </div>
 
 <script>
-    const tietHocData = <?= json_encode($lopHocList) ?>;
+    const buoiHocData = <?= json_encode($lopHocList) ?>;
 </script>
 <script src="assets/js/chuyencan.js"></script>

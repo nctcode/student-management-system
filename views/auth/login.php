@@ -254,21 +254,30 @@ if (session_status() === PHP_SESSION_NONE) {
             <div class="demo-section">
                 <h6>Tài khoản demo:</h6>
                 <div class="demo-grid">
+                    
                     <div class="demo-item">
-                        <strong>Quản trị viên:</strong>
-                        <div>admin / 123456</div>
-                    </div>
-                    <div class="demo-item">
-                        <strong>Giáo viên:</strong>
+                        <strong>Giáo viên CN:</strong>
                         <div>gvcn01 / 123456</div>
                     </div>
                     <div class="demo-item">
-                        <strong>Học sinh:</strong>
+                        <strong>Giáo viên BM:</strong>
+                        <div>gvbm01 / 123456</div>
+                    </div>
+                    <div class="demo-item">
+                        <strong>Học sinh 1:</strong>
                         <div>hs01 / 123456</div>
                     </div>
                     <div class="demo-item">
-                        <strong>Phụ huynh:</strong>
+                        <strong>Học sinh 2:</strong>
+                        <div>hs02 / 123456</div>
+                    </div>
+                    <div class="demo-item">
+                        <strong>Phụ huynh 1:</strong>
                         <div>ph01 / 123456</div>
+                    </div>
+                    <div class="demo-item">
+                        <strong>Phụ huynh 2:</strong>
+                        <div>ph02 / 123456</div>
                     </div>
                     <div class="demo-item">
                         <strong>Ban giám hiệu 1:</strong>
@@ -281,6 +290,10 @@ if (session_status() === PHP_SESSION_NONE) {
                     <div class="demo-item">
                         <strong>Tổ trưởng:</strong>
                         <div>totruong01 / 123456</div>
+                    </div>
+                    <div class="demo-item">
+                        <strong>Quản trị viên:</strong>
+                        <div>admin / 123456</div>
                     </div>
                 </div>
             </div>

@@ -11,15 +11,15 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=diem&action=xemdiem">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span>Kết quả học tập</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=thoikhoabieu&action=xemluoi">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Thời khóa biểu</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=diem&action=xemdiem">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Kết quả học tập</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -71,6 +71,13 @@
                     <span>Hồ sơ tuyển sinh</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="index.php?controller=tracuuhoso&action=traCuuHoSo" class="nav-link">
+                    <i class="fas fa-file-alt me-2"></i>
+                    <span>Tra cứu tình trạng hồ sơ</span>
+                </a>
+            </li>
+            
         </ul>
     </div>
 </nav>

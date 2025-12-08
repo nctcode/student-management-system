@@ -48,6 +48,7 @@ class QuanLyNguoiDungController
         require 'views/layouts/header.php';
         require 'views/layouts/sidebar/admin.php';
         require 'views/nguoidung/capnhatthongtin.php';
+        exit();
     }
 
     // Xử lý cập nhật thông tin người dùng

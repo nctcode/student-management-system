@@ -2,10 +2,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // === DOM Elements ===
     const selMaLop = document.getElementById('maLop');
-    const selMaTietHoc = document.getElementById('maTietHoc');
-    const selNgayDiemDanh = document.getElementById('ngayDiemDanh');
+    const selMaBuoiHoc = document.getElementById('maBuoiHoc');
     const btnXem = document.getElementById('btnXemDiemDanh');
-    
+    const selNgayDiemDanh = document.getElementById('ngayDiemDanh');
     const cardDiemDanh = document.getElementById('cardDiemDanh');
     const cardSubTitleDiemDanh = document.getElementById('cardSubTitleDiemDanh');
     const tbodyDiemDanh = document.getElementById('tbodyDiemDanh');
@@ -18,41 +17,157 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // === XỬ LÝ DROPDOWN PHỤ THUỘC ===
     
+    // === XỬ LÝ LỌC BUỔI HỌC THEO NGÀY (GỢI Ý) ===
+
     function checkFormValidity() {
-        const valid = selMaLop.value && selMaTietHoc.value && selNgayDiemDanh.value;
+        const valid = selMaLop.value && selMaBuoiHoc.value;
+        // KHÔNG kiểm tra ngày trong validation
         btnXem.disabled = !valid; 
+        console.log("🔍 Validation - Lớp:", !!selMaLop.value, "Buổi:", !!selMaBuoiHoc.value);
     }
 
+    // Khi chọn lớp - HIỂN THỊ TẤT CẢ BUỔI HỌC
     selMaLop?.addEventListener('change', function() {
         const maLopChon = this.value;
-        selMaTietHoc.innerHTML = '<option value="">Vui lòng chọn buổi học</option>';
+        console.log("🎯 Chọn lớp:", maLopChon);
         
-        if (maLopChon && tietHocData[maLopChon]) {
-            const tietHocCuaLop = tietHocData[maLopChon].tietHoc;
+        // Reset dropdown buổi học
+        selMaBuoiHoc.innerHTML = '<option value="">Chọn buổi học</option>';
+        
+        if (maLopChon && buoiHocData[maLopChon]) {
+            const buoiHocCuaLop = buoiHocData[maLopChon].buoiHoc;
+            console.log("📚 Tất cả buổi học:", buoiHocCuaLop);
             
-            tietHocCuaLop.forEach(tiet => {
-                const optionText = `${tiet.tenMonHoc} (${tiet.ngayHocTrongTuan}, Tiết ${tiet.tietHoc})`;
-                const option = new Option(optionText, tiet.maTietHoc);
-                selMaTietHoc.add(option);
+            // THÊM TẤT CẢ buổi học vào dropdown
+            buoiHocCuaLop.forEach(buoi => {
+                const ngayFormatted = new Date(buoi.ngayHoc + 'T00:00:00').toLocaleDateString('vi-VN');
+                const optionText = `${buoi.tenMonHoc} (${ngayFormatted}, Tiết ${buoi.tietBatDau}-${buoi.tietKetThuc})`;
+                const option = new Option(optionText, buoi.maBuoiHoc);
+                selMaBuoiHoc.add(option);
             });
-            selMaTietHoc.disabled = false;
+            selMaBuoiHoc.disabled = false;
+            console.log(`✅ Đã thêm ${buoiHocCuaLop.length} buổi học`);
+            
+            // GỢI Ý: Tự động chọn buổi học đầu tiên của ngày đã chọn (nếu có)
+            tuDongChonBuoiHocTheoNgay(maLopChon);
         } else {
-            selMaTietHoc.disabled = true;
+            console.log("⚠️ Không có buổi học cho lớp này");
+            selMaBuoiHoc.disabled = true;
         }
+        
         checkFormValidity();
     });
-    
-    selMaTietHoc?.addEventListener('change', checkFormValidity);
-    selNgayDiemDanh?.addEventListener('change', checkFormValidity);
 
+    // Khi thay đổi ngày - CHỈ GỢI ý chọn buổi học
+    selNgayDiemDanh?.addEventListener('change', function() {
+        const ngayChon = this.value;
+        const maLopChon = selMaLop.value;
+        
+        console.log("📅 Chọn ngày:", ngayChon);
+        
+        if (maLopChon && ngayChon) {
+            // GỢI Ý: Tự động chọn buổi học của ngày này (nếu có)
+            tuDongChonBuoiHocTheoNgay(maLopChon);
+        }
+    });
+
+    // Hàm tự động chọn buổi học theo ngày (GỢI Ý)
+    function tuDongChonBuoiHocTheoNgay(maLop) {
+        const ngayChon = selNgayDiemDanh.value;
+        
+        if (!ngayChon || !buoiHocData[maLop]) return;
+        
+        const buoiHocCuaLop = buoiHocData[maLop].buoiHoc;
+        const buoiHocTheoNgay = buoiHocCuaLop.filter(buoi => buoi.ngayHoc === ngayChon);
+        
+        console.log("🎯 Gợi ý buổi học ngày", ngayChon, ":", buoiHocTheoNgay);
+        
+        if (buoiHocTheoNgay.length > 0) {
+            // Tự động chọn buổi học đầu tiên của ngày này
+            selMaBuoiHoc.value = buoiHocTheoNgay[0].maBuoiHoc;
+            console.log(`✅ Đã gợi ý chọn buổi học: ${selMaBuoiHoc.value}`);
+            
+            // Hiển thị thông báo gợi ý
+            const thongBao = document.createElement('div');
+            thongBao.className = 'alert alert-info alert-dismissible fade show mt-2';
+            thongBao.innerHTML = `
+                <i class="fas fa-info-circle"></i> 
+                Đã tự động chọn buổi học <strong>${buoiHocTheoNgay[0].tenMonHoc}</strong> 
+                cho ngày <strong>${formatNgayVietNam(ngayChon)}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Thêm thông báo vào trước nút Xem
+            const cardBody = document.querySelector('.card-body');
+            const existingAlert = cardBody.querySelector('.alert');
+            if (existingAlert) existingAlert.remove();
+            
+            cardBody.insertBefore(thongBao, cardBody.querySelector('.mt-3'));
+            
+        } else {
+            console.log("ℹ️ Không có buổi học nào vào ngày này, nhưng vẫn hiển thị tất cả buổi học");
+            
+            // Thông báo không có lịch ngày này (nhưng vẫn cho chọn buổi học khác)
+            const thongBao = document.createElement('div');
+            thongBao.className = 'alert alert-warning alert-dismissible fade show mt-2';
+            thongBao.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i> 
+                Không có lịch dạy vào ngày <strong>${formatNgayVietNam(ngayChon)}</strong>. 
+                Vui lòng chọn buổi học từ các ngày khác.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const cardBody = document.querySelector('.card-body');
+            const existingAlert = cardBody.querySelector('.alert');
+            if (existingAlert) existingAlert.remove();
+            
+            cardBody.insertBefore(thongBao, cardBody.querySelector('.mt-3'));
+        }
+        
+        checkFormValidity();
+    }
+
+    // Hàm format ngày Việt Nam
+    function formatNgayVietNam(ngayISO) {
+        const ngay = new Date(ngayISO + 'T00:00:00');
+        return ngay.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric'
+        });
+    }
+
+    // Khi chọn buổi học
+    selMaBuoiHoc?.addEventListener('change', function() {
+        console.log("🎯 Chọn buổi học:", this.value);
+        
+        // Cập nhật ngày theo buổi học được chọn (gợi ý)
+        if (this.value && buoiHocData[selMaLop.value]) {
+            const buoiHocCuaLop = buoiHocData[selMaLop.value].buoiHoc;
+            const buoiHocDuocChon = buoiHocCuaLop.find(buoi => buoi.maBuoiHoc == this.value);
+            
+            if (buoiHocDuocChon) {
+                selNgayDiemDanh.value = buoiHocDuocChon.ngayHoc;
+                console.log(`📅 Đã cập nhật ngày theo buổi học: ${buoiHocDuocChon.ngayHoc}`);
+            }
+        }
+        
+        checkFormValidity();
+    });
+
+    if (selMaLop && selMaLop.options.length === 2) { // 1 option mặc định + 1 lớp
+        selMaLop.selectedIndex = 1;
+        selMaLop.dispatchEvent(new Event('change'));
+    }
     // === XỬ LÝ AJAX TẢI BẢNG ĐIỂM DANH ===
     
     btnXem?.addEventListener('click', async function() {
         const maLop = selMaLop.value;
-        const maTietHoc = selMaTietHoc.value;
+        const maBuoiHoc = selMaBuoiHoc.value;
         const ngayDiemDanh = selNgayDiemDanh.value;
 
-        if (!maLop || !maTietHoc || !ngayDiemDanh) {
+        if (!maLop || !maBuoiHoc || !ngayDiemDanh) {
             alert('Vui lòng chọn đầy đủ thông tin.');
             return;
         }
@@ -64,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cardSubTitleDiemDanh.innerHTML = '';
 
         try {
-            const response = await fetch(`index.php?controller=chuyencan&action=ajaxGetBangDiemDanh&maLop=${maLop}&maTietHoc=${maTietHoc}&ngayDiemDanh=${ngayDiemDanh}`, {
+            const response = await fetch(`index.php?controller=chuyencan&action=ajaxGetBangDiemDanh&maLop=${maLop}&maBuoiHoc=${maBuoiHoc}`, {
                 cache: 'no-store' 
             });
             if (!response.ok) throw new Error('Lỗi mạng khi tải dữ liệu.');
@@ -72,17 +187,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             if (result.error) throw new Error(result.error);
 
-            const { danhSachHocSinh, thongTinTietHoc } = result;
+            const { danhSachHocSinh, thongTinBuoiHoc } = result;
 
-            const ngayFormatted = new Date(ngayDiemDanh + 'T00:00:00').toLocaleDateString('vi-VN');
+            const ngayFormatted = new Date(thongTinBuoiHoc.ngayHoc + 'T00:00:00').toLocaleDateString('vi-VN');
             cardSubTitleDiemDanh.innerHTML = `
-                Lớp: ${thongTinTietHoc.tenLop} | Môn: ${thongTinTietHoc.tenMonHoc} | Ngày: <strong>${ngayFormatted}</strong>
+                Lớp: ${thongTinBuoiHoc.tenLop} | Môn: ${thongTinBuoiHoc.tenMonHoc} | 
+                Ngày: <strong>${ngayFormatted}</strong> | Tiết: ${thongTinBuoiHoc.tietBatDau}-${thongTinBuoiHoc.tietKetThuc} |
+                Giáo viên: ${thongTinBuoiHoc.tenGiaoVien}
             `;
 
             hiddenInputsContainer.innerHTML = `
                 <input type="hidden" name="maLop" value="${maLop}">
-                <input type="hidden" name="maTietHoc" value="${maTietHoc}">
-                <input type="hidden" name="ngayDiemDanh" value="${ngayDiemDanh}">
+                <input type="hidden" name="maBuoiHoc" value="${maBuoiHoc}">
             `;
 
             tbodyDiemDanh.innerHTML = ''; 
@@ -110,11 +226,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             <label class="btn btn-outline-warning btn-sm ${trangThai == 'DI_MUON' ? 'active' : ''}">
                                 <input type="radio" name="trangthai[${maHS}]" value="DI_MUON" ${trangThai == 'DI_MUON' ? 'checked' : ''}> Đi muộn
                             </label>
-                            <label class="btn btn-outline-info btn-sm ${trangThai == 'VANG_CP' ? 'active' : ''}">
-                                <input type="radio" name="trangthai[${maHS}]" value="VANG_CP" ${trangThai == 'VANG_CP' ? 'checked' : ''}> Vắng (CP)
+                            <label class="btn btn-outline-info btn-sm ${trangThai == 'VANG_CO_PHEP' ? 'active' : ''}">
+                                <input type="radio" name="trangthai[${maHS}]" value="VANG_CO_PHEP" ${trangThai == 'VANG_CO_PHEP' ? 'checked' : ''}> Vắng (CP)
                             </label>
-                            <label class="btn btn-outline-danger btn-sm ${trangThai == 'VANG_KP' ? 'active' : ''}">
-                                <input type="radio" name="trangthai[${maHS}]" value="VANG_KP" ${trangThai == 'VANG_KP' ? 'checked' : ''}> Vắng (KP)
+                            <label class="btn btn-outline-danger btn-sm ${trangThai == 'VANG_KHONG_PHEP' ? 'active' : ''}">
+                                <input type="radio" name="trangthai[${maHS}]" value="VANG_KHONG_PHEP" ${trangThai == 'VANG_KHONG_PHEP' ? 'checked' : ''}> Vắng (KP)
                             </label>
                         </div>
                     </td>
@@ -133,7 +249,6 @@ document.addEventListener('DOMContentLoaded', function() {
             btnXem.innerHTML = '<i class="fas fa-list-check"></i> Xem danh sách';
         }
     });
-
 
     // === LOGIC CÁC NÚT ĐIỂM DANH ===
     
@@ -204,39 +319,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // === TỰ ĐỘNG TẢI BẢNG ===
     function autoLoadTable() {
-        if (!selMaLop || !selMaTietHoc || !selNgayDiemDanh || !btnXem) return;
-
         const urlParams = new URLSearchParams(window.location.search);
         
         const maLop = urlParams.get('maLop');
-        const maTietHoc = urlParams.get('maTietHoc');
-        const ngayDiemDanh = urlParams.get('ngayDiemDanh');
+        const maBuoiHoc = urlParams.get('maBuoiHoc');
         const autoload = urlParams.get('autoload');
 
-        if (maLop && maTietHoc && ngayDiemDanh && autoload) {
-            // 1. Gán giá trị cho các dropdown
+        if (maLop && maBuoiHoc && autoload) {
             selMaLop.value = maLop;
-            
-            // 2. Kích hoạt dropdown tiết học (dispatch event 'change')
             selMaLop.dispatchEvent(new Event('change'));
             
-            // 3. Gán giá trị cho tiết học VÀ ngày
-            // (Phải chờ một chút để dropdown tiết học được nạp xong)
             setTimeout(() => {
-                selMaTietHoc.value = maTietHoc;
-                selNgayDiemDanh.value = ngayDiemDanh;
-                
-                // 4. Kích hoạt nút "Xem"
+                selMaBuoiHoc.value = maBuoiHoc;
                 checkFormValidity();
-                
-                // 5. Tự động nhấp "Xem"
                 btnXem.click();
                 
-                // 6. Xóa param khỏi URL để tránh F5 bị lặp lại
                 window.history.replaceState({}, document.title, "index.php?controller=chuyencan&action=index");
-            }, 100); // Chờ 100ms
+            }, 100);
         }
     }
     
-    autoLoadTable(); // Chạy khi trang tải
+    autoLoadTable();
 });

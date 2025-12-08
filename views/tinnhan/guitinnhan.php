@@ -1,3 +1,7 @@
+<?php
+// Thêm vào đầu file guitinnhan.php (trước phần HTML)
+$maTruong = $_SESSION['user']['maTruong'] ?? '';
+?>
 <div class="container-fluid">
     <h1 class="h3 mb-4 text-gray-800"><strong>Gửi tin nhắn</strong></h1>
     
@@ -184,6 +188,8 @@
 </div>
 
 <script>
+    // Trong phần script của guitinnhan.php - thêm biến toàn cục
+    const maTruong = '<?= $maTruong ?>';
     document.addEventListener('DOMContentLoaded', function() {
     const picker = document.querySelector('emoji-picker');
     const emojiBtn = document.getElementById('emojiBtn');

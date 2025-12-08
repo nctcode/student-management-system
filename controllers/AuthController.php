@@ -1,4 +1,5 @@
 <?php
+require_once 'models/TaiKhoanModel.php';
 class AuthController { 
     private $model;
 
@@ -8,6 +9,15 @@ class AuthController {
         }
         require_once 'models/TaiKhoanModel.php';
         $this->model = new TaiKhoanModel();
+    }
+    public function index() {
+        // Kiểm tra nếu đã đăng nhập thì chuyển hướng về trang chủ
+        if (isset($_SESSION['user'])) {
+            $this->redirectByRole($_SESSION['user']['vaiTro']);
+            return;
+        }
+        // Nếu chưa đăng nhập, chuyển đến trang login
+        $this->login();
     }
 
     public function changePassword() {
@@ -144,75 +154,91 @@ class AuthController {
         require_once 'views/auth/login.php';
     }
     
-    // --- BẮT ĐẦU processLogin ĐÃ HỢP NHẤT ---
-    public function processLogin() {
-        if ($_POST) {
-            $username = $_POST['username'] ?? '';
-            $password = $_POST['password'] ?? '';
-            
-            $user = $this->model->authenticate($username, $password);
-            
-            if ($user === "LOCKED") {
-                $_SESSION['error'] = "⛔ Tài khoản của bạn đã bị khóa!";
-                header('Location: index.php?controller=auth&action=login');
-                exit;
-            }
-            
-            if (!$user) {
-                $_SESSION['error'] = "Tên đăng nhập hoặc mật khẩu không đúng!";
-                header('Location: index.php?controller=auth&action=login');
-                exit;
-            }
-            
-            // ĐĂNG NHẬP THÀNH CÔNG
-            $maNguoiDung = $this->model->getMaNguoiDung($user['maTaiKhoan']);
-            
-            $_SESSION['user'] = [
-                'maTaiKhoan' => $user['maTaiKhoan'],
-                'tenDangNhap' => $user['tenDangNhap'],
-                'hoTen' => $user['hoTen'],
-                'vaiTro' => $user['vaiTro'],
-                'maNguoiDung' => $maNguoiDung
-            ];
-            
-            // Lấy thông tin bổ sung theo vai trò
-            if ($user['vaiTro'] === 'HOCSINH') {
-                $maHocSinh = $this->model->getMaHocSinhByMaNguoiDung($maNguoiDung);
-                if ($maHocSinh) {
-                    $_SESSION['user']['maHocSinh'] = $maHocSinh;
-                    
-                    // --- LẤY KHỐI VÀ LƯU VÀO SESSION ---
-                    $khoi = $this->model->getThongTinKhoiHocSinh($maNguoiDung);
-                    $_SESSION['user']['khoi'] = $khoi; 
-                }
-            }
-            
-            if ($user['vaiTro'] === 'PHUHUYNH') {
-                $maPhuHuynh = $this->model->getMaPhuHuynhByMaNguoiDung($maNguoiDung);
-                if ($maPhuHuynh) $_SESSION['user']['maPhuHuynh'] = $maPhuHuynh;
-            }
-            
-            if ($user['vaiTro'] === 'GIAOVIEN') {
-                $maGiaoVien = $this->model->getMaGiaoVienByMaNguoiDung($maNguoiDung);
-                if ($maGiaoVien) $_SESSION['user']['maGiaoVien'] = $maGiaoVien;
-            }
-
-            if ($user['vaiTro'] === 'BGH') {
-                $maTruong = $this->model->getMaTruongByMaNguoiDung($maNguoiDung);
-                if ($maTruong) $_SESSION['user']['maTruong'] = $maTruong;
-            }
-            
-            $this->redirectByRole($user['vaiTro']);
-            return;
+ public function processLogin() {
+    if ($_POST) {
+        $username = $_POST['username'] ?? '';
+        $password = $_POST['password'] ?? '';
+        
+        $user = $this->model->authenticate($username, $password);
+        
+        // 🔥 KIỂM TRA TÀI KHOẢN BỊ KHÓA
+        if ($user === "LOCKED") {
+            $_SESSION['error'] = "⛔ Tài khoản của bạn đã bị khóa!";
+            header('Location: index.php?controller=auth&action=login');
+            exit;
         }
         
-        header('Location: index.php?controller=auth&action=login');
-        exit;
+        // 🔥 KIỂM TRA SAI TÀI KHOẢN/ MẬT KHẨU
+        if (!$user) {
+            $_SESSION['error'] = "Tên đăng nhập hoặc mật khẩu không đúng!";
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+        
+        // ✅ NẾU ĐẾN ĐƯỢC ĐÂY THÌ ĐĂNG NHẬP THÀNH CÔNG
+        // Lấy maNguoiDung từ database
+        $maNguoiDung = $this->model->getMaNguoiDung($user['maTaiKhoan']);
+        
+        $_SESSION['user'] = [
+            'maTaiKhoan' => $user['maTaiKhoan'],
+            'tenDangNhap' => $user['tenDangNhap'],
+            'hoTen' => $user['hoTen'],
+            'vaiTro' => $user['vaiTro'],
+            'maNguoiDung' => $maNguoiDung
+        ];
+        
+        // 🆕 THÊM: Lấy mã phụ huynh nếu vai trò là PHUHUYNH
+        if ($user['vaiTro'] === 'PHUHUYNH') {
+            $maPhuHuynh = $this->model->getMaPhuHuynhByMaNguoiDung($maNguoiDung);
+            if ($maPhuHuynh) {
+                $_SESSION['user']['maPhuHuynh'] = $maPhuHuynh;
+            }
+        }
+        
+        // 🆕 THÊM: Lấy mã giáo viên nếu vai trò là GIAOVIEN
+        if ($user['vaiTro'] === 'GIAOVIEN') {
+            $maGiaoVien = $this->model->getMaGiaoVienByMaNguoiDung($maNguoiDung);
+            if ($maGiaoVien) {
+                $_SESSION['user']['maGiaoVien'] = $maGiaoVien;
+            }
+        }
+        
+        // Tìm đến phần này trong processLogin() (khoảng dòng 142-150):
+        if ($user['vaiTro'] === 'HOCSINH') {
+            $maHocSinh = $this->model->getMaHocSinhByMaNguoiDung($maNguoiDung);
+            if ($maHocSinh) {
+                $_SESSION['user']['maHocSinh'] = $maHocSinh;
+                
+                // 🔥 THÊM: Lấy thông tin lớp và khối của học sinh
+                $studentInfo = $this->model->getStudentClassInfo($maHocSinh);
+                if ($studentInfo) {
+                    $_SESSION['user']['maLop'] = $studentInfo['maLop'];
+                    $_SESSION['user']['tenLop'] = $studentInfo['tenLop'];
+                    $_SESSION['user']['khoi'] = $studentInfo['khoi']; // Quan trọng: lấy khối
+                    
+                    // DEBUG: Ghi log để kiểm tra
+                    error_log("Student Info for maHocSinh=$maHocSinh: " . print_r($studentInfo, true));
+                } else {
+                    error_log("WARNING: No student info found for maHocSinh=$maHocSinh");
+                }
+            }
+        }
+        
+        // 🆕 THÊM: Lấy mã trường nếu vai trò là BGH
+        if ($user['vaiTro'] === 'BGH') {
+            $maTruong = $this->model->getMaTruongByMaNguoiDung($maNguoiDung);
+            if ($maTruong) {
+                $_SESSION['user']['maTruong'] = $maTruong;
+            }
+        }
+        
+        $this->redirectByRole($user['vaiTro']);
+        return;
     }
-    // --- KẾT THÚC processLogin ĐÃ HỢP NHẤT ---
-
-    // --- BẮT ĐẦU redirectByRole ĐÃ KHÔI PHỤC CẤU TRÚC ---
-    private function redirectByRole($role) {
+    
+    header('Location: index.php?controller=auth&action=login');
+    exit;
+}   private function redirectByRole($role) {
         error_log("Redirecting by role: " . $role);
         
         switch ($role) {
@@ -231,15 +257,11 @@ class AuthController {
             case 'BGH':
                 header('Location: index.php?controller=home&action=principal');
                 break;
-            case 'TOTRUONG':
-                header('Location: index.php?controller=home&action=leader'); // THÊM TOTRUONG
-                break;
             default:
                 header('Location: index.php?controller=home&action=index');
         }
         exit;
     }
-    // --- KẾT THÚC redirectByRole ---
     
     public function logout() {
         session_destroy();

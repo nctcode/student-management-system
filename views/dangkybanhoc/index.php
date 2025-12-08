@@ -1,12 +1,10 @@
 <?php
 require_once 'views/layouts/header.php';
-
 require_once 'views/layouts/sidebar/hocsinh.php';
 
-
-// Helper functions for this view only
+// Helper functions
 function renderNotifications() {
-    // --- Xử lý thông báo LỖI ---
+    // Xử lý thông báo LỖI
     if (isset($_SESSION['error'])): ?>
     <div class="alert alert-danger alert-dismissible fade show js-autoclose-notification" role="alert">
         <i class="fas fa-exclamation-triangle me-2"></i>
@@ -16,7 +14,7 @@ function renderNotifications() {
     <?php unset($_SESSION['error']); ?>
     <?php endif; 
     
-    // --- Xử lý thông báo THÀNH CÔNG (của Controller) ---
+    // Xử lý thông báo THÀNH CÔNG
     if (isset($_SESSION['success'])): ?>
     <div class="alert alert-success alert-dismissible fade show js-autoclose-notification" role="alert">
         <i class="fas fa-check-circle me-2"></i>
@@ -25,42 +23,85 @@ function renderNotifications() {
     </div>
     <?php unset($_SESSION['success']); ?>
     <?php endif;
+    
+    // Xử lý thông báo THÔNG TIN
+    if (isset($_SESSION['info'])): ?>
+    <div class="alert alert-info alert-dismissible fade show js-autoclose-notification" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <?php echo htmlspecialchars($_SESSION['info']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php unset($_SESSION['info']); ?>
+    <?php endif;
 }
 
-function renderRegistrationInfo($thongTinDangKy) { ?>
+function renderRegistrationInfo($thongTinDangKy, $daDangKy) { ?>
     <div style="
-        background-color: #d1ecf1; /* Nền xanh nhạt alert-info */
-        border: 1px solid #bee5eb; /* Viền xanh nhạt alert-info */
-        padding: 1rem; 
-        border-radius: 0.25rem; 
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+        padding: 1.5rem; 
+        border-radius: 0.5rem; 
         margin-bottom: 1.5rem;
     ">
-        <h5 class="text-info" style="font-weight: 700;"><i class="fas fa-check-circle me-2"></i>Bạn đã đăng ký ban học thành công!</h5>
-        <p class="mb-1"><strong>Ban đã chọn:</strong> <?php echo htmlspecialchars($thongTinDangKy['tenBan']); ?></p>
-        <p class="mb-0"><strong>Ngày đăng ký:</strong> <?php echo date('d/m/Y H:i', strtotime($thongTinDangKy['ngayDangKy'])); ?></p>
-    </div>
-    <div class="d-flex gap-2">
-        <a href="index.php?controller=home&action=student" class="btn btn-primary">
-            <i class="fas fa-arrow-left me-2"></i>Quay về Dashboard
-        </a>
+        <h5 class="text-primary" style="font-weight: 700;">
+            <i class="fas fa-check-circle me-2"></i>Bạn đã đăng ký ban học
+        </h5>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <p class="mb-1"><strong>Ban đã chọn:</strong> <?php echo htmlspecialchars($thongTinDangKy['tenBan']); ?></p>
+                <p class="mb-1"><strong>Ngày đăng ký:</strong> <?php echo date('d/m/Y H:i', strtotime($thongTinDangKy['ngayDangKy'])); ?></p>
+                <p class="mb-0"><strong>Trạng thái:</strong> <span class="badge bg-success">Đã đăng ký</span></p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1"><strong>Chỉ tiêu:</strong> <?php echo $thongTinDangKy['chiTieu']; ?> học sinh</p>
+                <p class="mb-1"><strong>Đã đăng ký:</strong> <?php echo $thongTinDangKy['soLuongDaDangKy']; ?> học sinh</p>
+                <p class="mb-0"><strong>Còn lại:</strong> <?php echo $thongTinDangKy['chiTieu'] - $thongTinDangKy['soLuongDaDangKy']; ?> chỉ tiêu</p>
+            </div>
+        </div>
+        
+        <div class="mt-4 pt-3 border-top">
+            <p class="text-muted small mb-3">
+                <i class="fas fa-exclamation-circle me-1"></i>
+                Bạn có thể chọn lại ban học khác trước khi hết thời hạn đăng ký.
+            </p>
+            
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="index.php?controller=home&action=student" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay về Dashboard
+                </a>
+                
+                <button type="button" class="btn btn-outline-primary" onclick="scrollToForm()">
+                    <i class="fas fa-edit me-2"></i>Chọn lại ban khác
+                </button>
+            </div>
+        </div>
     </div>
 <?php }
 
-function renderRegistrationForm($danhSachBan) { ?>
+function renderRegistrationForm($danhSachBan, $thongTinDangKy) { 
+    $currentBan = $thongTinDangKy['maBan'] ?? null;
+    ?>
     <form id="formDangKy" method="POST" action="index.php?controller=dangkybanhoc&action=store">
         <div class="row">
             <?php foreach ($danhSachBan as $ban): 
                 $conChiTieu = $ban['chiTieu'] - $ban['soLuongDaDangKy'];
-                // Tránh lỗi chia cho 0 nếu chỉ tiêu bằng 0
                 $phanTram = $ban['chiTieu'] > 0 ? ($ban['soLuongDaDangKy'] / $ban['chiTieu']) * 100 : 100;
                 $isAlmostFull = $phanTram > 80;
                 $isCritical = $conChiTieu <= 3 && $conChiTieu > 0;
+                $isSelected = ($currentBan == $ban['maBan']);
             ?>
             <div class="col-md-6 mb-3">
-                <div class="card h-100 <?php echo $isAlmostFull ? 'border-warning' : ''; ?> <?php echo $isCritical ? 'border-danger' : ''; ?>">
+                <div class="card h-100 <?php echo $isSelected ? 'border-primary border-2' : ''; ?> 
+                                      <?php echo $isAlmostFull ? 'border-warning' : ''; ?> 
+                                      <?php echo $isCritical ? 'border-danger' : ''; ?>">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title"><?php echo htmlspecialchars($ban['tenBan']); ?></h5>
+                            <h5 class="card-title">
+                                <?php echo htmlspecialchars($ban['tenBan']); ?>
+                                <?php if ($isSelected): ?>
+                                    <span class="badge bg-primary ms-2">Đã chọn</span>
+                                <?php endif; ?>
+                            </h5>
                             <div>
                                 <?php if ($isCritical): ?>
                                     <span class="badge bg-danger">Sắp hết</span>
@@ -70,7 +111,7 @@ function renderRegistrationForm($danhSachBan) { ?>
                             </div>
                         </div>
                         
-                        <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress mb-2" style="height: 10px;">
                             <div class="progress-bar 
                                 <?php echo $isCritical ? 'bg-danger' : ($isAlmostFull ? 'bg-warning' : 'bg-success'); ?>" 
                                 style="width: <?php echo min(100, $phanTram); ?>%"
@@ -91,10 +132,12 @@ function renderRegistrationForm($danhSachBan) { ?>
                         
                         <div class="form-check">
                             <input class="form-check-input" type="radio" 
-                                        name="ma_ban" value="<?php echo $ban['maBan']; ?>" 
-                                        id="ban_<?php echo $ban['maBan']; ?>">
+                                   name="ma_ban" 
+                                   value="<?php echo $ban['maBan']; ?>" 
+                                   id="ban_<?php echo $ban['maBan']; ?>"
+                                   <?php echo $isSelected ? 'checked' : ''; ?>>
                             <label class="form-check-label fw-medium" for="ban_<?php echo $ban['maBan']; ?>">
-                                Chọn ban này
+                                <?php echo $isSelected ? 'Đã chọn ban này' : 'Chọn ban này'; ?>
                             </label>
                         </div>
                     </div>
@@ -110,8 +153,8 @@ function renderRegistrationForm($danhSachBan) { ?>
         
         <div class="mt-4">
             <div style="
-                background-color: #fff8e1; /* Màu nền nhẹ hơn */
-                border-left: 5px solid #ffc107; /* Đường viền dọc màu vàng đậm */
+                background-color: #fff8e1;
+                border-left: 5px solid #ffc107;
                 padding: 1rem; 
                 border-radius: 0.3rem; 
                 box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -121,23 +164,30 @@ function renderRegistrationForm($danhSachBan) { ?>
                     <i class="fas fa-exclamation-triangle me-2"></i>Lưu ý quan trọng:
                 </h6>
                 <ul class="mb-0 small" style="list-style-type: disc; padding-left: 1.5rem;">
-                    <li>Mỗi học sinh chỉ được đăng ký **một ban học duy nhất**</li>
-                    <li>Sau khi đăng ký, bạn **không thể thay đổi** ban học</li>
-                    <li>**Thời hạn đăng ký: 04/11/2025 - 18/11/2025**</li>
-                    <li>Vui lòng cân nhắc kỹ trước khi đăng ký</li>
+                    <li>Học sinh có thể <strong>chọn lại ban học</strong> trước khi hết thời hạn</li>
+                    <li>**Thời hạn đăng ký: 15/12/2025 - 31/12/2025**</li>
                 </ul>
             </div>
             
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between flex-wrap gap-2">
                 <a href="index.php?controller=home&action=student" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Quay lại
                 </a>
-                <button type="submit" class="btn btn-primary" id="submitBtn">
-                    <i class="fas fa-paper-plane me-2"></i>Xác nhận đăng ký
-                </button>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        <?php echo $thongTinDangKy ? 'Cập nhật đăng ký' : 'Xác nhận đăng ký'; ?>
+                    </button>
+                </div>
             </div>
         </div>
     </form>
+    
+    <?php if ($thongTinDangKy): ?>
+    <!-- Form ẩn để hủy đăng ký -->
+    <form id="formHuy" method="POST" action="index.php?controller=dangkybanhoc&action=huyDangKy" style="display: none;"></form>
+    <?php endif; ?>
 <?php }
 ?>
 
@@ -147,16 +197,25 @@ function renderRegistrationForm($danhSachBan) { ?>
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h4><i class="fas fa-graduation-cap me-2"></i>Đăng ký Ban học Lớp 12</h4>
+                    <p class="mb-0 small opacity-75">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        Thời hạn đăng ký: 15/12/2025 - 31/12/2025
+                    </p>
                 </div>
                 <div class="card-body">
                     <?php renderNotifications(); ?>
                     
                     <?php if ($daDangKy && $thongTinDangKy): ?>
-                        <?php renderRegistrationInfo($thongTinDangKy); ?>
+                        <?php renderRegistrationInfo($thongTinDangKy, $daDangKy); ?>
+                    <?php endif; ?>
+                    
+                    <?php if (!empty($danhSachBan)): ?>
+                        <?php renderRegistrationForm($danhSachBan, $thongTinDangKy ?? []); ?>
                     <?php else: ?>
-                        <?php if (!empty($danhSachBan)): ?>
-                            <?php renderRegistrationForm($danhSachBan); ?>
-                        <?php endif; ?>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Hiện tại không có ban học nào còn chỉ tiêu để đăng ký.
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -166,7 +225,7 @@ function renderRegistrationForm($danhSachBan) { ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // TỰ ĐÓNG THÔNG BÁO LỖI/THÀNH CÔNG SAU 5 GIÂY (5000ms)
+    // Tự đóng thông báo sau 5 giây
     const alerts = document.querySelectorAll('.js-autoclose-notification');
     alerts.forEach(alert => {
         setTimeout(() => {
@@ -174,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if(bootstrapAlert) {
                 bootstrapAlert.close();
             }
-        }, 5000); // 5 giây
+        }, 5000);
     });
     
     // Logic Validation Form
@@ -194,14 +253,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateSubmitButtonState();
             });
         });
+        
+        updateSubmitButtonState();
     }
 });
 
 function validateForm() {
     const selectedBan = document.querySelector('input[name="ma_ban"]:checked');
+    const currentBan = <?php echo json_encode($thongTinDangKy['maBan'] ?? null); ?>;
     
     if (!selectedBan) {
         showValidationError("Vui lòng chọn ban học!");
+        return false;
+    }
+    
+    // Nếu chọn cùng ban cũ
+    if (currentBan && parseInt(selectedBan.value) === parseInt(currentBan)) {
+        alert('Bạn đã chọn ban học này rồi!');
         return false;
     }
     
@@ -212,7 +280,12 @@ function confirmRegistration(maBan) {
     const banCard = document.querySelector(`input[value="${maBan}"]`).closest('.card');
     const banName = banCard.querySelector('.card-title').textContent.trim();
     
-    return confirm(`BẠN CÓ CHẮC CHẮN MUỐN ĐĂNG KÝ BAN "${banName.toUpperCase()}"?\n\nLưu ý: Sau khi đăng ký, bạn KHÔNG THỂ thay đổi ban học.`);
+    const currentBan = <?php echo json_encode($thongTinDangKy['tenBan'] ?? null); ?>;
+    const message = currentBan 
+        ? `BẠN CÓ CHẮC CHẮN MUỐN ĐỔI TỪ BAN "${currentBan}" SANG BAN "${banName.toUpperCase()}"?`
+        : `BẠN CÓ CHẮC CHẮN MUỐN ĐĂNG KÝ BAN "${banName.toUpperCase()}"?\n\nLưu ý: Sau khi đăng ký, bạn có thể chọn lại ban khác trong thời hạn.`;
+    
+    return confirm(message);
 }
 
 function showValidationError(message) {
@@ -238,6 +311,13 @@ function updateSubmitButtonState() {
     } else {
         submitBtn.classList.remove('btn-primary');
         submitBtn.classList.add('btn-secondary');
+    }
+}
+
+function scrollToForm() {
+    const form = document.getElementById('formDangKy');
+    if (form) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 </script>

@@ -6,4 +6,5 @@ return [
     'password' => '',
     'charset' => 'utf8mb4'
 ];
+$db = getDBConnection();
 ?>
