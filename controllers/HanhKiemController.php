@@ -7,7 +7,6 @@ class HanhKiemController {
     private $db;
 
     public function __construct() {
-        // Bắt đầu session nếu chưa có
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
@@ -18,13 +17,11 @@ class HanhKiemController {
     }
 
     private function checkAuth() {
-        // Kiểm tra session theo cấu trúc của AuthController
         if (!isset($_SESSION['user']) || !isset($_SESSION['user']['vaiTro'])) {
             header('Location: index.php?controller=auth&action=login');
             exit;
         }
         
-        // Chỉ cho phép giáo viên, BGH, QTV, TOTRUONG
         $allowedRoles = ['GIAOVIEN', 'BGH', 'QTV', 'TOTRUONG'];
         if (!in_array($_SESSION['user']['vaiTro'], $allowedRoles)) {
             echo "<script>alert('Bạn không có quyền truy cập!'); window.history.back();</script>";
@@ -33,12 +30,10 @@ class HanhKiemController {
     }
 
     private function getMaGiaoVien() {
-        // Lấy mã giáo viên từ session
         if (isset($_SESSION['user']['maGiaoVien'])) {
             return $_SESSION['user']['maGiaoVien'];
         }
         
-        // Nếu chưa có, lấy từ database dựa trên maNguoiDung
         $maNguoiDung = $_SESSION['user']['maNguoiDung'] ?? null;
         if ($maNguoiDung) {
             $query = "SELECT maGiaoVien FROM giaovien WHERE maNguoiDung = ?";
@@ -56,12 +51,10 @@ class HanhKiemController {
     }
 
     private function getCurrentHocKy() {
-        // Lấy học kỳ hiện tại từ session hoặc mặc định
         if (isset($_SESSION['hoc_ky_hien_tai'])) {
             return $_SESSION['hoc_ky_hien_tai'];
         }
         
-        // Lấy học kỳ hiện tại từ bảng nienkhoa
         $query = "SELECT CONCAT(hocKy, '-', YEAR(ngayBatDau)) AS hoc_ky 
                   FROM nienkhoa 
                   WHERE CURDATE() BETWEEN ngayBatDau AND ngayKetThuc 
@@ -77,8 +70,7 @@ class HanhKiemController {
             return $result['hoc_ky'];
         }
         
-        // Mặc định nếu không tìm thấy
-        $defaultHocKy = 'HK1-2024';
+        $defaultHocKy = 'HK1-' . date('Y');
         $_SESSION['hoc_ky_hien_tai'] = $defaultHocKy;
         return $defaultHocKy;
     }
@@ -86,11 +78,10 @@ class HanhKiemController {
     public function index() {
         $this->checkAuth();
         
-        // Lấy thông tin giáo viên
         $maGiaoVien = $this->getMaGiaoVien();
         $hocKyHienTai = $this->getCurrentHocKy();
         
-        // Lấy danh sách học kỳ từ database
+        // Lấy danh sách học kỳ
         $query = "SELECT DISTINCT CONCAT(hocKy, '-', YEAR(ngayBatDau)) AS hoc_ky, 
                          CONCAT('Học kỳ ', 
                                 CASE hocKy 
@@ -108,32 +99,87 @@ class HanhKiemController {
         $stmt->execute();
         $dsHocKy = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Lấy thông tin lớp chủ nhiệm
         $lopChuNhiem = $this->model->getLopChuNhiem($maGiaoVien);
-        
-        // Kiểm tra xem có phải là giáo viên không
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
         
         if (!$lopChuNhiem && $userRole === 'GIAOVIEN') {
-            // Giáo viên không có lớp chủ nhiệm
             $dsHanhKiem = [];
             $thongBao = "Bạn không phải là giáo viên chủ nhiệm của lớp nào.";
         } else {
-            // Lấy danh sách học sinh của lớp chủ nhiệm
             $dsHanhKiem = $this->model->getHocSinhByLopChuNhiem($maGiaoVien, $hocKyHienTai);
+            
+            // Tính thống kê
+            $tongHS = count($dsHanhKiem);
+            $daCham = 0;
+            $tongDiem = 0;
+            
+            foreach ($dsHanhKiem as $hs) {
+                if (!empty($hs['diem_so']) || $hs['diem_so'] === 0) {
+                    $daCham++;
+                    $tongDiem += $hs['diem_so'];
+                }
+            }
+            
+            $diemTB = $daCham > 0 ? round($tongDiem / $daCham, 1) : 0;
+            $chuaCham = $tongHS - $daCham;
+            
             $thongBao = null;
         }
         
         require 'views/hanh_kiem/index.php';
     }
 
+    // CHỈNH SỬA: Thêm action để lấy form nhập nhanh
+    public function nhapNhanh() {
+        $this->checkAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $maHocSinh = $_POST['maHocSinh'] ?? '';
+            $hocKy = $_POST['hoc_ky'] ?? '';
+            
+            if (empty($maHocSinh) || empty($hocKy)) {
+                echo json_encode(['success' => false, 'message' => 'Thiếu thông tin']);
+                exit();
+            }
+            
+            // Kiểm tra xem đã có điểm chưa
+            $query = "SELECT hk.*, nd.hoTen 
+                      FROM hanh_kiem hk
+                      JOIN hocsinh hs ON hk.sinh_vien_id = hs.maHocSinh
+                      JOIN nguoidung nd ON hs.maNguoiDung = nd.maNguoiDung
+                      WHERE hk.sinh_vien_id = :maHocSinh AND hk.hoc_ky = :hocKy";
+            
+            try {
+                $stmt = $this->db->prepare($query);
+                $stmt->bindParam(':maHocSinh', $maHocSinh, PDO::PARAM_INT);
+                $stmt->bindParam(':hocKy', $hocKy, PDO::PARAM_STR);
+                $stmt->execute();
+                $hanhKiem = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                echo json_encode([
+                    'success' => true,
+                    'data' => $hanhKiem
+                ]);
+                
+            } catch(PDOException $e) {
+                error_log("Lỗi truy vấn nhapNhanh: " . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => 'Lỗi truy vấn']);
+            }
+            exit();
+        }
+        
+        echo json_encode(['success' => false, 'message' => 'Invalid request']);
+        exit();
+    }
+
+    // CHỈNH SỬA: Cải tiến hàm save để xử lý tốt hơn
     public function save() {
         $this->checkAuth();
         
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $maHocSinh = $_POST['maHocSinh'] ?? '';
             $hocKy = $_POST['hoc_ky'] ?? '';
-            $diemSo = intval($_POST['diem_so'] ?? 0);
+            $diemSo = isset($_POST['diem_so']) && $_POST['diem_so'] !== '' ? intval($_POST['diem_so']) : null;
             $nhanXet = $_POST['nhan_xet'] ?? '';
             $action = $_POST['action'] ?? 'save';
             
@@ -143,7 +189,7 @@ class HanhKiemController {
                 exit();
             }
             
-            // Kiểm tra quyền (nếu là giáo viên)
+            // Kiểm tra quyền
             $userRole = $_SESSION['user']['vaiTro'] ?? '';
             if ($userRole === 'GIAOVIEN') {
                 $maGiaoVien = $this->getMaGiaoVien();
@@ -164,19 +210,22 @@ class HanhKiemController {
             }
             
             // Validate điểm
-            if ($diemSo < 0 || $diemSo > 100) {
+            if ($diemSo !== null && ($diemSo < 0 || $diemSo > 100)) {
                 echo json_encode(['success' => false, 'message' => 'Điểm phải từ 0 đến 100']);
                 exit();
             }
             
             // Logic tự động xếp loại
-            $xepLoai = 'Yếu';
-            if ($diemSo >= 90) $xepLoai = 'Xuất sắc';
-            elseif ($diemSo >= 80) $xepLoai = 'Tốt';
-            elseif ($diemSo >= 65) $xepLoai = 'Khá';
-            elseif ($diemSo >= 50) $xepLoai = 'Trung bình';
+            $xepLoai = 'Chưa xếp loại';
+            if ($diemSo !== null) {
+                if ($diemSo >= 90) $xepLoai = 'Xuất sắc';
+                elseif ($diemSo >= 80) $xepLoai = 'Tốt';
+                elseif ($diemSo >= 65) $xepLoai = 'Khá';
+                elseif ($diemSo >= 50) $xepLoai = 'Trung bình';
+                elseif ($diemSo >= 0) $xepLoai = 'Yếu';
+            }
             
-            // Lưu điểm
+            // Lưu điểm (cho phép lưu cả khi điểm là null)
             if ($this->model->saveHanhKiem($maHocSinh, $hocKy, $diemSo, $xepLoai, $nhanXet)) {
                 echo json_encode([
                     'success' => true, 
@@ -186,6 +235,86 @@ class HanhKiemController {
             } else {
                 echo json_encode(['success' => false, 'message' => 'Lỗi khi lưu điểm']);
             }
+            exit();
+        }
+        
+        echo json_encode(['success' => false, 'message' => 'Invalid request']);
+        exit();
+    }
+
+    // CHỈNH SỬA: Thêm chức năng nhập hàng loạt
+    public function nhapHangLoat() {
+        $this->checkAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            $hocKy = $data['hoc_ky'] ?? '';
+            $dsDiem = $data['ds_diem'] ?? [];
+            $maGiaoVien = $this->getMaGiaoVien();
+            
+            if (empty($hocKy) || empty($dsDiem)) {
+                echo json_encode(['success' => false, 'message' => 'Thiếu dữ liệu']);
+                exit();
+            }
+            
+            $successCount = 0;
+            $errorCount = 0;
+            $errors = [];
+            
+            foreach ($dsDiem as $item) {
+                $maHocSinh = $item['maHocSinh'] ?? '';
+                $diemSo = isset($item['diem_so']) && $item['diem_so'] !== '' ? intval($item['diem_so']) : null;
+                $nhanXet = $item['nhan_xet'] ?? '';
+                
+                if (empty($maHocSinh)) {
+                    $errorCount++;
+                    continue;
+                }
+                
+                // Kiểm tra quyền (nếu là giáo viên)
+                $userRole = $_SESSION['user']['vaiTro'] ?? '';
+                if ($userRole === 'GIAOVIEN') {
+                    if (!$this->model->isGiaoVienChuNhiem($maGiaoVien, $maHocSinh)) {
+                        $errorCount++;
+                        $errors[] = "Không có quyền nhập điểm cho HS $maHocSinh";
+                        continue;
+                    }
+                }
+                
+                // Validate điểm
+                if ($diemSo !== null && ($diemSo < 0 || $diemSo > 100)) {
+                    $errorCount++;
+                    $errors[] = "Điểm HS $maHocSinh không hợp lệ";
+                    continue;
+                }
+                
+                // Logic xếp loại
+                $xepLoai = 'Chưa xếp loại';
+                if ($diemSo !== null) {
+                    if ($diemSo >= 90) $xepLoai = 'Xuất sắc';
+                    elseif ($diemSo >= 80) $xepLoai = 'Tốt';
+                    elseif ($diemSo >= 65) $xepLoai = 'Khá';
+                    elseif ($diemSo >= 50) $xepLoai = 'Trung bình';
+                    elseif ($diemSo >= 0) $xepLoai = 'Yếu';
+                }
+                
+                // Lưu điểm
+                if ($this->model->saveHanhKiem($maHocSinh, $hocKy, $diemSo, $xepLoai, $nhanXet)) {
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                    $errors[] = "Lỗi lưu điểm HS $maHocSinh";
+                }
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'message' => "Đã nhập thành công $successCount học sinh. Lỗi: $errorCount",
+                'success_count' => $successCount,
+                'error_count' => $errorCount,
+                'errors' => $errors
+            ]);
             exit();
         }
         

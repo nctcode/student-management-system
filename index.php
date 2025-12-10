@@ -30,6 +30,19 @@ if (file_exists($controllerFile)) {
         if (method_exists($controllerInstance, $action)) {
             // Xử lý các action cần tham số
             switch ($controller) {
+                case 'auth':
+                    switch ($action) {
+                        case 'login':
+                        case 'logout':
+                        case 'register':
+                        case 'changePassword':
+                        case 'resetPassword':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->$action();
+                    }
+                    break;
                 case 'donchuyenloptruong':
                     switch ($action) {
                         case 'index':

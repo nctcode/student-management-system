@@ -8,26 +8,10 @@ class ThongKeModel {
         $this->db = new Database();
     }
 
-    /**
-     * Hàm helper để xác định Năm Học hiện tại (Giữ nguyên cho tính tương thích)
-     */
-    private function getCurrentNamHoc() {
-        $namHienTai = intval(date('Y'));
-        $thangHienTai = intval(date('m'));
-        
-        // Giả định năm học bắt đầu từ tháng 9
-        if ($thangHienTai >= 9) {
-            return $namHienTai . '-' . ($namHienTai + 1);
-        } else {
-            return ($namHienTai - 1) . '-' . $namHienTai;
-        }
-    }
-
-
     // *******************************************************
-    // 1. Thống kê Phân công (Đã hoạt động)
+    // 1. Thống kê Phân công (CẬP NHẬT: THÊM maTruong)
     // *******************************************************
-    public function getThongKePhanCong($maKhoi = null, $maLop = null) {
+    public function getThongKePhanCong($maKhoi = null, $maLop = null, $maTruong = null) {
         $conn = $this->db->getConnection();
         
         $sql = "SELECT 
@@ -49,8 +33,19 @@ class ThongKeModel {
                 WHERE 1=1";
         
         $params = [];
-        if ($maKhoi && $maKhoi !== 'all') { $sql .= " AND l.maKhoi = :maKhoi"; $params[':maKhoi'] = $maKhoi; }
-        if ($maLop && $maLop !== 'all') { $sql .= " AND l.maLop = :maLop"; $params[':maLop'] = $maLop; }
+        if ($maKhoi && $maKhoi !== 'all') { 
+            $sql .= " AND l.maKhoi = :maKhoi"; 
+            $params[':maKhoi'] = $maKhoi; 
+        }
+        if ($maLop && $maLop !== 'all') { 
+            $sql .= " AND l.maLop = :maLop"; 
+            $params[':maLop'] = $maLop; 
+        }
+        if ($maTruong) { 
+            $sql .= " AND l.maTruong = :maTruong"; 
+            $params[':maTruong'] = $maTruong; 
+        }
+        
         $sql .= " ORDER BY k.tenKhoi, l.tenLop";
 
         try {
@@ -76,15 +71,13 @@ class ThongKeModel {
         }
     }
 
-
     // *******************************************************
-    // 2. Thống kê Học lực (ĐÃ SỬA LỖI: CHUYỂN ĐỔI HỌC KỲ)
+    // 2. Thống kê Học lực (CẬP NHẬT: THÊM maTruong)
     // *******************************************************
-    public function getThongKeHocLuc($maKhoi = null, $maLop = null, $hocKy = 1) {
+    public function getThongKeHocLuc($maKhoi = null, $maLop = null, $hocKy = 1, $maTruong = null) {
         $conn = $this->db->getConnection();
         
-        // CHUYỂN ĐỔI: Chuyển số 1/2 từ form thành chuỗi 'HK1'/'HK2' để khớp CSDL
-        $hocKyString = "HK" . $hocKy; 
+        $hocKyString = "HK" . $hocKy;
 
         $sql = "SELECT 
                     k.tenKhoi, l.tenLop, 
@@ -97,12 +90,22 @@ class ThongKeModel {
                 JOIN hocsinh hs ON kq.maHocSinh = hs.maHocSinh
                 JOIN lophoc l ON hs.maLop = l.maLop
                 LEFT JOIN khoi k ON l.maKhoi = k.maKhoi
-                WHERE kq.hocKy = :hocKyString"; // Dùng biến chuỗi đã chuyển đổi
-
+                WHERE kq.hocKy = :hocKyString";
         
         $params = [':hocKyString' => $hocKyString];
-        if ($maKhoi && $maKhoi !== 'all') { $sql .= " AND l.maKhoi = :maKhoi"; $params[':maKhoi'] = $maKhoi; }
-        if ($maLop && $maLop !== 'all') { $sql .= " AND l.maLop = :maLop"; $params[':maLop'] = $maLop; }
+        if ($maKhoi && $maKhoi !== 'all') { 
+            $sql .= " AND l.maKhoi = :maKhoi"; 
+            $params[':maKhoi'] = $maKhoi; 
+        }
+        if ($maLop && $maLop !== 'all') { 
+            $sql .= " AND l.maLop = :maLop"; 
+            $params[':maLop'] = $maLop; 
+        }
+        if ($maTruong) { 
+            $sql .= " AND l.maTruong = :maTruong"; 
+            $params[':maTruong'] = $maTruong; 
+        }
+        
         $sql .= " GROUP BY l.maLop, l.tenLop, k.tenKhoi ORDER BY k.tenKhoi, l.tenLop";
 
         try {
@@ -129,9 +132,9 @@ class ThongKeModel {
     }
 
     // *******************************************************
-    // 3. Thống kê Chuyên cần (Đã hoạt động)
+    // 3. Thống kê Chuyên cần (CẬP NHẬT: THÊM maTruong)
     // *******************************************************
-    public function getThongKeChuyenCan($maKhoi = null, $maLop = null, $hocKy = 1) {
+    public function getThongKeChuyenCan($maKhoi = null, $maLop = null, $hocKy = 1, $maTruong = null) {
         $conn = $this->db->getConnection();
         
         $sql = "SELECT 
@@ -145,8 +148,19 @@ class ThongKeModel {
                 WHERE 1=1"; 
                 
         $params = [];
-        if ($maKhoi && $maKhoi !== 'all') { $sql .= " AND l.maKhoi = :maKhoi"; $params[':maKhoi'] = $maKhoi; }
-        if ($maLop && $maLop !== 'all') { $sql .= " AND l.maLop = :maLop"; $params[':maLop'] = $maLop; }
+        if ($maKhoi && $maKhoi !== 'all') { 
+            $sql .= " AND l.maKhoi = :maKhoi"; 
+            $params[':maKhoi'] = $maKhoi; 
+        }
+        if ($maLop && $maLop !== 'all') { 
+            $sql .= " AND l.maLop = :maLop"; 
+            $params[':maLop'] = $maLop; 
+        }
+        if ($maTruong) { 
+            $sql .= " AND l.maTruong = :maTruong"; 
+            $params[':maTruong'] = $maTruong; 
+        }
+        
         $sql .= " GROUP BY l.maLop, l.tenLop, k.tenKhoi ORDER BY k.tenKhoi, l.tenLop";
 
         try {

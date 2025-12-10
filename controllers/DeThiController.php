@@ -42,6 +42,7 @@ class DeThiController
         require_once 'views/layouts/header.php';
         require_once 'views/layouts/sidebar/giaovien.php';
         require_once 'views/dethi/lapdethi.php';
+        exit();
     }
 
     public function view()
@@ -467,6 +468,7 @@ class DeThiController
         require_once 'views/layouts/sidebar/totruong.php';
         require_once 'views/dethi/duyetdethi.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 
     // THÊM phương thức lấy danh sách môn học
@@ -581,6 +583,7 @@ class DeThiController
         require_once 'views/layouts/header.php';
         require_once 'views/layouts/sidebar/totruong.php';
         require_once 'views/dethi/lichsuduyetde.php';
+        exit();
     }
 
 // THÊM: Phương thức lấy danh sách môn học cho tổ trưởng
