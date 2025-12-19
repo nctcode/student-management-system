@@ -32,6 +32,7 @@ class ProfileController {
 
         // Nạp file view và truyền dữ liệu
         include __DIR__ . '/../views/profile/index.php';
+        exit();
     }
 }
 ?>

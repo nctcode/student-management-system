@@ -324,7 +324,11 @@ class ThongBaoController {
     }  
      
     // Xóa thông báo (chỉ QTV và BGH)
-    public function xoa($maThongBao) {
+    public function xoa($maThongBao = null) {
+        // Nếu không có tham số, lấy từ $_GET
+        if ($maThongBao === null) {
+            $maThongBao = $_GET['maThongBao'] ?? '';
+        }
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
         if (!in_array($userRole, ['QTV', 'BGH'])) {
             $_SESSION['error'] = "Bạn không có quyền xóa thông báo";

@@ -193,6 +193,10 @@ class AuthController {
             if ($maPhuHuynh) {
                 $_SESSION['user']['maPhuHuynh'] = $maPhuHuynh;
             }
+            $maTruong = $this->model->getMaTruongByMaNguoiDung($maNguoiDung);
+            if ($maTruong) {
+                $_SESSION['user']['maTruong'] = $maTruong;
+            }
         }
         
         // 🆕 THÊM: Lấy mã giáo viên nếu vai trò là GIAOVIEN
@@ -201,10 +205,18 @@ class AuthController {
             if ($maGiaoVien) {
                 $_SESSION['user']['maGiaoVien'] = $maGiaoVien;
             }
+            $maTruong = $this->model->getMaTruongByMaNguoiDung($maNguoiDung);
+            if ($maTruong) {
+                $_SESSION['user']['maTruong'] = $maTruong;
+            }
         }
         
         // Tìm đến phần này trong processLogin() (khoảng dòng 142-150):
         if ($user['vaiTro'] === 'HOCSINH') {
+            $maTruong = $this->model->getMaTruongByMaNguoiDung($maNguoiDung);
+            if ($maTruong) {
+                $_SESSION['user']['maTruong'] = $maTruong;
+            }
             $maHocSinh = $this->model->getMaHocSinhByMaNguoiDung($maNguoiDung);
             if ($maHocSinh) {
                 $_SESSION['user']['maHocSinh'] = $maHocSinh;
@@ -238,7 +250,8 @@ class AuthController {
     
     header('Location: index.php?controller=auth&action=login');
     exit;
-}   private function redirectByRole($role) {
+}
+   private function redirectByRole($role) {
         error_log("Redirecting by role: " . $role);
         
         switch ($role) {

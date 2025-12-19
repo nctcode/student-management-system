@@ -1,0 +1,167 @@
+/* =========================================
+   GLOBAL / CHUNG
+   ========================================= */
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Icon tròn nhỏ (dùng trong danh sách) */
+.icon-sm {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Icon tròn vừa (dùng trong header card) */
+.icon-shape {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+/* Icon tròn lớn (dùng trong dashboard index) */
+.icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Màu chữ custom */
+.text-secondary { color: #858796 !important; }
+.text-primary { color: #4e73df !important; }
+
+/* =========================================
+   TRANG DANH SÁCH LỚP (index.php)
+   ========================================= */
+.hover-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+
+/* Card lớp GVCN - Màu xanh lá */
+.gvcn-card {
+    border-left: 4px solid #198754 !important;
+    background: linear-gradient(135deg, #f8fff8 0%, #f0f9f0 100%);
+}
+
+/* Card lớp GVBM - Màu xanh dương */
+.gvbm-card {
+    border-left: 4px solid #0d6efd !important;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+}
+
+/* Ribbon Style (Dải băng góc phải) */
+.ribbon {
+    position: absolute;
+    right: -5px; 
+    top: -5px;
+    z-index: 1;
+    overflow: hidden;
+    width: 75px; 
+    height: 75px; 
+    text-align: right;
+}
+
+.ribbon span {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 20px;
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    width: 100px;
+    display: block;
+    background: #198754; /* Mặc định xanh lá */
+    box-shadow: 0 3px 10px -5px rgba(0, 0, 0, 0.5);
+    position: absolute;
+    top: 19px;
+    right: -21px;
+}
+
+/* Hiệu ứng 3D gập của Ribbon */
+.ribbon span::before {
+    content: "";
+    position: absolute;
+    left: 0px;
+    top: 100%;
+    z-index: -1;
+    border-left: 3px solid #13653f;
+    border-right: 3px solid transparent;
+    border-bottom: 3px solid transparent;
+    border-top: 3px solid #13653f;
+}
+
+.ribbon span::after {
+    content: "";
+    position: absolute;
+    right: 0px;
+    top: 100%;
+    z-index: -1;
+    border-left: 3px solid transparent;
+    border-right: 3px solid #13653f;
+    border-bottom: 3px solid transparent;
+    border-top: 3px solid #13653f;
+}
+
+/* Ribbon cho GVBM (nếu cần đổi màu sau này) */
+.ribbon.gvbm span {
+    background: #0d6efd;
+}
+.ribbon.gvbm span::before {
+    border-left-color: #0a58ca;
+    border-top-color: #0a58ca;
+}
+.ribbon.gvbm span::after {
+    border-right-color: #0a58ca;
+    border-top-color: #0a58ca;
+}
+
+/* =========================================
+   TRANG DANH SÁCH HỌC SINH & CHI TIẾT
+   ========================================= */
+/* Badge màu hồng cho nữ */
+.badge.bg-pink {
+    background-color: #e83e8c !important;
+    color: #fff;
+}
+
+/* Table Styles */
+.table th, .custom-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+.table td, .custom-table td {
+    padding: 10px;
+    vertical-align: middle;
+    font-size: 0.95rem;
+}
+
+/* Accordion Styles (Bảng điểm) */
+.accordion-button {
+    background-color: #f8f9fc;
+    box-shadow: none !important;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #eef2ff;
+    color: #4e73df;
+    font-weight: bold;
+}

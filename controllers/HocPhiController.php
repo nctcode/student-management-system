@@ -37,6 +37,7 @@ class HocPhiController {
         }
         require_once 'views/hocphi/dashboard.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 
     public function lichsu() {
@@ -54,6 +55,7 @@ class HocPhiController {
         }
         require_once 'views/hocphi/lichsuthanhtoan.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
     
     public function donghocphi() {
@@ -71,6 +73,7 @@ class HocPhiController {
         }
         require_once 'views/hocphi/donghocphi.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
     
     public function thanhtoan() {
@@ -96,6 +99,7 @@ class HocPhiController {
                 ]);
             }
         }
+        exit();
     }
 
     public function thanhcong() {
@@ -115,6 +119,7 @@ class HocPhiController {
         }
         require_once 'views/hocphi/thanhtoanthanhcong.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 
     public function inphieu() {
@@ -134,6 +139,7 @@ class HocPhiController {
         }
         require_once 'views/hocphi/inphieu.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 
     public function bienlai() {
@@ -153,6 +159,7 @@ class HocPhiController {
         }
         require_once 'views/hocphi/bienlai.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 }
 ?>

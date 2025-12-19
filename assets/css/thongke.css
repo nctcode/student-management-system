@@ -1,0 +1,42 @@
+/* assets/css/thongke.css */
+
+/* Custom Border Utilities */
+.border-top-primary {
+    border-top: 3px solid #4e73df !important;
+}
+
+/* Nav Pills Customization */
+.nav-pills .nav-link {
+    color: #858796;
+    border-radius: 0.35rem;
+    padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
+    transition: all 0.2s;
+}
+
+.nav-pills .nav-link:hover {
+    background-color: #eaecf4;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #4e73df;
+    color: #fff;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+/* Badge Weight */
+.badge {
+    font-weight: 600;
+}
+
+/* Responsive Fixes */
+@media (max-width: 768px) {
+    div[style*="margin-left"] {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 15px !important;
+    }
+    div[style*="position: fixed"] {
+        display: none;
+    }
+}

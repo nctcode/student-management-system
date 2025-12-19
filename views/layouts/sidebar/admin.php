@@ -28,6 +28,12 @@
                     </div>
                 </div>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=quanlynguoidung&action=index">
+                    <i class="fas fa-fw fa-user-edit"></i>
+                    <span>Cập nhật thông tin</span>
+                </a>
+            </li>
             <?php endif; ?>
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=quanlytaikhoan&action=index">

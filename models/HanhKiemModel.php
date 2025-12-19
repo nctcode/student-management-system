@@ -76,6 +76,7 @@ class HanhKiemModel {
     }
 
     // Cập nhật hoặc thêm điểm hạnh kiểm
+    // Cập nhật hoặc thêm điểm hạnh kiểm - CHO PHÉP ĐIỂM NULL
     public function saveHanhKiem($maHocSinh, $hocKy, $diemSo, $xepLoai, $nhanXet) {
         // Kiểm tra xem đã có bản ghi chưa
         $checkQuery = "SELECT id FROM hanh_kiem 
@@ -105,7 +106,13 @@ class HanhKiemModel {
                 $stmt->bindParam(':hocKy', $hocKy, PDO::PARAM_STR);
             }
             
-            $stmt->bindParam(':diemSo', $diemSo, PDO::PARAM_INT);
+            // Cho phép diemSo là NULL
+            if ($diemSo === null) {
+                $stmt->bindValue(':diemSo', null, PDO::PARAM_NULL);
+            } else {
+                $stmt->bindParam(':diemSo', $diemSo, PDO::PARAM_INT);
+            }
+            
             $stmt->bindParam(':xepLoai', $xepLoai, PDO::PARAM_STR);
             $stmt->bindParam(':nhanXet', $nhanXet, PDO::PARAM_STR);
             

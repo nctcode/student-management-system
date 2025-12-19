@@ -323,35 +323,118 @@ class GiaoVienModel {
     // CÁC HÀM GỐC - LOẠI BỎ MATRUONG
     // *******************************************************
     
-    // Lấy tất cả Giáo viên
-    public function getAllTeachers() {
+    // Thay thế hàm getAllTeachers cũ bằng hàm này
+    public function getAllTeachers($maTruong = null) {
         $conn = $this->db->getConnection();
-        $sql = "SELECT gv.maGiaoVien, nd.hoTen, gv.chuyenMon 
-                FROM giaovien gv
-                JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-                ORDER BY nd.hoTen ASC";
+        
+        $sql = "SELECT 
+                    g.maGiaoVien, 
+                    nd.hoTen, 
+                    g.chuyenMon, 
+                    g.maMonHoc,
+                    m.tenMonHoc,
+                    tt.maToTruong,
+                    tt.toChuyenMon,
+                    tt.maMonHoc as maMonTrucThuoc
+                FROM giaovien g
+                JOIN nguoidung nd ON g.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN monhoc m ON g.maMonHoc = m.maMonHoc
+                LEFT JOIN totruongchuyenmon tt ON g.maToTruong = tt.maToTruong
+                WHERE nd.loaiNguoiDung = 'GIAOVIEN'";
+        
+        if ($maTruong) {
+            $sql .= " AND nd.maTruong = :maTruong";
+        }
+        
+        $sql .= " ORDER BY nd.hoTen";
+        
+        $stmt = $conn->prepare($sql);
+        if ($maTruong) {
+            $stmt->bindParam(':maTruong', $maTruong);
+        }
+        $stmt->execute();
+        $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        error_log("Số giáo viên lấy được: " . count($teachers) . " (maTruong: " . ($maTruong ?? 'null') . ")");
+        
+        return $teachers;
+    }
+
+    public function getTeachersBySubject($maMonHoc, $maTruong = null) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT DISTINCT 
+                    g.maGiaoVien, 
+                    nd.hoTen, 
+                    g.chuyenMon,
+                    g.maMonHoc,
+                    tt.maToTruong,
+                    tt.toChuyenMon
+                FROM giaovien g
+                JOIN nguoidung nd ON g.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN totruongchuyenmon tt ON g.maToTruong = tt.maToTruong
+                LEFT JOIN totruongchuyenmon tt_subject ON tt_subject.maMonHoc = :maMonHoc
+                WHERE nd.loaiNguoiDung = 'GIAOVIEN'
+                AND (g.maMonHoc = :maMonHoc OR tt.maToTruong = tt_subject.maToTruong)";
+        
+        if ($maTruong) {
+            $sql .= " AND nd.maTruong = :maTruong";
+        }
+        
+        $sql .= " ORDER BY nd.hoTen";
+        
         try {
             $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':maMonHoc', $maMonHoc);
+            if ($maTruong) {
+                $stmt->bindParam(':maTruong', $maTruong);
+            }
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) { 
-            error_log("Lỗi lấy danh sách giáo viên: " . $e->getMessage());
-            return []; 
+        } catch (PDOException $e) {
+            error_log("Lỗi lấy giáo viên theo môn: " . $e->getMessage());
+            return [];
         }
     }
 
-    // Lấy danh sách các Lớp
-    public function getAllClasses() {
+    /**
+     * Lấy thông tin tổ chuyên môn theo môn học
+     */
+    public function getToChuyenMonByMonHoc($maMonHoc) {
         $conn = $this->db->getConnection();
-        $sql = "SELECT maLop, tenLop, maGiaoVien FROM lophoc ORDER BY tenLop ASC";
+        
+        $sql = "SELECT tt.* FROM totruongchuyenmon tt WHERE tt.maMonHoc = ?";
+        
         try {
             $stmt = $conn->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) { 
-            error_log("Lỗi lấy danh sách lớp: " . $e->getMessage());
-            return []; 
+            $stmt->execute([$maMonHoc]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Lỗi lấy tổ chuyên môn: " . $e->getMessage());
+            return null;
         }
+    }
+
+
+    // Lấy danh sách các Lớp
+    // Trong GiaoVienModel.php, sửa hàm getAllClasses
+    public function getAllClasses($maTruong = null) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT * FROM lophoc WHERE 1=1";
+        
+        if ($maTruong) {
+            $sql .= " AND maTruong = :maTruong";
+        }
+        
+        // Sắp xếp theo khối và tên lớp
+        $sql .= " ORDER BY maKhoi ASC, tenLop ASC";
+        
+        $stmt = $conn->prepare($sql);
+        if ($maTruong) {
+            $stmt->bindParam(':maTruong', $maTruong);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     // Lấy danh sách các Môn học
@@ -366,24 +449,90 @@ class GiaoVienModel {
             return []; 
         }
     }
-    
-    // Lấy phân công GVBM hiện tại của một lớp
-    public function getSubjectAssignmentsByClass($maLop) {
+
+    // Thêm vào GiaoVienModel.php
+/**
+ * Lấy phân công GVCN của lớp
+ */
+    public function getGVCNAssignmentByClass($maLop) {
         $conn = $this->db->getConnection();
-        $sql = "SELECT pc.maPhanCong, mh.tenMonHoc, nd.hoTen AS tenGiaoVien
+        
+        $sql = "SELECT 
+                    pc.maGiaoVien,
+                    nd.hoTen as tenGiaoVien
                 FROM phanconggiangday pc
-                JOIN monhoc mh ON pc.maMonHoc = mh.maMonHoc
-                JOIN giaovien gv ON pc.maGiaoVien = gv.maGiaoVien
-                JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-                WHERE pc.maLop = :maLop";
+                JOIN giaovien g ON pc.maGiaoVien = g.maGiaoVien
+                JOIN nguoidung nd ON g.maNguoiDung = nd.maNguoiDung
+                WHERE pc.maLop = :maLop 
+                AND pc.loaiPhanCong = 'GVCN'
+                AND pc.trangThai = 'Hoạt động'
+                LIMIT 1";
+        
         try {
             $stmt = $conn->prepare($sql);
             $stmt->execute([':maLop' => $maLop]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) { 
-            error_log("Lỗi lấy phân công GVBM: " . $e->getMessage());
-            return []; 
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Lỗi lấy GVCN: " . $e->getMessage());
+            return null;
         }
+    }
+    
+   
+    // Lấy phân công GVBM hiện tại của một lớp
+    public function getSubjectAssignmentsByClass($maLop, $maTruong = null) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT 
+                    pc.maMonHoc, 
+                    m.tenMonHoc, 
+                    pc.maGiaoVien, 
+                    nd.hoTen as tenGiaoVien,
+                    pc.loaiPhanCong,
+                    nk.namHoc,
+                    g.chuyenMon
+                FROM phanconggiangday pc
+                JOIN monhoc m ON pc.maMonHoc = m.maMonHoc
+                JOIN giaovien g ON pc.maGiaoVien = g.maGiaoVien
+                JOIN nguoidung nd ON g.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN nienkhoa nk ON pc.maNienKhoa = nk.maNienKhoa
+                WHERE pc.maLop = :maLop 
+                AND pc.trangThai = 'Hoạt động'
+                AND pc.loaiPhanCong = 'GVBM'";
+        
+        if ($maTruong) {
+            $sql .= " AND EXISTS (
+                        SELECT 1 FROM lophoc l 
+                        WHERE l.maLop = pc.maLop 
+                        AND l.maTruong = :maTruong
+                    )";
+        }
+        
+        $sql .= " ORDER BY m.tenMonHoc";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':maLop', $maLop);
+        if ($maTruong) {
+            $stmt->bindParam(':maTruong', $maTruong);
+        }
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $assignments = [];
+        foreach ($results as $row) {
+            $assignments[$row['maMonHoc']] = [
+                'maGiaoVien' => $row['maGiaoVien'],
+                'tenGiaoVien' => $row['tenGiaoVien'],
+                'loaiPhanCong' => $row['loaiPhanCong'],
+                'namHoc' => $row['namHoc'],
+                'chuyenMon' => $row['chuyenMon']
+            ];
+        }
+        
+        // Ghi log để debug
+        error_log("Số phân công GVBM tìm thấy cho lớp $maLop: " . count($assignments));
+        
+        return $assignments;
     }
 
     // *******************************************************
@@ -393,12 +542,19 @@ class GiaoVienModel {
     /**
      * Lấy số lượng lớp học thực tế
      */
-    public function getTotalClasses() {
+    public function getTotalClasses($maTruong = null) {
         $conn = $this->db->getConnection();
-        $sql = "SELECT COUNT(*) as total FROM lophoc";
+        $sql = "SELECT COUNT(*) as total FROM lophoc WHERE 1=1";
+        
+        $params = [];
+        if ($maTruong) {
+            $sql .= " AND maTruong = :maTruong";
+            $params[':maTruong'] = $maTruong;
+        }
+        
         try {
             $stmt = $conn->prepare($sql);
-            $stmt->execute();
+            $stmt->execute($params);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['total'] ?? 0;
         } catch (PDOException $e) {
@@ -410,11 +566,24 @@ class GiaoVienModel {
     /**
      * Lấy số lượng giáo viên thực tế
      */
-    public function getTotalTeachers() {
+    public function getTotalTeachers($maTruong = null) {
         $conn = $this->db->getConnection();
-        $sql = "SELECT COUNT(*) as total FROM giaovien";
+        
+        // Lấy giáo viên thuộc trường thông qua bảng nguoidung
+        $sql = "SELECT COUNT(DISTINCT g.maGiaoVien) as total 
+                FROM giaovien g
+                JOIN nguoidung nd ON g.maNguoiDung = nd.maNguoiDung
+                WHERE nd.maTruong IS NOT NULL";
+        
+        if ($maTruong) {
+            $sql .= " AND nd.maTruong = :maTruong";
+        }
+        
         try {
             $stmt = $conn->prepare($sql);
+            if ($maTruong) {
+                $stmt->bindParam(':maTruong', $maTruong);
+            }
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['total'] ?? 0;
@@ -427,11 +596,19 @@ class GiaoVienModel {
     /**
      * Lấy số lượng lớp đã có GVCN
      */
-    public function getClassesWithGVCN() {
+    public function getClassesWithGVCN($maTruong = null) {
         $conn = $this->db->getConnection();
-        $sql = "SELECT COUNT(*) as total FROM lophoc WHERE maGiaoVien IS NOT NULL AND maGiaoVien != '' AND maGiaoVien != 0";
+        $sql = "SELECT COUNT(*) as total FROM lophoc WHERE maGiaoVien IS NOT NULL";
+        
+        if ($maTruong) {
+            $sql .= " AND maTruong = :maTruong";
+        }
+        
         try {
             $stmt = $conn->prepare($sql);
+            if ($maTruong) {
+                $stmt->bindParam(':maTruong', $maTruong);
+            }
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result['total'] ?? 0;
@@ -444,22 +621,31 @@ class GiaoVienModel {
     /**
      * Lấy phân công GVCN hiện tại
      */
-    public function getCurrentGVCNAssignments() {
+    // Tìm hàm này trong GiaoVienModel.php
+    public function getCurrentGVCNAssignments($maTruong = null) {
         $conn = $this->db->getConnection();
-        $sql = "SELECT l.maLop, l.tenLop, gv.maGiaoVien, nd.hoTen AS tenGV
+        
+        // SỬA LẠI CÂU SQL: thay nd.hoTen as tenGV
+        $sql = "SELECT l.maLop, l.tenLop, g.maGiaoVien, nd.hoTen as tenGV 
                 FROM lophoc l
-                LEFT JOIN giaovien gv ON l.maGiaoVien = gv.maGiaoVien
-                LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-                ORDER BY l.tenLop";
-        try {
-            $stmt = $conn->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Lỗi lấy phân công GVCN: " . $e->getMessage());
-            return [];
+                LEFT JOIN giaovien g ON l.maGiaoVien = g.maGiaoVien
+                LEFT JOIN nguoidung nd ON g.maNguoiDung = nd.maNguoiDung
+                WHERE 1=1";
+        
+        if ($maTruong) {
+            $sql .= " AND l.maTruong = :maTruong";
         }
+        
+        $sql .= " ORDER BY l.tenLop";
+        
+        $stmt = $conn->prepare($sql);
+        if ($maTruong) {
+            $stmt->bindParam(':maTruong', $maTruong);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
 
     // *******************************************************
     // LOGIC KIỂM TRA VÀ XỬ LÝ PHÂN CÔNG
@@ -467,12 +653,25 @@ class GiaoVienModel {
 
     /**
      * Kiểm tra xem giáo viên có đang chủ nhiệm lớp khác không
+     * CHỈ kiểm tra khi đang phân công GVCN mới
      */
-    public function checkExistingGVCN($maGiaoVien, $maLopHienTai) {
+    public function checkExistingGVCN($maGiaoVien, $maLopHienTai = null) {
         $conn = $this->db->getConnection();
-        $sql = "SELECT tenLop FROM lophoc WHERE maGiaoVien = :maGV AND maLop != :maLop";
+        
+        // Tìm lớp nào đang có giáo viên này làm GVCN
+        $sql = "SELECT l.maLop, l.tenLop 
+                FROM lophoc l
+                WHERE l.maGiaoVien = :maGV";
+        
+        $params = [':maGV' => $maGiaoVien];
+        
+        if ($maLopHienTai) {
+            $sql .= " AND l.maLop != :maLop";
+            $params[':maLop'] = $maLopHienTai;
+        }
+        
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':maGV' => $maGiaoVien, ':maLop' => $maLopHienTai]);
+        $stmt->execute($params);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -526,10 +725,8 @@ class GiaoVienModel {
         return false;
     }
 
-    /**
-     * Thực hiện toàn bộ logic phân công GVCN và GVBM
-     */
-    public function processAssignment($maLop, $maGVCN, $assignments) {
+    // Tìm hàm processAssignment trong GiaoVienModel.php và sửa lại như sau:
+    public function processAssignment($maLop, $maGVCN, $assignments, $maTruong = null) {
         $conn = $this->db->getConnection();
         
         // --- 1. KIỂM TRA TRƯỚC KHI BẮT ĐẦU TRANSACTION ---
@@ -554,7 +751,7 @@ class GiaoVienModel {
                         'monHoc' => $monHoc['tenMonHoc'] ?? 'Môn học #' . $assign['maMonHoc'],
                         // Lấy hoTen và chuyenMon từ kết quả của hàm public getGiaoVienById
                         'giaoVien' => $giaoVien['hoTen'] ?? 'Giáo viên #' . $assign['maGiaoVien'],
-                        'chuyenMon' => $giaoVien['chuyenMon'] ?? ''
+                        'chuyenMon' => $giaoVien['chuyênMon'] ?? ''
                     ];
                 }
             }
@@ -568,6 +765,21 @@ class GiaoVienModel {
         try {
             $conn->beginTransaction();
 
+            // Kiểm tra lớp có thuộc trường không
+            if ($maTruong) {
+                $checkLop = $conn->prepare("SELECT maLop FROM lophoc WHERE maLop = :maLop AND maTruong = :maTruong");
+                $checkLop->bindParam(':maLop', $maLop);
+                $checkLop->bindParam(':maTruong', $maTruong);
+                $checkLop->execute();
+                if ($checkLop->rowCount() === 0) {
+                    $conn->rollBack();
+                    return ['error' => 'Lớp không thuộc trường quản lý'];
+                }
+            }
+            
+            // Lấy mã năm học hiện tại
+            $currentYear = $this->getCurrentNienKhoa();
+            
             // 2a. Phân công GVCN (UPDATE lophoc)
             $sql_gvcn = "UPDATE lophoc SET maGiaoVien = :maGVCN WHERE maLop = :maLop";
             $stmt_gvcn = $conn->prepare($sql_gvcn);
@@ -576,22 +788,13 @@ class GiaoVienModel {
                 ':maLop' => $maLop
             ]);
 
-            // 2b. Xóa phân công GVBM cũ của lớp này
-            $sql_delete = "DELETE FROM phanconggiangday WHERE maLop = :maLop";
-            $stmt_delete = $conn->prepare($sql_delete);
-            $stmt_delete->execute([':maLop' => $maLop]);
+            // 2b. Cập nhật phân công GVCN trong bảng phanconggiangday
+            $this->updateGVCNAssignment($maLop, $maGVCN, $currentYear);
 
-            // 2c. Phân công GVBM mới (INSERT phanconggiangday)
-            $sql_insert = "INSERT INTO phanconggiangday (maLop, maGiaoVien, maMonHoc) VALUES (:maLop, :maGV, :maMon)";
-            $stmt_insert = $conn->prepare($sql_insert);
-
+            // 2c. Xử lý phân công GVBM - CẬP NHẬT THAY VÌ XÓA
             foreach ($assignments as $assign) {
                 if (!empty($assign['maMonHoc']) && !empty($assign['maGiaoVien'])) {
-                    $stmt_insert->execute([
-                        ':maLop' => $maLop,
-                        ':maGV' => $assign['maGiaoVien'],
-                        ':maMon' => $assign['maMonHoc']
-                    ]);
+                    $this->updateGVBMAssignment($maLop, $assign['maMonHoc'], $assign['maGiaoVien'], $currentYear);
                 }
             }
 
@@ -602,6 +805,190 @@ class GiaoVienModel {
             $conn->rollBack();
             error_log("Lỗi thực hiện phân công: " . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Cập nhật phân công GVBM (UPDATE nếu đã có, INSERT nếu chưa có)
+     */
+    private function updateGVBMAssignment($maLop, $maMonHoc, $maGiaoVien, $maNienKhoa) {
+        $conn = $this->db->getConnection();
+        
+        // Kiểm tra xem đã có phân công cho môn học này trong lớp chưa
+        $sql_check = "SELECT maPhanCongGiangDay FROM phanconggiangday 
+                    WHERE maLop = :maLop AND maMonHoc = :maMonHoc AND loaiPhanCong = 'GVBM'";
+        $stmt_check = $conn->prepare($sql_check);
+        $stmt_check->execute([
+            ':maLop' => $maLop,
+            ':maMonHoc' => $maMonHoc
+        ]);
+        
+        if ($stmt_check->rowCount() > 0) {
+            // CẬP NHẬT phân công hiện có - chỉ đổi giáo viên
+            $sql_update = "UPDATE phanconggiangday 
+                        SET maGiaoVien = :maGV, ngayPhanCong = CURDATE()
+                        WHERE maLop = :maLop AND maMonHoc = :maMonHoc AND loaiPhanCong = 'GVBM'";
+            $stmt_update = $conn->prepare($sql_update);
+            return $stmt_update->execute([
+                ':maGV' => $maGiaoVien,
+                ':maLop' => $maLop,
+                ':maMonHoc' => $maMonHoc
+            ]);
+        } else {
+            // THÊM MỚI phân công
+            $sql_insert = "INSERT INTO phanconggiangday 
+                        (ngayPhanCong, trangThai, loaiPhanCong, maNienKhoa, maGiaoVien, maLop, maMonHoc) 
+                        VALUES (CURDATE(), 'Hoạt động', 'GVBM', :maNienKhoa, :maGV, :maLop, :maMon)";
+            $stmt_insert = $conn->prepare($sql_insert);
+            return $stmt_insert->execute([
+                ':maNienKhoa' => $maNienKhoa,
+                ':maGV' => $maGiaoVien,
+                ':maLop' => $maLop,
+                ':maMon' => $maMonHoc
+            ]);
+        }
+    }
+
+    /**
+     * Cập nhật phân công GVCN (UPDATE nếu đã có, INSERT nếu chưa có)
+     */
+    private function updateGVCNAssignment($maLop, $maGiaoVien, $maNienKhoa) {
+        $conn = $this->db->getConnection();
+        
+        // Kiểm tra xem đã có phân công GVCN cho lớp này chưa
+        $sql_check = "SELECT maPhanCongGiangDay FROM phanconggiangday 
+                    WHERE maLop = :maLop AND loaiPhanCong = 'GVCN'";
+        $stmt_check = $conn->prepare($sql_check);
+        $stmt_check->execute([':maLop' => $maLop]);
+        
+        if ($stmt_check->rowCount() > 0) {
+            // CẬP NHẬT phân công hiện có - chỉ đổi giáo viên
+            $sql_update = "UPDATE phanconggiangday 
+                        SET maGiaoVien = :maGV, ngayPhanCong = CURDATE()
+                        WHERE maLop = :maLop AND loaiPhanCong = 'GVCN'";
+            $stmt_update = $conn->prepare($sql_update);
+            return $stmt_update->execute([
+                ':maGV' => $maGiaoVien,
+                ':maLop' => $maLop
+            ]);
+        } else {
+            // THÊM MỚI phân công
+            $sql_insert = "INSERT INTO phanconggiangday 
+                        (ngayPhanCong, trangThai, loaiPhanCong, maNienKhoa, maGiaoVien, maLop) 
+                        VALUES (CURDATE(), 'Hoạt động', 'GVCN', :maNienKhoa, :maGV, :maLop)";
+            $stmt_insert = $conn->prepare($sql_insert);
+            return $stmt_insert->execute([
+                ':maNienKhoa' => $maNienKhoa,
+                ':maGV' => $maGiaoVien,
+                ':maLop' => $maLop
+            ]);
+        }
+    }
+
+    /**
+     * Lấy mã năm học hiện tại
+     */
+    private function getCurrentNienKhoa() {
+        $conn = $this->db->getConnection();
+        
+        // Tìm năm học mà ngày hiện tại nằm trong khoảng
+        $sql = "SELECT maNienKhoa FROM nienkhoa 
+                WHERE CURDATE() BETWEEN ngayBatDau AND ngayKetThuc 
+                LIMIT 1";
+        
+        try {
+            $stmt = $conn->query($sql);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                return $result['maNienKhoa'];
+            } else {
+                // Nếu không tìm thấy, lấy năm học gần nhất
+                $sql = "SELECT maNienKhoa FROM nienkhoa 
+                        ORDER BY ABS(DATEDIFF(CURDATE(), ngayBatDau)) 
+                        LIMIT 1";
+                $stmt = $conn->query($sql);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $result['maNienKhoa'] ?? 1; // Mặc định là 1
+            }
+        } catch (Exception $e) {
+            error_log("Lỗi lấy năm học hiện tại: " . $e->getMessage());
+            return 1;
+        }
+    }
+
+    /**
+     * Thêm phân công GVCN vào bảng phanconggiangday
+     */
+    private function addGVCNAssignment($maLop, $maGiaoVien, $maNienKhoa) {
+        $conn = $this->db->getConnection();
+        
+        // Kiểm tra xem đã có phân công GVCN cho lớp này chưa
+        $sql_check = "SELECT maPhanCongGiangDay FROM phanconggiangday 
+                    WHERE maLop = :maLop AND loaiPhanCong = 'GVCN'";
+        $stmt_check = $conn->prepare($sql_check);
+        $stmt_check->execute([':maLop' => $maLop]);
+        
+        if ($stmt_check->rowCount() > 0) {
+            // Cập nhật phân công hiện có
+            $sql_update = "UPDATE phanconggiangday 
+                        SET maGiaoVien = :maGV, ngayPhanCong = CURDATE()
+                        WHERE maLop = :maLop AND loaiPhanCong = 'GVCN'";
+            $stmt_update = $conn->prepare($sql_update);
+            return $stmt_update->execute([':maGV' => $maGiaoVien, ':maLop' => $maLop]);
+        } else {
+            // Thêm phân công mới
+            $sql_insert = "INSERT INTO phanconggiangday 
+                        (ngayPhanCong, trangThai, loaiPhanCong, maNienKhoa, maGiaoVien, maLop) 
+                        VALUES (CURDATE(), 'Hoạt động', 'GVCN', :maNienKhoa, :maGV, :maLop)";
+            $stmt_insert = $conn->prepare($sql_insert);
+            return $stmt_insert->execute([
+                ':maNienKhoa' => $maNienKhoa,
+                ':maGV' => $maGiaoVien,
+                ':maLop' => $maLop
+            ]);
+        }
+    }
+
+    /**
+     * Lấy tất cả phân công hiện tại của lớp
+     */
+    public function getAllAssignmentsByClass($maLop) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT 
+                    pc.maPhanCongGiangDay,
+                    pc.ngayPhanCong,
+                    pc.trangThai,
+                    pc.loaiPhanCong,
+                    pc.maNienKhoa,
+                    pc.maGiaoVien,
+                    pc.maLop,
+                    pc.maMonHoc,
+                    gv.maGiaoVien,
+                    nd.hoTen as tenGiaoVien,
+                    mh.tenMonHoc,
+                    l.tenLop,
+                    nk.namHoc
+                FROM phanconggiangday pc
+                LEFT JOIN giaovien gv ON pc.maGiaoVien = gv.maGiaoVien
+                LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN monhoc mh ON pc.maMonHoc = mh.maMonHoc
+                LEFT JOIN lophoc l ON pc.maLop = l.maLop
+                LEFT JOIN nienkhoa nk ON pc.maNienKhoa = nk.maNienKhoa
+                WHERE pc.maLop = :maLop 
+                AND pc.trangThai = 'Hoạt động'
+                ORDER BY 
+                    CASE WHEN pc.loaiPhanCong = 'GVCN' THEN 1 ELSE 2 END,
+                    mh.tenMonHoc";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([':maLop' => $maLop]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Lỗi lấy phân công lớp: " . $e->getMessage());
+            return [];
         }
     }
 
@@ -623,16 +1010,27 @@ class GiaoVienModel {
     /**
      * Lấy danh sách tất cả Khối
      */
-    public function getAllKhoi() {
+    public function getAllKhoi($maTruong = null) {
         $conn = $this->db->getConnection();
-        $sql = "SELECT maKhoi, tenKhoi FROM khoi ORDER BY tenKhoi ASC";
-        try {
-            $stmt = $conn->query($sql);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) { 
-            error_log("Lỗi lấy danh sách khối: " . $e->getMessage());
-            return []; 
+        
+        // Lấy các khối có lớp thuộc trường này
+        $sql = "SELECT DISTINCT k.maKhoi, k.tenKhoi 
+                FROM khoi k
+                JOIN lophoc l ON k.maKhoi = l.maKhoi
+                WHERE 1=1";
+        
+        if ($maTruong) {
+            $sql .= " AND l.maTruong = :maTruong";
         }
+        
+        $sql .= " ORDER BY k.tenKhoi";
+        
+        $stmt = $conn->prepare($sql);
+        if ($maTruong) {
+            $stmt->bindParam(':maTruong', $maTruong);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     /**
