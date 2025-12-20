@@ -9,6 +9,14 @@ class ThongKeController {
     }
 
     public function index() {
+        // KIỂM TRA SESSION ĐỂ LẤY MÃ TRƯỜNG
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Nếu không có mã trường (chưa đăng nhập hoặc lỗi), gán mặc định hoặc xử lý lỗi
+        $maTruong = isset($_SESSION['user']['maTruong']) ? $_SESSION['user']['maTruong'] : 0;
+
         $hocKy = isset($_GET['hk']) ? $_GET['hk'] : '1';
         $maKhoi = isset($_GET['maKhoi']) ? $_GET['maKhoi'] : 'all';
         $maLop = isset($_GET['maLop']) ? $_GET['maLop'] : 'all';
@@ -17,15 +25,18 @@ class ThongKeController {
         $mapTab = ['hocLuc'=>'hoctap', 'hanhKiem'=>'hanhkiem', 'nhanSu'=>'nhansu', 'quyMo'=>'quymo', 'taiChinh'=>'taichinh'];
         $activeTab = $mapTab[$tab] ?? 'hoctap';
 
-        // Lấy dữ liệu từ Model
-        $phoDiem = $this->model->getPhoDiem($hocKy, $maKhoi, $maLop);
+        // TRUYỀN $maTruong VÀO CÁC HÀM MODEL
+        $phoDiem = $this->model->getPhoDiem($hocKy, $maKhoi, $maLop, $maTruong);
         $jsonPhoDiem = json_encode(array_values($phoDiem));
-        $duBaoTN = $this->model->getDuBaoTotNghiep($hocKy);
-        $hanhKiem = $this->model->getThongKeHanhKiem($hocKy, $maKhoi, $maLop);
-        $jsonHanhKiem = json_encode(array_values($hanhKiem));
-        $taiChinhKPI = $this->model->getTaiChinhOverview($hocKy, $maKhoi, $maLop);
         
-        $duLieuSoSanh = $this->model->getSoSanhHocLuc('2024-2025', $maKhoi, $maLop);
+        $duBaoTN = $this->model->getDuBaoTotNghiep($hocKy, $maTruong);
+        
+        $hanhKiem = $this->model->getThongKeHanhKiem($hocKy, $maKhoi, $maLop, $maTruong);
+        $jsonHanhKiem = json_encode(array_values($hanhKiem));
+        
+        $taiChinhKPI = $this->model->getTaiChinhOverview($hocKy, $maKhoi, $maLop, $maTruong);
+        
+        $duLieuSoSanh = $this->model->getSoSanhHocLuc('2024-2025', $maKhoi, $maLop, $maTruong);
         $dataSS_HK1 = []; $dataSS_HK2 = []; $tempMap = []; 
         foreach($duLieuSoSanh as $r) $tempMap[$r['hocLuc']] = $r;
         foreach(['KEM', 'YEU', 'TRUNG_BINH', 'KHA', 'GIOI'] as $k) {
@@ -35,28 +46,38 @@ class ThongKeController {
         $jsonSS_HK1 = json_encode($dataSS_HK1);
         $jsonSS_HK2 = json_encode($dataSS_HK2);
 
-        $gvTaiCongViec = $this->model->getTaiCongViecGiaoVien();
-        $siSoKhoi = $this->model->getSiSoTrungBinh();
-        $doanhThuChart = $this->model->getDoanhThuTheoThang();
-        $topLopNo = $this->model->getTopLopNoHocPhi($hocKy);
+        $gvTaiCongViec = $this->model->getTaiCongViecGiaoVien($maTruong);
+        $siSoKhoi = $this->model->getSiSoTrungBinh($maTruong);
+        $doanhThuChart = $this->model->getDoanhThuTheoThang($maTruong);
+        $topLopNo = $this->model->getTopLopNoHocPhi($hocKy, $maTruong);
+        
         $labelsDT = []; $dataDT = [];
         foreach($doanhThuChart as $d) { $labelsDT[] = $d['thang']; $dataDT[] = $d['doanhThu']; }
         $jsonLabelsDT = json_encode($labelsDT);
         $jsonDataDT = json_encode($dataDT);
 
-        $danhSachKhoi = $this->model->getAllKhoi();
-        $danhSachLop = $this->model->getAllLopWithKhoi();
+        // Lấy danh sách lớp thuộc trường này
+        $danhSachKhoi = $this->model->getAllKhoi(); // Khối thường dùng chung
+        $danhSachLop = $this->model->getAllLopWithKhoi($maTruong);
+
+        // Lấy KPI tổng quan theo trường
+        $kpiData = $this->model->getKPIs($maTruong); // Giả sử bạn muốn dùng biến này ở View
 
         require_once 'views/thongke/index.php';
     }
 
     public function export() {
+        if (session_status() == PHP_SESSION_NONE) session_start();
+        $maTruong = isset($_SESSION['user']['maTruong']) ? $_SESSION['user']['maTruong'] : 0;
+
         $type = $_GET['loaiBaoCao'] ?? 'hocLuc';
         $hocKy = $_GET['hk'] ?? '1';
         $maKhoi = $_GET['maKhoi'] ?? 'all';
         $maLop = $_GET['maLop'] ?? 'all';
 
-        $data = $this->model->getDataExport($type, 'HK'.$hocKy, $maKhoi, $maLop);
+        // Truyền $maTruong vào hàm export
+        $data = $this->model->getDataExport($type, 'HK'.$hocKy, $maKhoi, $maLop, $maTruong);
+        
         $filename = "BaoCao_" . ucfirst($type) . "_" . date('Ymd_His') . ".xls";
         
         if (ob_get_level()) ob_end_clean();
