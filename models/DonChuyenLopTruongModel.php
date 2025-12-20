@@ -46,25 +46,28 @@ class DonChuyenLopTruongModel {
         }
 
         // 2. Lọc theo Trường đang chọn và Logic duyệt
-        // 2. Lọc theo Trường đang chọn và Logic duyệt
         if ($maTruong) {
-            $sql .= " AND (
-                -- Logic 2 bước CHO ĐƠN CHUYỂN TRƯỜNG:
-                (d.loaiDon = 'chuyen_truong' AND (
-                    -- B1: Trường đi thấy (Chờ duyệt ở Trường đi)
-                    (d.maTruongHienTai = :maTruong AND d.trangThaiTruongDi = 'Chờ duyệt' AND d.trangThaiTruongDen = 'Chờ duyệt')
-                    -- B2: Trường đến thấy (Đã duyệt ở Trường đi, Chờ duyệt ở Trường đến)
-                    OR (d.maTruongDen = :maTruong AND d.trangThaiTruongDi = 'Đã duyệt' AND d.trangThaiTruongDen = 'Chờ duyệt')
-                    -- Cả 2 trường đều thấy đơn đã hoàn tất hoặc bị từ chối
-                    OR (d.maTruongHienTai = :maTruong AND d.trangThaiTruongDi IN ('Đã duyệt', 'Từ chối'))
-                    OR (d.maTruongDen = :maTruong AND d.trangThaiTruongDen IN ('Đã duyệt', 'Từ chối'))
-                ))
-                -- Logic 1 bước CHO ĐƠN CHUYỂN LỚP:
-                OR (d.loaiDon = 'chuyen_lop' AND d.maTruongHienTai = :maTruong_2)
-            )";
-            $params[':maTruong'] = $maTruong;
-            $params[':maTruong_2'] = $maTruong;
-        }
+    $sql .= " AND (
+        -- Logic 2 bước CHO ĐƠN CHUYỂN TRƯỜNG (ĐÃ SỬA: ĐẾN TRƯỚC -> ĐI SAU):
+        (d.loaiDon = 'chuyen_truong' AND (
+            -- B1: Trường ĐẾN thấy đơn đầu tiên (Khi cả 2 đều đang chờ)
+            (d.maTruongDen = :maTruong AND d.trangThaiTruongDen = 'Chờ duyệt' AND d.trangThaiTruongDi = 'Chờ duyệt')
+            
+            -- B2: Trường ĐI thấy đơn sau (Khi trường ĐẾN đã duyệt, trường ĐI chưa duyệt)
+            OR (d.maTruongHienTai = :maTruong AND d.trangThaiTruongDen = 'Đã duyệt' AND d.trangThaiTruongDi = 'Chờ duyệt')
+            
+            -- Cả 2 trường đều thấy đơn đã hoàn tất hoặc bị từ chối
+            -- Trường Đi thấy lịch sử của mình HOẶC thấy đơn đã bị Trường Đến từ chối
+            OR (d.maTruongHienTai = :maTruong AND (d.trangThaiTruongDi IN ('Đã duyệt', 'Từ chối') OR d.trangThaiTruongDen = 'Từ chối'))
+            -- Trường Đến thấy lịch sử của mình
+            OR (d.maTruongDen = :maTruong AND d.trangThaiTruongDen IN ('Đã duyệt', 'Từ chối'))
+        ))
+        -- Logic 1 bước CHO ĐƠN CHUYỂN LỚP (Giữ nguyên):
+        OR (d.loaiDon = 'chuyen_lop' AND d.maTruongHienTai = :maTruong_2)
+    )";
+    $params[':maTruong'] = $maTruong;
+    $params[':maTruong_2'] = $maTruong;
+}
 
         // 3. Tìm kiếm
         if (!empty($search)) {
@@ -102,29 +105,29 @@ class DonChuyenLopTruongModel {
                     }
                 }
             } else { 
-                // Chuyển trường (LOGIC 2 BƯỚC)
-                $statusDi = $don['trangThaiTruongDi'] ?? 'Chờ duyệt';
-                $statusDen = $don['trangThaiTruongDen'] ?? 'Chờ duyệt';
+    // Chuyển trường (LOGIC 2 BƯỚC: TRƯỜNG ĐẾN DUYỆT TRƯỚC)
+    $statusDi = $don['trangThaiTruongDi'] ?? 'Chờ duyệt';
+    $statusDen = $don['trangThaiTruongDen'] ?? 'Chờ duyệt';
 
-                if ($statusDen === 'Từ chối' || $statusDi === 'Từ chối') {
-                    $don['trangThaiTong'] = 'Bị từ chối';
-                } elseif ($statusDi === 'Đã duyệt' && $statusDen === 'Đã duyệt') {
-                    $don['trangThaiTong'] = 'Hoàn tất';
-                } else {
-                    $don['trangThaiTong'] = 'Chờ duyệt';
-                    
-                    // B1: Trường đi duyệt (Cả Duyệt và Từ chối)
-                    if ($statusDi === 'Chờ duyệt' && $statusDen === 'Chờ duyệt' && $maTruongHienTai == $currentSchoolId) {
-                        $don['canApprove'] = true;
-                        $don['actionType'] = 'full'; 
-                    } 
-                    // B2: Trường đến duyệt (Cả Duyệt và Từ chối)
-                    elseif ($statusDi === 'Đã duyệt' && $statusDen === 'Chờ duyệt' && $maTruongDen == $currentSchoolId) {
-                        $don['canApprove'] = true;
-                        $don['actionType'] = 'full';
-                    }
-                }
-            }
+    if ($statusDen === 'Từ chối' || $statusDi === 'Từ chối') {
+        $don['trangThaiTong'] = 'Bị từ chối';
+    } elseif ($statusDi === 'Đã duyệt' && $statusDen === 'Đã duyệt') {
+        $don['trangThaiTong'] = 'Hoàn tất';
+    } else {
+        $don['trangThaiTong'] = 'Chờ duyệt';
+        
+        // B1: Trường ĐẾN duyệt trước (Khi cả 2 đều là Chờ duyệt)
+        if ($statusDen === 'Chờ duyệt' && $statusDi === 'Chờ duyệt' && $maTruongDen == $currentSchoolId) {
+            $don['canApprove'] = true;
+            $don['actionType'] = 'full'; 
+        } 
+        // B2: Trường ĐI duyệt sau (Khi trường ĐẾN đã duyệt)
+        elseif ($statusDen === 'Đã duyệt' && $statusDi === 'Chờ duyệt' && $maTruongHienTai == $currentSchoolId) {
+            $don['canApprove'] = true;
+            $don['actionType'] = 'full';
+        }
+    }
+}
         }
         unset($don); 
         
@@ -236,11 +239,11 @@ class DonChuyenLopTruongModel {
         // **********************************************
         // LOGIC CHẶN TỪ CHỐI: TRƯỜNG ĐI KHÔNG CÓ QUYỀN TỪ CHỐI NẾU TRƯỜNG ĐẾN ĐÃ DUYỆT
         // **********************************************
-        if ($side === 'truongdi' && ($don['trangThaiTruongDen'] ?? 'Chờ duyệt') === 'Đã duyệt') {
-            error_log("Cảnh báo: Trường đi cố gắng từ chối đơn #$maDon sau khi Trường đến đã duyệt. Thao tác bị chặn.");
-            // Giả lập lỗi để Controller hiển thị thông báo "Lỗi khi từ chối đơn"
-            return false; 
-        }
+        // Nếu là Trường ĐẾN (Bước 1): Không được sửa nếu Trường ĐI (Bước 2) đã có động thái khác "Chờ duyệt"
+    if ($side === 'truongden' && ($don['trangThaiTruongDi'] ?? 'Chờ duyệt') !== 'Chờ duyệt') {
+        error_log("Cảnh báo: Trường đến cố gắng từ chối đơn #$maDon sau khi Trường đi đã xử lý.");
+        return false; 
+    }
 
         if ($side === 'truongdi') {
             $sql = "UPDATE donchuyenloptruong 
