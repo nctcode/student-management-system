@@ -70,7 +70,8 @@ class PhanCongGVBMCNController {
         exit;
     }
 
-    // Trong hàm saveAssignment của controller
+    // Trong PhanCongGVBMCNController.php
+
     public function saveAssignment() {
         $this->checkPermission(['QTV', 'BGH']);
         
@@ -86,6 +87,26 @@ class PhanCongGVBMCNController {
             header('Location: index.php?controller=PhanCongGVBMCN&action=index'); 
             exit;
         }
+
+        // --- BẮT ĐẦU SỬA: Kiểm tra trùng GVCN ---
+        $tenLopTrung = $this->model->checkGVCNExisted($maGVCN, $maLop, $maTruong);
+        
+        if ($tenLopTrung) {
+            // Lấy tên giáo viên để thông báo rõ hơn
+            $teachers = $this->model->getAllTeachers($maTruong);
+            $tenGiaoVien = '';
+            foreach ($teachers as $t) {
+                if ($t['maGiaoVien'] == $maGVCN) {
+                    $tenGiaoVien = $t['hoTen'];
+                    break;
+                }
+            }
+
+            $_SESSION['error'] = "Giáo viên <strong>$tenGiaoVien</strong> đang chủ nhiệm lớp <strong>$tenLopTrung</strong>.<br>Một giáo viên chỉ được chủ nhiệm một lớp.";
+            header('Location: index.php?controller=PhanCongGVBMCN&action=index'); 
+            exit;
+        }
+        // --- KẾT THÚC SỬA ---
         
         // Lấy tất cả môn học
         $allSubjects = $this->model->getAllSubjects();
@@ -102,7 +123,6 @@ class PhanCongGVBMCNController {
                     'maGiaoVien' => $maGiaoVien
                 ];
             }
-            // Nếu không có giáo viên, không thêm vào danh sách (giữ nguyên phân công cũ nếu có)
         }
 
         // Gọi hàm processAssignment
@@ -111,7 +131,7 @@ class PhanCongGVBMCNController {
         if ($result === true) {
             $_SESSION['success'] = "Phân công giáo viên cho lớp thành công!";
         } elseif (is_array($result) && isset($result['error'])) {
-            // Xử lý lỗi...
+            $_SESSION['error'] = $result['error']; // Hiển thị lỗi cụ thể từ model nếu có
         } else {
             $_SESSION['error'] = "Không thể lưu dữ liệu, vui lòng thử lại.";
         }

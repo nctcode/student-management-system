@@ -724,6 +724,40 @@ class GiaoVienModel {
         
         return false;
     }
+    // Thêm vào GiaoVienModel.php
+
+    /**
+     * Kiểm tra giáo viên đã là GVCN của lớp nào khác chưa
+     * Trả về tên lớp nếu đã là GVCN, ngược lại trả về false
+     */
+    public function checkGVCNExisted($maGiaoVien, $maLopHienTai, $maTruong = null) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT l.tenLop 
+                FROM lophoc l
+                WHERE l.maGiaoVien = :maGiaoVien 
+                AND l.maLop != :maLopHienTai";
+        
+        $params = [
+            ':maGiaoVien' => $maGiaoVien,
+            ':maLopHienTai' => $maLopHienTai
+        ];
+
+        if ($maTruong) {
+            $sql .= " AND l.maTruong = :maTruong";
+            $params[':maTruong'] = $maTruong;
+        }
+
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $result ? $result['tenLop'] : false;
+        } catch (PDOException $e) {
+            error_log("Lỗi kiểm tra trùng GVCN: " . $e->getMessage());
+            return false;
+        }
+    }
 
     // Tìm hàm processAssignment trong GiaoVienModel.php và sửa lại như sau:
     public function processAssignment($maLop, $maGVCN, $assignments, $maTruong = null) {
