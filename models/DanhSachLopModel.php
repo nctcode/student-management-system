@@ -218,16 +218,18 @@ class DanhSachLopModel {
     }
 
     /**
-     * Lấy chuyên cần của học sinh
+     * Lấy chuyên cần của học sinh (SỬA LẠI JOIN BẢNG)
      */
     public function getChuyenCanHocSinh($maHocSinh) {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT ngayHoc, trangThai, ghiChu
-                FROM chuyencan 
-                WHERE maHocSinh = :maHocSinh
-                ORDER BY ngayHoc DESC
-                LIMIT 30"; // 30 ngày gần nhất
+        // SỬA: JOIN với bảng buoihoc để lấy ngayHoc
+        $sql = "SELECT bh.ngayHoc, cc.trangThai, cc.ghiChu
+                FROM chuyencan cc
+                JOIN buoihoc bh ON cc.maBuoiHoc = bh.maBuoiHoc
+                WHERE cc.maHocSinh = :maHocSinh
+                ORDER BY bh.ngayHoc DESC
+                LIMIT 30"; 
         
         try {
             $stmt = $conn->prepare($sql);
