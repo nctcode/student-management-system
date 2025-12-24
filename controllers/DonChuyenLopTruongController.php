@@ -90,13 +90,19 @@ class DonChuyenLopTruongController {
 
         $maTruong = $this->getMaTruongFilter();
         $loaiDon = $_GET['loaiDon'] ?? 'tat_ca';
-        $search = $_GET['search'] ?? '';
+            $loaiDonUrl = $_GET['loaiDon'] ?? 'tat_ca';
+            $loaiDonDB = 'tat_ca';
+            if ($loaiDonUrl === 'truong') {
+                $loaiDonDB = 'chuyen_truong';
+            } elseif ($loaiDonUrl === 'lop') {
+                $loaiDonDB = 'chuyen_lop';
+            }
+            
+            $search = $_GET['search'] ?? '';
 
-        // Giữ lại tham số school trong URL (cần thiết cho Model và View)
-        $selectedSchool = $this->getCurrentSchoolId();
-        
-        $requests = $this->model->getAll($search, $maTruong, $loaiDon);
-        $schools = $this->model->getAllSchools();
+            $selectedSchool = $this->getCurrentSchoolId();
+            $requests = $this->model->getAll($search, $maTruong, $loaiDonDB);
+            $schools = $this->model->getAllSchools();
         
         $currentSchoolId = $this->getCurrentSchoolId();
         $currentSchoolName = $this->getSchoolName($schools, $currentSchoolId);
