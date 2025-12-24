@@ -596,12 +596,21 @@ small.text-muted {
                             <label class="form-label">Họ tên cha</label>
                             <input type="text" name="hoTenCha" class="form-control" value="<?php echo $_POST['hoTenCha'] ?? ''; ?>">
                         </div>
+                        <!-- Thêm trường namSinhCha -->
+                        <div class="col-md-2">
+                            <label class="form-label">Năm sinh</label>
+                            <input type="number" name="namSinhCha" class="form-control" min="1950" max="2005" value="<?php echo $_POST['namSinhCha'] ?? ''; ?>">
+                        </div>
 
                         <div class="col-md-3">
                             <label class="form-label">Nghề nghiệp</label>
                             <input type="text" name="ngheNghiepCha" class="form-control" value="<?php echo $_POST['ngheNghiepCha'] ?? ''; ?>">
                         </div>
-
+                        <!-- Thêm trường noiCongTacCha -->
+                        <div class="col-md-3">
+                            <label class="form-label">Nơi công tác</label>
+                            <input type="text" name="noiCongTacCha" class="form-control" value="<?php echo $_POST['noiCongTacCha'] ?? ''; ?>">
+                        </div>
                         <div class="col-md-3">
                             <label class="form-label">SĐT cha</label>
                             <input type="tel" name="dienThoaiCha" class="form-control" value="<?php echo $_POST['dienThoaiCha'] ?? ''; ?>">
@@ -618,12 +627,18 @@ small.text-muted {
                             <label class="form-label">Họ tên mẹ</label>
                             <input type="text" name="hoTenMe" class="form-control" value="<?php echo $_POST['hoTenMe'] ?? ''; ?>">
                         </div>
-
+                        <div class="col-md-2">
+                            <label class="form-label">Năm sinh</label>
+                            <input type="number" name="namSinhMe" class="form-control" min="1950" max="2005" value="<?php echo $_POST['namSinhMe'] ?? ''; ?>">
+                        </div>
                         <div class="col-md-3">
                             <label class="form-label">Nghề nghiệp</label>
                             <input type="text" name="ngheNghiepMe" class="form-control" value="<?php echo $_POST['ngheNghiepMe'] ?? ''; ?>">
                         </div>
-
+                        <div class="col-md-3">
+                            <label class="form-label">Nơi công tác</label>
+                            <input type="text" name="noiCongTacMe" class="form-control" value="<?php echo $_POST['noiCongTacMe'] ?? ''; ?>">
+                        </div>
                         <div class="col-md-3">
                             <label class="form-label">SĐT mẹ</label>
                             <input type="tel" name="dienThoaiMe" class="form-control" value="<?php echo $_POST['dienThoaiMe'] ?? ''; ?>">
@@ -641,13 +656,19 @@ small.text-muted {
                             <input type="text" name="hoTenNguoiGiamHo" class="form-control" value="<?php echo $_POST['hoTenNguoiGiamHo'] ?? ''; ?>">
                         </div>
 
-                       
+                       <div class="col-md-2">
+                            <label class="form-label">Năm sinh</label>
+                            <input type="number" name="namSinhNguoiGiamHo" class="form-control" min="1950" max="2005" value="<?php echo $_POST['namSinhNguoiGiamHo'] ?? ''; ?>">
+                        </div>
 
                         <div class="col-md-3">
                             <label class="form-label">Nghề nghiệp</label>
                             <input type="text" name="ngheNghiepNguoiGiamHo" class="form-control" value="<?php echo $_POST['ngheNghiepNguoiGiamHo'] ?? ''; ?>">
                         </div>
-
+                        <div class="col-md-3">
+                            <label class="form-label">Nơi công tác</label>
+                            <input type="text" name="noiCongTacNguoiGiamHo" class="form-control" value="<?php echo $_POST['noiCongTacNguoiGiamHo'] ?? ''; ?>">
+                        </div>
                         <div class="col-md-3">
                             <label class="form-label">SĐT người giám hộ</label>
                             <input type="tel" name="dienThoaiNguoiGiamHo" class="form-control" value="<?php echo $_POST['dienThoaiNguoiGiamHo'] ?? ''; ?>">
@@ -735,53 +756,46 @@ small.text-muted {
                             <input type="text" name="nguyenVong3" class="form-control" value="<?php echo $_POST['nguyenVong3'] ?? ''; ?>">
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label">Nguyện vọng 4</label>
-                            <input type="text" name="nguyenVong4" class="form-control" value="<?php echo $_POST['nguyenVong4'] ?? ''; ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Nguyện vọng 5</label>
-                            <input type="text" name="nguyenVong5" class="form-control" value="<?php echo $_POST['nguyenVong5'] ?? ''; ?>">
-                        </div>
+                        
 
                         <!-- THÔNG TIN HỒ SƠ ĐÍNH KÈM -->
-                        <div class="col-12 mt-4">
+                        <div class="col-12 mt-2">
                             <h5 class="border-bottom pb-2 text-primary">
                                 <i class="fas fa-file-upload"></i> HỒ SƠ ĐÍNH KÈM
                             </h5>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Bản sao giấy khai sinh</label>
                             <input type="file" name="banSaoGiayKhaiSinh" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Chấp nhận file PDF, JPG, PNG (tối đa 5MB)</small>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Bản sao hộ khẩu</label>
                             <input type="file" name="banSaoHoKhau" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Chấp nhận file PDF, JPG, PNG (tối đa 5MB)</small>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Học bạ THCS</label>
                             <input type="file" name="hocBaTHCS" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Chấp nhận file PDF, JPG, PNG (tối đa 5MB)</small>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Giấy chứng nhận tốt nghiệp</label>
                             <input type="file" name="giayChungNhanTotNghiep" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Chấp nhận file PDF, JPG, PNG (tối đa 5MB)</small>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Ảnh 3x4</label>
                             <input type="file" name="anh34" class="form-control" accept=".jpg,.jpeg,.png">
                             <small class="text-muted">Chấp nhận file JPG, PNG (tối đa 2MB)</small>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Giấy xác nhận ưu tiên (nếu có)</label>
                             <input type="file" name="giayXacNhanUuTien" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Chấp nhận file PDF, JPG, PNG (tối đa 5MB)</small>

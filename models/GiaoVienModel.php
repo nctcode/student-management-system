@@ -8,6 +8,22 @@ class GiaoVienModel {
         $this->db = new Database();
     }
 
+    public function getGiaoVienByNguoiDung($maNguoiDung) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT gv.*, nd.hoTen, nd.ngaySinh, nd.gioiTinh, nd.soDienThoai, nd.email, nd.diaChi,
+                        tt.toChuyenMon
+                FROM giaovien gv
+                JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN totruongchuyenmon tt ON gv.maToTruong = tt.maToTruong
+                WHERE nd.maNguoiDung = ?";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maNguoiDung]);
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     // Lấy thông tin giáo viên dựa trên mã người dùng.
     public function getGiaoVienByMaNguoiDung($maNguoiDung) {
         $conn = $this->db->getConnection();

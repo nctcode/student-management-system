@@ -209,7 +209,6 @@ function hienThi($text)
                 <th>Miệng</th>
                 <th>15 phút</th>
                 <th>1 tiết</th>
-                <th>Giữa kỳ</th>
                 <th>Cuối kỳ</th>
                 <th>TB</th>
               </tr>
@@ -224,7 +223,6 @@ function hienThi($text)
             <td>${ct.MIENG ?? 0}</td>
             <td>${ct['15_PHUT'] ?? 0}</td>
             <td>${ct['1_TIET'] ?? 0}</td>
-            <td>${ct.GIUA_KY ?? 0}</td>
             <td>${ct.CUOI_KY ?? 0}</td>
             <td>${ct.DIEM_TB ?? 0}</td>
           </tr>`;

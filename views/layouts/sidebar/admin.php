@@ -11,7 +11,7 @@
                 </a>
             </li>
             <?php if (in_array($_SESSION['user']['vaiTro'], ['QTV', 'BGH', 'GIAOVIEN'])): ?>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a class="nav-link collapsed" href="#" 
                    data-bs-toggle="collapse" 
                    data-bs-target="#collapseTinNhan"
@@ -27,7 +27,7 @@
                         <a class="collapse-item" href="index.php?controller=tinnhan&action=index">Danh sách tin nhắn</a>
                     </div>
                 </div>
-            </li>
+            </li> -->
             <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=quanlynguoidung&action=index">
                     <i class="fas fa-fw fa-user-edit"></i>

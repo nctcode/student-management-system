@@ -331,9 +331,6 @@ if (file_exists($controllerFile)) {
                     }
                     break;
 
-                default:
-                    $controllerInstance->$action();
-                
                 case 'hanhkiem':
                     switch ($action) {
                         case 'index':
@@ -346,6 +343,19 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
+                
+                case 'tracuuhosotuyensinh':
+                    switch ($action) {
+                        case 'index':
+                        case 'traCuuHoSo':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
+                default:
+                    $controllerInstance->$action();
             }
         } else {
             // Xử lý lỗi Action không tồn tại

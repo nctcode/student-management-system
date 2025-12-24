@@ -12,7 +12,6 @@ class TuyenSinhModel {
         return $this->db->getConnection();
     }
     
-    // Đăng ký hồ sơ tuyển sinh
     public function dangKyHoSo($data) {
         $conn = $this->db->getConnection();
         
@@ -23,12 +22,15 @@ class TuyenSinhModel {
                 hoTenMe, namSinhMe, ngheNghiepMe, dienThoaiMe, noiCongTacMe,
                 hoTenNguoiGiamHo, namSinhNguoiGiamHo, ngheNghiepNguoiGiamHo, dienThoaiNguoiGiamHo, noiCongTacNguoiGiamHo,
                 truongTHCS, diaChiTruongTHCS, namTotNghiep, xepLoaiHocLuc, xepLoaiHanhKiem, diemTB_Lop9,
-                nguyenVong1, nguyenVong2, nguyenVong3, nganhHoc, hinhThucTuyenSinh, maBan,
+                nguyenVong1, nguyenVong2, nguyenVong3, hinhThucTuyenSinh,
                 banSaoGiayKhaiSinh, banSaoHoKhau, hocBaTHCS, giayChungNhanTotNghiep, anh34, giayXacNhanUuTien) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
-        $stmt = $conn->prepare($sql);
-        $result = $stmt->execute([
+        // Debug: đếm số dấu ?
+        $questionCount = substr_count($sql, '?');
+        error_log("SQL có {$questionCount} dấu ?");
+        
+        $params = [
             $data['hoTen'],
             $data['gioiTinh'],
             $data['ngaySinh'],
@@ -65,17 +67,25 @@ class TuyenSinhModel {
             $data['nguyenVong1'] ?? null,
             $data['nguyenVong2'] ?? null,
             $data['nguyenVong3'] ?? null,
-            $data['nganhHoc'] ?? null,
             $data['hinhThucTuyenSinh'] ?? 'XET_TUYEN',
-            $data['maBan'] ?? null,
             $data['banSaoGiayKhaiSinh'] ?? null,
             $data['banSaoHoKhau'] ?? null,
             $data['hocBaTHCS'] ?? null,
             $data['giayChungNhanTotNghiep'] ?? null,
             $data['anh34'] ?? null,
             $data['giayXacNhanUuTien'] ?? null
-        ]);
-
+        ];
+        
+        // Debug: đếm số params
+        error_log("Có " . count($params) . " tham số");
+        
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->execute($params);
+        
+        if (!$result) {
+            error_log("Lỗi PDO: " . print_r($stmt->errorInfo(), true));
+        }
+        
         return $result ? $conn->lastInsertId() : false;
     }
 
@@ -83,9 +93,8 @@ class TuyenSinhModel {
     public function getAllHoSo() {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT hs.*, b.tenBan, dt.diemToan, dt.diemVan, dt.diemAnh, dt.diemMon4, dt.diemTong
+        $sql = "SELECT hs.*, dt.diemToan, dt.diemVan, dt.diemAnh, dt.diemMon4, dt.diemTong
                 FROM hosotuyensinh hs
-                LEFT JOIN banhoc b ON hs.maBan = b.maBan
                 LEFT JOIN diemtuyensinh dt ON hs.maHoSo = dt.maHoSo
                 ORDER BY hs.ngayDangKy DESC";
         
@@ -99,9 +108,8 @@ class TuyenSinhModel {
     public function getHoSoById($maHoSo) {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT hs.*, b.tenBan, dt.*
+        $sql = "SELECT hs.*, dt.*
                 FROM hosotuyensinh hs
-                LEFT JOIN banhoc b ON hs.maBan = b.maBan
                 LEFT JOIN diemtuyensinh dt ON hs.maHoSo = dt.maHoSo
                 WHERE hs.maHoSo = ?";
         
@@ -111,35 +119,33 @@ class TuyenSinhModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     // Thêm phương thức này vào TuyenSinhModel
-public function getHoSoByMaHocSinh($maHocSinh) {
-    $conn = $this->db->getConnection();
-    
-    $sql = "SELECT hs.*, b.tenBan, dt.*, h.maHocSinh
-            FROM hosotuyensinh hs
-            LEFT JOIN banhoc b ON hs.maBan = b.maBan
-            LEFT JOIN diemtuyensinh dt ON hs.maHoSo = dt.maHoSo
-            LEFT JOIN hocsinh h ON hs.maHoSo = h.maHoSo
-            WHERE h.maHocSinh = ?";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->execute([$maHocSinh]);
-    
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Debug: kiểm tra kết quả query
-    error_log("Query getHoSoByMaHocSinh: maHocSinh = " . $maHocSinh);
-    error_log("Result: " . print_r($result, true));
-    
-    return $result;
-}
+    public function getHoSoByMaHocSinh($maHocSinh) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT hs.*, dt.*, h.maHocSinh
+                FROM hosotuyensinh hs
+                LEFT JOIN diemtuyensinh dt ON hs.maHoSo = dt.maHoSo
+                LEFT JOIN hocsinh h ON hs.maHoSo = h.maHoSo
+                WHERE h.maHocSinh = ?";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maHocSinh]);
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Debug: kiểm tra kết quả query
+        error_log("Query getHoSoByMaHocSinh: maHocSinh = " . $maHocSinh);
+        error_log("Result: " . print_r($result, true));
+        
+        return $result;
+    }
 
     // Phương thức lấy danh sách hồ sơ theo mã học sinh (nếu cần)
     public function getHoSoByMaHocSinhList($maHocSinh) {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT hs.*, b.tenBan, dt.diemToan, dt.diemVan, dt.diemAnh, dt.diemMon4, dt.diemTong, dt.soBaoDanh
+        $sql = "SELECT hs.*, dt.diemToan, dt.diemVan, dt.diemAnh, dt.diemMon4, dt.diemTong, dt.soBaoDanh
                 FROM hosotuyensinh hs
-                LEFT JOIN banhoc b ON hs.maBan = b.maBan
                 LEFT JOIN diemtuyensinh dt ON hs.maHoSo = dt.maHoSo
                 LEFT JOIN hocsinh h ON hs.maHoSo = h.maHoSo
                 WHERE h.maHocSinh = ?
@@ -155,9 +161,8 @@ public function getHoSoByMaHocSinh($maHocSinh) {
     public function getHoSoByPhone($soDienThoai) {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT hs.*, b.tenBan, dt.diemToan, dt.diemVan, dt.diemAnh, dt.diemMon4, dt.diemTong, dt.soBaoDanh
+        $sql = "SELECT hs.*, dt.diemToan, dt.diemVan, dt.diemAnh, dt.diemMon4, dt.diemTong, dt.soBaoDanh
                 FROM hosotuyensinh hs
-                LEFT JOIN banhoc b ON hs.maBan = b.maBan
                 LEFT JOIN diemtuyensinh dt ON hs.maHoSo = dt.maHoSo
                 WHERE hs.soDienThoaiHocSinh = ? OR hs.soDienThoaiPhuHuynh = ? OR hs.dienThoaiCha = ? OR hs.dienThoaiMe = ?
                 ORDER BY hs.ngayDangKy DESC";
@@ -184,29 +189,60 @@ public function getHoSoByMaHocSinh($maHocSinh) {
     public function nhapDiemTuyenSinh($maHoSo, $diemData) {
         $conn = $this->db->getConnection();
         
-        // Tính điểm tổng
-        $diemTong = $diemData['diemToan'] + $diemData['diemVan'] + $diemData['diemAnh'] + 
-                   $diemData['diemMon4'] + $diemData['diemCong'];
-        
-        // Tạo số báo danh tự động
-        $soBaoDanh = 'TS' . date('Y') . str_pad($maHoSo, 4, '0', STR_PAD_LEFT);
-
-        $sql = "INSERT INTO diemtuyensinh 
-                (maHoSo, soBaoDanh, diemToan, diemVan, diemAnh, diemMon4, diemCong, diemTong, dotThi) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE 
-                diemToan = ?, diemVan = ?, diemAnh = ?, diemMon4 = ?, 
-                diemCong = ?, diemTong = ?, dotThi = ?";
-        
-        $stmt = $conn->prepare($sql);
-        return $stmt->execute([
-            $maHoSo, $soBaoDanh, 
-            $diemData['diemToan'], $diemData['diemVan'], $diemData['diemAnh'], 
-            $diemData['diemMon4'], $diemData['diemCong'], $diemTong, $diemData['dotThi'],
-            // Update values
-            $diemData['diemToan'], $diemData['diemVan'], $diemData['diemAnh'], 
-            $diemData['diemMon4'], $diemData['diemCong'], $diemTong, $diemData['dotThi']
-        ]);
+        try {
+            $conn->beginTransaction();
+            
+            // Tính điểm tổng
+            $diemTong = $diemData['diemToan'] + $diemData['diemVan'] + $diemData['diemAnh'] + 
+                    $diemData['diemMon4'] + $diemData['diemCong'];
+            
+            // Tạo số báo danh tự động
+            $soBaoDanh = 'TS' . date('Y') . str_pad($maHoSo, 4, '0', STR_PAD_LEFT);
+            
+            // Xác định kết quả dựa trên điểm tổng
+            $ketQua = ($diemTong >= 32) ? 'TRUNG_TUYEN' : 'KHONG_TRUNG_TUYEN';
+            
+            // Insert/Update điểm tuyển sinh
+            $sqlDiem = "INSERT INTO diemtuyensinh 
+                        (maHoSo, soBaoDanh, diemToan, diemVan, diemAnh, diemMon4, diemCong, diemTong, dotThi) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE 
+                        diemToan = ?, diemVan = ?, diemAnh = ?, diemMon4 = ?, 
+                        diemCong = ?, diemTong = ?, dotThi = ?";
+            
+            $stmtDiem = $conn->prepare($sqlDiem);
+            $stmtDiem->execute([
+                $maHoSo, $soBaoDanh, 
+                $diemData['diemToan'], $diemData['diemVan'], $diemData['diemAnh'], 
+                $diemData['diemMon4'], $diemData['diemCong'], $diemTong, $diemData['dotThi'],
+                // Update values
+                $diemData['diemToan'], $diemData['diemVan'], $diemData['diemAnh'], 
+                $diemData['diemMon4'], $diemData['diemCong'], $diemTong, $diemData['dotThi']
+            ]);
+            
+            // Cập nhật trạng thái và kết quả cho hồ sơ
+            $sqlHoSo = "UPDATE hosotuyensinh 
+                        SET trangThai = 'DA_DUYET', 
+                            ketQua = ?,
+                            ghiChu = CONCAT(IFNULL(ghiChu, ''), ' Đã nhập điểm - Tổng: ', ?)
+                        WHERE maHoSo = ?";
+            
+            $stmtHoSo = $conn->prepare($sqlHoSo);
+            $stmtHoSo->execute([$ketQua, $diemTong, $maHoSo]);
+            
+            // Nếu trúng tuyển, tự động tạo học sinh
+            if ($ketQua === 'TRUNG_TUYEN') {
+                $this->taoHocSinhKhiTrungTuyen($maHoSo);
+            }
+            
+            $conn->commit();
+            return true;
+            
+        } catch (Exception $e) {
+            $conn->rollBack();
+            error_log("Error in nhapDiemTuyenSinh: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Thống kê tuyển sinh
@@ -278,42 +314,41 @@ public function getHoSoByMaHocSinh($maHocSinh) {
         return $maHocSinh;
     }
     // Lấy hồ sơ theo mã người dùng (cho học sinh)
-public function getHoSoByMaNguoiDung($maNguoiDung) {
-    $conn = $this->db->getConnection();
-    
-    $sql = "SELECT hs.*, b.tenBan, dt.diemToan, dt.diemVan, dt.diemAnh, dt.diemMon4, dt.diemTong, dt.soBaoDanh
-            FROM hosotuyensinh hs
-            LEFT JOIN banhoc b ON hs.maBan = b.maBan
-            LEFT JOIN diemtuyensinh dt ON hs.maHoSo = dt.maHoSo
-            LEFT JOIN hocsinh h ON hs.maHoSo = h.maHoSo
-            WHERE h.maNguoiDung = ?
-            ORDER BY hs.ngayDangKy DESC";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->execute([$maNguoiDung]);
-    
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+    public function getHoSoByMaNguoiDung($maNguoiDung) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT hs.*, dt.diemToan, dt.diemVan, dt.diemAnh, dt.diemMon4, dt.diemTong, dt.soBaoDanh
+                FROM hosotuyensinh hs
+                LEFT JOIN diemtuyensinh dt ON hs.maHoSo = dt.maHoSo
+                LEFT JOIN hocsinh h ON hs.maHoSo = h.maHoSo
+                WHERE h.maNguoiDung = ?
+                ORDER BY hs.ngayDangKy DESC";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maNguoiDung]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
-// Lấy hồ sơ theo mã phụ huynh (cho phụ huynh)
-public function getHoSoByMaPhuHuynh($maPhuHuynh) {
-    $conn = $this->db->getConnection();
-    
-    $sql = "SELECT hs.*, b.tenBan, dt.diemToan, dt.diemVan, dt.diemAnh, dt.diemMon4, dt.diemTong, dt.soBaoDanh,
-                   nd.hoTen as tenHocSinh, h.maHocSinh
-            FROM hosotuyensinh hs
-            LEFT JOIN banhoc b ON hs.maBan = b.maBan
-            LEFT JOIN diemtuyensinh dt ON hs.maHoSo = dt.maHoSo
-            INNER JOIN hocsinh h ON hs.maHoSo = h.maHoSo
-            INNER JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
-            WHERE h.maPhuHuynh = ?
-            ORDER BY hs.ngayDangKy DESC";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->execute([$maPhuHuynh]);
-    
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+    // Cũng cần sửa phương thức getHoSoByMaPhuHuynh:
+    public function getHoSoByMaPhuHuynh($maPhuHuynh) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT hs.*, dt.diemToan, dt.diemVan, dt.diemAnh, dt.diemMon4, dt.diemTong, dt.soBaoDanh,
+                    nd.hoTen as tenHocSinh, h.maHocSinh
+                FROM hosotuyensinh hs
+                LEFT JOIN diemtuyensinh dt ON hs.maHoSo = dt.maHoSo
+                INNER JOIN hocsinh h ON hs.maHoSo = h.maHoSo
+                INNER JOIN nguoidung nd ON h.maNguoiDung = nd.maNguoiDung
+                WHERE h.maPhuHuynh = ?
+                ORDER BY hs.ngayDangKy DESC";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maPhuHuynh]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 
 // Lấy mã phụ huynh từ mã người dùng
 public function getMaPhuHuynhByMaNguoiDung($maNguoiDung) {

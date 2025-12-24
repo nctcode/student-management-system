@@ -69,7 +69,7 @@ $title = "Chi tiết hồ sơ tuyển sinh";
                             <p><strong>SĐT phụ huynh:</strong> <?php echo $hoSo['soDienThoaiPhuHuynh'] ?? 'N/A'; ?></p>
                             <p><strong>SĐT cha:</strong> <?php echo $hoSo['dienThoaiCha'] ?? 'N/A'; ?></p>
                             <p><strong>SĐT mẹ:</strong> <?php echo $hoSo['dienThoaiMe'] ?? 'N/A'; ?></p>
-                            <?php if ($hoSo['dienThoaiNguoiGiamHo']): ?>
+                            <?php if (!empty($hoSo['dienThoaiNguoiGiamHo'])): ?>
                             <p><strong>SĐT người giám hộ:</strong> <?php echo $hoSo['dienThoaiNguoiGiamHo']; ?></p>
                             <?php endif; ?>
                         </div>
@@ -138,27 +138,22 @@ $title = "Chi tiết hồ sơ tuyển sinh";
                     <div class="row">
                         <div class="col-md-4">
                             <p><strong>Nguyện vọng 1:</strong><br>
-                            <?php echo $hoSo['nguyenVong1'] ?? 'N/A'; ?>
+                            <?php echo !empty($hoSo['nguyenVong1']) ? $hoSo['nguyenVong1'] : 'N/A'; ?>
                             </p>
                         </div>
                         <div class="col-md-4">
                             <p><strong>Nguyện vọng 2:</strong><br>
-                            <?php echo $hoSo['nguyenVong2'] ?? 'N/A'; ?>
+                            <?php echo !empty($hoSo['nguyenVong2']) ? $hoSo['nguyenVong2'] : 'N/A'; ?>
                             </p>
                         </div>
                         <div class="col-md-4">
                             <p><strong>Nguyện vọng 3:</strong><br>
-                            <?php echo $hoSo['nguyenVong3'] ?? 'N/A'; ?>
+                            <?php echo !empty($hoSo['nguyenVong3']) ? $hoSo['nguyenVong3'] : 'N/A'; ?>
                             </p>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Ngành học:</strong><br>
-                            <?php echo $hoSo['nganhHoc'] ?? 'N/A'; ?>
-                            </p>
-                        </div>
-                        <div class="col-md-6">
+                    <div class="row mt-2">
+                        <div class="col-md-12">
                             <p><strong>Hình thức tuyển sinh:</strong><br>
                             <?php 
                             $hinhThuc = [
@@ -284,10 +279,6 @@ $title = "Chi tiết hồ sơ tuyển sinh";
                     <?php endif; ?>
                     </p>
 
-                    <p><strong>Ban đăng ký:</strong><br>
-                    <span class="badge bg-info"><?php echo $hoSo['tenBan'] ?? 'N/A'; ?></span>
-                    </p>
-
                     <p><strong>Ngày đăng ký:</strong><br>
                     <?php echo date('d/m/Y H:i', strtotime($hoSo['ngayDangKy'])); ?>
                     </p>
@@ -310,14 +301,14 @@ $title = "Chi tiết hồ sơ tuyển sinh";
                 </div>
                 <div class="card-body">
                     <p><strong>Số báo danh:</strong> <?php echo $hoSo['soBaoDanh']; ?></p>
-                    <p><strong>Toán:</strong> <?php echo $hoSo['diemToan'] ?? 'N/A'; ?></p>
-                    <p><strong>Văn:</strong> <?php echo $hoSo['diemVan'] ?? 'N/A'; ?></p>
-                    <p><strong>Anh:</strong> <?php echo $hoSo['diemAnh'] ?? 'N/A'; ?></p>
-                    <p><strong>Môn 4:</strong> <?php echo $hoSo['diemMon4'] ?? 'N/A'; ?></p>
-                    <p><strong>Điểm cộng:</strong> <?php echo $hoSo['diemCong'] ?? '0'; ?></p>
+                    <p><strong>Toán:</strong> <?php echo isset($hoSo['diemToan']) ? $hoSo['diemToan'] : 'N/A'; ?></p>
+                    <p><strong>Văn:</strong> <?php echo isset($hoSo['diemVan']) ? $hoSo['diemVan'] : 'N/A'; ?></p>
+                    <p><strong>Anh:</strong> <?php echo isset($hoSo['diemAnh']) ? $hoSo['diemAnh'] : 'N/A'; ?></p>
+                    <p><strong>Môn 4:</strong> <?php echo isset($hoSo['diemMon4']) ? $hoSo['diemMon4'] : 'N/A'; ?></p>
+                    <p><strong>Điểm cộng:</strong> <?php echo isset($hoSo['diemCong']) ? $hoSo['diemCong'] : '0'; ?></p>
                     <hr>
                     <p><strong>Tổng điểm:</strong> 
-                        <span class="fw-bold text-primary"><?php echo $hoSo['diemTong'] ?? 'N/A'; ?></span>
+                        <span class="fw-bold text-primary"><?php echo isset($hoSo['diemTong']) ? $hoSo['diemTong'] : 'N/A'; ?></span>
                     </p>
                     <p><strong>Đợt thi:</strong> <?php echo $hoSo['dotThi'] ?? 'N/A'; ?></p>
                 </div>

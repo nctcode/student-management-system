@@ -1,11 +1,11 @@
 <?php
-require_once 'models/HoSoModel.php';
+require_once 'models/TuyenSinhModel.php';
 
 class TraCuuHoSoController { 
     private $model;
 
     public function __construct() {
-        $this->model = new HoSoModel();
+        $this->model = new TuyenSinhModel();
     }
 
     public function traCuuHoSo() { 
@@ -19,7 +19,7 @@ class TraCuuHoSoController {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['maHoSo'])) {
             $maHoSo = trim($_POST['maHoSo']);
-            $hoSo = $this->model->getHoSoByMa($maHoSo);
+            $hoSo = $this->model->getHoSoById($maHoSo);
         }
 
         require_once 'views/layouts/header.php';

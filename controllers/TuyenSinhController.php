@@ -78,208 +78,207 @@ class TuyenSinhController {
     }
 
     // Trang đăng ký hồ sơ (cho phụ huynh/học sinh)
-public function dangkyhoso() {
-    $title = "Đăng ký tuyển sinh";
-    
-    // Lấy danh sách ban học
-    $banHoc = $this->banHocModel->getAllBanHoc();
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Lấy thông tin user
-        $userRole = $_SESSION['user']['vaiTro'] ?? '';
-        $maNguoiDung = $_SESSION['user']['maNguoiDung'] ?? '';
+    public function dangkyhoso() {
+        $title = "Đăng ký tuyển sinh";
         
-        // Xử lý dữ liệu form
-        $data = [
-            'hoTen' => $_POST['hoTen'] ?? '',
-            'gioiTinh' => $_POST['gioiTinh'] ?? 'NAM',
-            'ngaySinh' => $_POST['ngaySinh'] ?? '',
-            'noiSinh' => $_POST['noiSinh'] ?? '',
-            'danToc' => $_POST['danToc'] ?? '',
-            'tonGiao' => $_POST['tonGiao'] ?? '',
-            'quocTich' => $_POST['quocTich'] ?? 'Việt Nam',
-            'diaChiThuongTru' => $_POST['diaChiThuongTru'] ?? '',
-            'noiOHienNay' => $_POST['noiOHienNay'] ?? '',
-            'soDienThoaiHocSinh' => $_POST['soDienThoaiHocSinh'] ?? '',
-            'soDienThoaiPhuHuynh' => $_POST['soDienThoaiPhuHuynh'] ?? '',
-            'email' => $_POST['email'] ?? '',
-            'hoTenCha' => $_POST['hoTenCha'] ?? '',
-            'namSinhCha' => $_POST['namSinhCha'] ?? null,
-            'ngheNghiepCha' => $_POST['ngheNghiepCha'] ?? '',
-            'dienThoaiCha' => $_POST['dienThoaiCha'] ?? '',
-            'noiCongTacCha' => $_POST['noiCongTacCha'] ?? '',
-            'hoTenMe' => $_POST['hoTenMe'] ?? '',
-            'namSinhMe' => $_POST['namSinhMe'] ?? null,
-            'ngheNghiepMe' => $_POST['ngheNghiepMe'] ?? '',
-            'dienThoaiMe' => $_POST['dienThoaiMe'] ?? '',
-            'noiCongTacMe' => $_POST['noiCongTacMe'] ?? '',
-            'hoTenNguoiGiamHo' => $_POST['hoTenNguoiGiamHo'] ?? '',
-            'namSinhNguoiGiamHo' => $_POST['namSinhNguoiGiamHo'] ?? null,
-            'ngheNghiepNguoiGiamHo' => $_POST['ngheNghiepNguoiGiamHo'] ?? '',
-            'dienThoaiNguoiGiamHo' => $_POST['dienThoaiNguoiGiamHo'] ?? '',
-            'noiCongTacNguoiGiamHo' => $_POST['noiCongTacNguoiGiamHo'] ?? '',
-            'truongTHCS' => $_POST['truongTHCS'] ?? '',
-            'diaChiTruongTHCS' => $_POST['diaChiTruongTHCS'] ?? '',
-            'namTotNghiep' => $_POST['namTotNghiep'] ?? null,
-            'xepLoaiHocLuc' => $_POST['xepLoaiHocLuc'] ?? null,
-            'xepLoaiHanhKiem' => $_POST['xepLoaiHanhKiem'] ?? null,
-            'diemTB_Lop9' => $_POST['diemTB_Lop9'] ?? null,
-            'nguyenVong1' => $_POST['nguyenVong1'] ?? '',
-            'nguyenVong2' => $_POST['nguyenVong2'] ?? '',
-            'nguyenVong3' => $_POST['nguyenVong3'] ?? '',
-            'nganhHoc' => $_POST['nganhHoc'] ?? '',
-            'hinhThucTuyenSinh' => $_POST['hinhThucTuyenSinh'] ?? 'XET_TUYEN',
-            'maBan' => $_POST['maBan'] ?? null
+        // Lấy danh sách ban học
+        $banHoc = $this->banHocModel->getAllBanHoc();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Lấy thông tin user
+            $userRole = $_SESSION['user']['vaiTro'] ?? '';
+            $maNguoiDung = $_SESSION['user']['maNguoiDung'] ?? '';
+            
+            // Xử lý dữ liệu form
+            $data = [
+                'hoTen' => $_POST['hoTen'] ?? '',
+                'gioiTinh' => $_POST['gioiTinh'] ?? 'NAM',
+                'ngaySinh' => $_POST['ngaySinh'] ?? '',
+                'noiSinh' => $_POST['noiSinh'] ?? '',
+                'danToc' => $_POST['danToc'] ?? '',
+                'tonGiao' => $_POST['tonGiao'] ?? '',
+                'quocTich' => $_POST['quocTich'] ?? 'Việt Nam',
+                'diaChiThuongTru' => $_POST['diaChiThuongTru'] ?? '',
+                'noiOHienNay' => $_POST['noiOHienNay'] ?? '',
+                'soDienThoaiHocSinh' => $_POST['soDienThoaiHocSinh'] ?? '',
+                'soDienThoaiPhuHuynh' => $_POST['soDienThoaiPhuHuynh'] ?? '',
+                'email' => $_POST['email'] ?? '',
+                'hoTenCha' => $_POST['hoTenCha'] ?? '',
+                'namSinhCha' => $_POST['namSinhCha'] ?? null,
+                'ngheNghiepCha' => $_POST['ngheNghiepCha'] ?? '',
+                'dienThoaiCha' => $_POST['dienThoaiCha'] ?? '',
+                'noiCongTacCha' => $_POST['noiCongTacCha'] ?? '',
+                'hoTenMe' => $_POST['hoTenMe'] ?? '',
+                'namSinhMe' => $_POST['namSinhMe'] ?? null,
+                'ngheNghiepMe' => $_POST['ngheNghiepMe'] ?? '',
+                'dienThoaiMe' => $_POST['dienThoaiMe'] ?? '',
+                'noiCongTacMe' => $_POST['noiCongTacMe'] ?? '',
+                'hoTenNguoiGiamHo' => $_POST['hoTenNguoiGiamHo'] ?? '',
+                'namSinhNguoiGiamHo' => $_POST['namSinhNguoiGiamHo'] ?? null,
+                'ngheNghiepNguoiGiamHo' => $_POST['ngheNghiepNguoiGiamHo'] ?? '',
+                'dienThoaiNguoiGiamHo' => $_POST['dienThoaiNguoiGiamHo'] ?? '',
+                'noiCongTacNguoiGiamHo' => $_POST['noiCongTacNguoiGiamHo'] ?? '',
+                'truongTHCS' => $_POST['truongTHCS'] ?? '',
+                'diaChiTruongTHCS' => $_POST['diaChiTruongTHCS'] ?? '',
+                'namTotNghiep' => $_POST['namTotNghiep'] ?? null,
+                'xepLoaiHocLuc' => $_POST['xepLoaiHocLuc'] ?? null,
+                'xepLoaiHanhKiem' => $_POST['xepLoaiHanhKiem'] ?? null,
+                'diemTB_Lop9' => $_POST['diemTB_Lop9'] ?? null,
+                'nguyenVong1' => $_POST['nguyenVong1'] ?? '',
+                'nguyenVong2' => $_POST['nguyenVong2'] ?? '',
+                'nguyenVong3' => $_POST['nguyenVong3'] ?? '',
+                'hinhThucTuyenSinh' => $_POST['hinhThucTuyenSinh'] ?? 'XET_TUYEN'
+                // Bỏ maBan và nganhHoc
+            ];
+
+        // ===== VALIDATE DỮ LIỆ =====
+    if (empty($data['hoTen']) || empty($data['ngaySinh']) || empty($data['diaChiThuongTru']) || 
+        empty($data['soDienThoaiHocSinh']) || empty($data['soDienThoaiPhuHuynh'])) {
+
+        $_SESSION['error'] = "Vui lòng điền đầy đủ thông tin bắt buộc!";
+
+    }
+    // Validate họ tên
+    elseif (!preg_match('/^[A-Za-zÀ-ỹ\s]+$/u', $data['hoTen'])) {
+
+        $_SESSION['error'] = "Họ tên không được chứa số hoặc ký tự đặc biệt!";
+
+    }
+    // ===== VALIDATE TẤT CẢ SỐ ĐIỆN THOẠI =====
+    else {
+        $phoneFields = [
+            'soDienThoaiHocSinh',
+            'soDienThoaiPhuHuynh',
+            'dienThoaiCha',
+            'dienThoaiMe',
+            'dienThoaiNguoiGiamHo'
         ];
 
-       // ===== VALIDATE DỮ LIỆ =====
-if (empty($data['hoTen']) || empty($data['ngaySinh']) || empty($data['diaChiThuongTru']) || 
-    empty($data['soDienThoaiHocSinh']) || empty($data['soDienThoaiPhuHuynh'])) {
-
-    $_SESSION['error'] = "Vui lòng điền đầy đủ thông tin bắt buộc!";
-
-}
-// Validate họ tên
-elseif (!preg_match('/^[A-Za-zÀ-ỹ\s]+$/u', $data['hoTen'])) {
-
-    $_SESSION['error'] = "Họ tên không được chứa số hoặc ký tự đặc biệt!";
-
-}
-// ===== VALIDATE TẤT CẢ SỐ ĐIỆN THOẠI =====
-else {
-    $phoneFields = [
-        'soDienThoaiHocSinh',
-        'soDienThoaiPhuHuynh',
-        'dienThoaiCha',
-        'dienThoaiMe',
-        'dienThoaiNguoiGiamHo'
-    ];
-
-    foreach ($phoneFields as $field) {
-        if (!empty($data[$field]) && !preg_match('/^0[0-9]{9}$/', $data[$field])) {
-            $_SESSION['error'] = "Số điện thoại không hợp lệ! (phải gồm 10 số, bắt đầu bằng 0)";
-            break;
-        }
-    }
-}
-
-if (!empty($_SESSION['error'])) {
-    // Có lỗi → không xử lý tiếp
-} else {
-            // Xử lý upload file
-            $uploadResult = $this->handleFileUpload();
-            if ($uploadResult['success']) {
-                $data = array_merge($data, $uploadResult['files']);
-                
-                // Đăng ký hồ sơ
-                $result = $this->tuyenSinhModel->dangKyHoSo($data);
-
-                if ($result) {
-                    // LẤY KẾT NỐI DATABASE
-                    $conn = $this->tuyenSinhModel->getConnection();
-                    
-                    // NẾU LÀ HỌC SINH - Tạo/cập nhật bản ghi học sinh
-                    if ($userRole === 'HOCSINH') {
-                        require_once 'models/HocSinhModel.php';
-                        $hocSinhModel = new HocSinhModel();
-                        
-                        // Kiểm tra xem học sinh này đã có bản ghi chưa
-                        $existingHocSinh = $hocSinhModel->getHocSinhByNguoiDung($maNguoiDung);
-                        
-                        if (!$existingHocSinh) {
-                            // QUAN TRỌNG: Tạo bản ghi học sinh mới với maHoSo
-                            $sqlHocSinh = "INSERT INTO hocsinh (maNguoiDung, maHoSo, trangThai, ngayNhapHoc) 
-                                           VALUES (?, ?, 'DANG_HOC', CURDATE())";
-                            $stmtHocSinh = $conn->prepare($sqlHocSinh);
-                            $stmtHocSinh->execute([$maNguoiDung, $result]);
-                            
-                            error_log("✓ Created hocsinh: maNguoiDung={$maNguoiDung}, maHoSo={$result}");
-                        } else {
-                            // QUAN TRỌNG: Cập nhật maHoSo cho học sinh đã tồn tại
-                            $sqlUpdate = "UPDATE hocsinh SET maHoSo = ? WHERE maNguoiDung = ?";
-                            $stmtUpdate = $conn->prepare($sqlUpdate);
-                            $stmtUpdate->execute([$result, $maNguoiDung]);
-                            
-                            error_log("✓ Updated hocsinh: maNguoiDung={$maNguoiDung}, maHoSo={$result}");
-                        }
-                        
-                        // Verify: Kiểm tra lại xem đã cập nhật thành công chưa
-                        $verifyHocSinh = $hocSinhModel->getHocSinhByNguoiDung($maNguoiDung);
-                        if ($verifyHocSinh && $verifyHocSinh['maHoSo'] == $result) {
-                            error_log("✓✓ VERIFIED: Học sinh có maHoSo = {$result}");
-                        } else {
-                            error_log("✗✗ ERROR: Không verify được maHoSo!");
-                        }
-                    }
-                    
-                    // NẾU LÀ PHỤ HUYNH - Tạo học sinh mới
-                    elseif ($userRole === 'PHUHUYNH') {
-                        $maPhuHuynh = $this->tuyenSinhModel->getMaPhuHuynhByMaNguoiDung($maNguoiDung);
-                        
-                        if ($maPhuHuynh) {
-                            try {
-                                // Bắt đầu transaction
-                                $conn->beginTransaction();
-                                
-                                // Tạo người dùng mới cho học sinh
-                                $sqlNguoiDung = "INSERT INTO nguoidung (hoTen, ngaySinh, gioiTinh, soDienThoai, email, diaChi, loaiNguoiDung) 
-                                                 VALUES (?, ?, ?, ?, ?, ?, 'HOCSINH')";
-                                $stmtNguoiDung = $conn->prepare($sqlNguoiDung);
-                                $stmtNguoiDung->execute([
-                                    $data['hoTen'],
-                                    $data['ngaySinh'],
-                                    $data['gioiTinh'],
-                                    $data['soDienThoaiHocSinh'],
-                                    $data['email'],
-                                    $data['diaChiThuongTru']
-                                ]);
-                                
-                                $maNguoiDungMoi = $conn->lastInsertId();
-                                
-                                // Tạo học sinh liên kết với phụ huynh và hồ sơ
-                                $sqlHocSinh = "INSERT INTO hocsinh (maNguoiDung, maPhuHuynh, maHoSo, trangThai, ngayNhapHoc) 
-                                               VALUES (?, ?, ?, 'DANG_HOC', CURDATE())";
-                                $stmtHocSinh = $conn->prepare($sqlHocSinh);
-                                $stmtHocSinh->execute([$maNguoiDungMoi, $maPhuHuynh, $result]);
-                                
-                                // Commit transaction
-                                $conn->commit();
-                                
-                                error_log("✓ Created student for parent: maPhuHuynh={$maPhuHuynh}, maHoSo={$result}");
-                            } catch (Exception $e) {
-                                // Rollback nếu có lỗi
-                                $conn->rollBack();
-                                error_log("✗ Error creating student: " . $e->getMessage());
-                                $_SESSION['error'] = "Có lỗi khi tạo học sinh: " . $e->getMessage();
-                            }
-                        }
-                    }
-                    
-                    $_SESSION['success'] = "Đăng ký hồ sơ thành công! Mã hồ sơ: #" . str_pad($result, 4, '0', STR_PAD_LEFT);
-                    
-                    // Chuyển hướng đến trang danh sách hồ sơ
-                    header('Location: index.php?controller=tuyensinh&action=hosocuatoi');
-                    exit;
-                } else {
-                    $_SESSION['error'] = "Có lỗi xảy ra khi đăng ký hồ sơ!";
-                }
-            } else {
-                $_SESSION['error'] = $uploadResult['error'];
+        foreach ($phoneFields as $field) {
+            if (!empty($data[$field]) && !preg_match('/^0[0-9]{9}$/', $data[$field])) {
+                $_SESSION['error'] = "Số điện thoại không hợp lệ! (phải gồm 10 số, bắt đầu bằng 0)";
+                break;
             }
         }
     }
-    
-    $showSidebar = true;
-    require_once 'views/layouts/header.php';
-    require_once 'views/tuyensinh/dangkyhoso.php';
-    $userRole = $_SESSION['user']['vaiTro'] ?? '';
-    if ($userRole === 'PHUHUYNH') {
-        require_once 'views/layouts/sidebar/phuhuynh.php';
+
+    if (!empty($_SESSION['error'])) {
+        // Có lỗi → không xử lý tiếp
     } else {
-        require_once 'views/layouts/sidebar/hocsinh.php';
+                // Xử lý upload file
+                $uploadResult = $this->handleFileUpload();
+                if ($uploadResult['success']) {
+                    $data = array_merge($data, $uploadResult['files']);
+                    
+                    // Đăng ký hồ sơ
+                    $result = $this->tuyenSinhModel->dangKyHoSo($data);
+
+                    if ($result) {
+                        // LẤY KẾT NỐI DATABASE
+                        $conn = $this->tuyenSinhModel->getConnection();
+                        
+                        // NẾU LÀ HỌC SINH - Tạo/cập nhật bản ghi học sinh
+                        if ($userRole === 'HOCSINH') {
+                            require_once 'models/HocSinhModel.php';
+                            $hocSinhModel = new HocSinhModel();
+                            
+                            // Kiểm tra xem học sinh này đã có bản ghi chưa
+                            $existingHocSinh = $hocSinhModel->getHocSinhByNguoiDung($maNguoiDung);
+                            
+                            if (!$existingHocSinh) {
+                                // QUAN TRỌNG: Tạo bản ghi học sinh mới với maHoSo
+                                $sqlHocSinh = "INSERT INTO hocsinh (maNguoiDung, maHoSo, trangThai, ngayNhapHoc) 
+                                            VALUES (?, ?, 'DANG_HOC', CURDATE())";
+                                $stmtHocSinh = $conn->prepare($sqlHocSinh);
+                                $stmtHocSinh->execute([$maNguoiDung, $result]);
+                                
+                                error_log("✓ Created hocsinh: maNguoiDung={$maNguoiDung}, maHoSo={$result}");
+                            } else {
+                                // QUAN TRỌNG: Cập nhật maHoSo cho học sinh đã tồn tại
+                                $sqlUpdate = "UPDATE hocsinh SET maHoSo = ? WHERE maNguoiDung = ?";
+                                $stmtUpdate = $conn->prepare($sqlUpdate);
+                                $stmtUpdate->execute([$result, $maNguoiDung]);
+                                
+                                error_log("✓ Updated hocsinh: maNguoiDung={$maNguoiDung}, maHoSo={$result}");
+                            }
+                            
+                            // Verify: Kiểm tra lại xem đã cập nhật thành công chưa
+                            $verifyHocSinh = $hocSinhModel->getHocSinhByNguoiDung($maNguoiDung);
+                            if ($verifyHocSinh && $verifyHocSinh['maHoSo'] == $result) {
+                                error_log("✓✓ VERIFIED: Học sinh có maHoSo = {$result}");
+                            } else {
+                                error_log("✗✗ ERROR: Không verify được maHoSo!");
+                            }
+                        }
+                        
+                        // NẾU LÀ PHỤ HUYNH - Tạo học sinh mới
+                        elseif ($userRole === 'PHUHUYNH') {
+                            $maPhuHuynh = $this->tuyenSinhModel->getMaPhuHuynhByMaNguoiDung($maNguoiDung);
+                            
+                            if ($maPhuHuynh) {
+                                try {
+                                    // Bắt đầu transaction
+                                    $conn->beginTransaction();
+                                    
+                                    // Tạo người dùng mới cho học sinh
+                                    $sqlNguoiDung = "INSERT INTO nguoidung (hoTen, ngaySinh, gioiTinh, soDienThoai, email, diaChi, loaiNguoiDung) 
+                                                    VALUES (?, ?, ?, ?, ?, ?, 'HOCSINH')";
+                                    $stmtNguoiDung = $conn->prepare($sqlNguoiDung);
+                                    $stmtNguoiDung->execute([
+                                        $data['hoTen'],
+                                        $data['ngaySinh'],
+                                        $data['gioiTinh'],
+                                        $data['soDienThoaiHocSinh'],
+                                        $data['email'],
+                                        $data['diaChiThuongTru']
+                                    ]);
+                                    
+                                    $maNguoiDungMoi = $conn->lastInsertId();
+                                    
+                                    // Tạo học sinh liên kết với phụ huynh và hồ sơ
+                                    $sqlHocSinh = "INSERT INTO hocsinh (maNguoiDung, maPhuHuynh, maHoSo, trangThai, ngayNhapHoc) 
+                                                VALUES (?, ?, ?, 'DANG_HOC', CURDATE())";
+                                    $stmtHocSinh = $conn->prepare($sqlHocSinh);
+                                    $stmtHocSinh->execute([$maNguoiDungMoi, $maPhuHuynh, $result]);
+                                    
+                                    // Commit transaction
+                                    $conn->commit();
+                                    
+                                    error_log("✓ Created student for parent: maPhuHuynh={$maPhuHuynh}, maHoSo={$result}");
+                                } catch (Exception $e) {
+                                    // Rollback nếu có lỗi
+                                    $conn->rollBack();
+                                    error_log("✗ Error creating student: " . $e->getMessage());
+                                    $_SESSION['error'] = "Có lỗi khi tạo học sinh: " . $e->getMessage();
+                                }
+                            }
+                        }
+                        
+                        $_SESSION['success'] = "Đăng ký hồ sơ thành công! Mã hồ sơ: #" . str_pad($result, 4, '0', STR_PAD_LEFT);
+                        
+                        // Chuyển hướng đến trang danh sách hồ sơ
+                        header('Location: index.php?controller=tuyensinh&action=hosocuatoi');
+                        exit;
+                    } else {
+                        $_SESSION['error'] = "Có lỗi xảy ra khi đăng ký hồ sơ!";
+                    }
+                } else {
+                    $_SESSION['error'] = $uploadResult['error'];
+                }
+            }
+        }
+        
+        $showSidebar = true;
+        require_once 'views/layouts/header.php';
+        require_once 'views/tuyensinh/dangkyhoso.php';
+        $userRole = $_SESSION['user']['vaiTro'] ?? '';
+        if ($userRole === 'PHUHUYNH') {
+            require_once 'views/layouts/sidebar/phuhuynh.php';
+        } else {
+            require_once 'views/layouts/sidebar/hocsinh.php';
+        }
+        require_once 'views/layouts/footer.php';
     }
-    require_once 'views/layouts/footer.php';
-}
 
     public function danhsachhoso() {
         $this->checkAuth();
