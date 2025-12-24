@@ -20,7 +20,19 @@ class HomeModel
             'rejected_exams' => 0
         ];
 
-        // Truy vấn tổng số đề thi theo trạng thái
+        if (!$maToTruong) return $stats;
+
+        // 1. Lấy môn học phụ trách dựa trên mã tổ trưởng (đúng logic)
+        $sql = "SELECT maMonHoc FROM totruongchuyenmon WHERE maToTruong = :maToTruong LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([':maToTruong' => $maToTruong]);
+        $info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$info) return $stats;
+
+        $maMonHoc = $info['maMonHoc'];
+
+        // 2. Thống kê theo trạng thái
         $sql = "SELECT 
                 CASE 
                     WHEN trangThai IS NULL OR trangThai = 'CHO_DUYET' THEN 'pending_exams'
@@ -29,10 +41,11 @@ class HomeModel
                 END AS status_group,
                 COUNT(*) as total
             FROM dethi
+            WHERE maMonHoc = :maMonHoc
             GROUP BY status_group";
 
         $stmt = $conn->prepare($sql);
-        $stmt->execute();
+        $stmt->execute([':maMonHoc' => $maMonHoc]);
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $stats[$row['status_group']] = $row['total'];
@@ -40,6 +53,7 @@ class HomeModel
 
         return $stats;
     }
+
 
 
 
@@ -220,7 +234,7 @@ class HomeModel
 
             // Số con đang học
             $sql = "SELECT COUNT(*) as total FROM hocsinh 
-                    WHERE maPhuHuynh = ? AND trangThai = 'DANG_HOC'";       
+                    WHERE maPhuHuynh = ? AND trangThai = 'DANG_HOC'";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$maPhuHuynh]);
             $stats['total_children'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
@@ -292,7 +306,8 @@ class HomeModel
     }
 
     // Lấy lịch học/dạy hôm nay
-    public function getTodaySchedule($maNguoiDung, $role){
+    public function getTodaySchedule($maNguoiDung, $role)
+    {
         $conn = $this->db->getConnection();
         $today = date('Y-m-d'); // Lấy ngày hiện tại
 
@@ -309,7 +324,6 @@ class HomeModel
                     ORDER BY bh.tietBatDau";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$maGiaoVien, $today]);
-            
         } else if ($role === 'HOCSINH') {
             // Lấy mã học sinh và lớp từ mã người dùng
             $studentInfo = $this->getStudentInfo($maNguoiDung);
@@ -325,7 +339,6 @@ class HomeModel
                     ORDER BY bh.tietBatDau";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$studentInfo['maLop'], $today]);
-            
         } else {
             return [];
         }

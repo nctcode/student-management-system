@@ -34,7 +34,7 @@ class DeThiController
 
         // KIỂM TRA PHÂN CÔNG MỚI
         $phanCong = $this->model->getPhanCongGiaoVien($giaoVien['maGiaoVien']);
-        
+
         // Lấy danh sách đề thi của giáo viên
         $deThiList = $this->model->getDeThiByGiaoVien($maNguoiDung);
 
@@ -42,7 +42,6 @@ class DeThiController
         require_once 'views/layouts/header.php';
         require_once 'views/layouts/sidebar/giaovien.php';
         require_once 'views/dethi/lapdethi.php';
-        exit();
     }
 
     public function view()
@@ -218,7 +217,7 @@ class DeThiController
         }
 
         $maDeThi = $_POST['id'] ?? 0;
-        
+
         if ($maDeThi <= 0) {
             $_SESSION['message'] = ['status' => 'error', 'text' => 'ID không hợp lệ'];
             header('Location: index.php?controller=deThi&action=index');
@@ -228,7 +227,7 @@ class DeThiController
         // Kiểm tra quyền xóa
         $deThi = $this->model->getDeThiById($maDeThi);
         $giaoVien = $this->model->getGiaoVienByMaNguoiDung($_SESSION['user']['maNguoiDung']);
-        
+
         if (!$giaoVien || $giaoVien['maGiaoVien'] != $deThi['maGiaoVien']) {
             $_SESSION['message'] = ['status' => 'error', 'text' => 'Bạn không có quyền xóa đề thi này'];
             header('Location: index.php?controller=deThi&action=index');
@@ -360,7 +359,7 @@ class DeThiController
 
         // KIỂM TRA XEM ĐỀ THI ĐÃ TỒN TẠI CHƯA
         $existingExam = $this->model->getDeThiById($maDeThi);
-        
+
         if ($existingExam) {
             // CẬP NHẬT ĐỀ THI ĐÃ TỒN TẠI
             try {
@@ -370,7 +369,7 @@ class DeThiController
                         ngayNop = :ngayNop,
                         trangThai = 'CHO_DUYET'
                         WHERE maDeThi = :maDeThi";
-                
+
                 $stmt = $this->conn->prepare($sql);
                 $result = $stmt->execute([
                     'tieuDe' => $tieuDe,
@@ -378,13 +377,12 @@ class DeThiController
                     'ngayNop' => date('Y-m-d H:i:s'),
                     'maDeThi' => $maDeThi
                 ]);
-                
+
                 if ($result) {
                     $_SESSION['message'] = ['status' => 'success', 'text' => 'Cập nhật đề thi thành công'];
                 } else {
                     $_SESSION['message'] = ['status' => 'error', 'text' => 'Cập nhật đề thi thất bại'];
                 }
-                
             } catch (Exception $e) {
                 $_SESSION['message'] = ['status' => 'error', 'text' => 'Lỗi: ' . $e->getMessage()];
             }
@@ -405,7 +403,7 @@ class DeThiController
 
             // Thêm vào database
             $result = $this->model->createDeThi($data);
-            
+
             $_SESSION['message'] = $result
                 ? ['status' => 'success', 'text' => 'Tạo đề thi thành công']
                 : ['status' => 'error', 'text' => 'Tạo đề thi thất bại'];
@@ -428,6 +426,8 @@ class DeThiController
         }
 
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+
+        // Lấy thông tin tổ trưởng
         $toTruong = $this->model->getToTruongByMaNguoiDung($maNguoiDung);
         if (!$toTruong) {
             $_SESSION['message'] = 'Không tìm thấy thông tin tổ trưởng chuyên môn';
@@ -435,20 +435,21 @@ class DeThiController
             exit;
         }
 
-        // Lấy các tham số lọc
+        // Lấy môn học tổ trưởng phụ trách
+        $maMonHocToTruong = $toTruong['maMonHoc'];
+
+        // Lấy các tham số lọc (CHỈ CÒN KHỐI & NIÊN KHÓA)
         $maKhoi = $_GET['maKhoi'] ?? null;
         $maNienKhoa = $_GET['maNienKhoa'] ?? null;
-        $maMonHoc = $_GET['maMonHoc'] ?? null;
+
+        // Lấy danh sách đề thi theo tổ trưởng
+        $exams = $this->model->getDeThiTheoToTruong($maNguoiDung, $maKhoi, $maNienKhoa);
+
+        // Xem chi tiết 1 đề thi
         $maDeThi = $_GET['maDeThi'] ?? null;
-
-        $maMonHocFilter = $maMonHoc ?? $toTruong['maMonHoc'];
-
-        // Lấy danh sách đề thi ĐÃ NỘP
-        $exams = $this->model->getDeThi($maMonHocFilter, $maKhoi, $maNienKhoa);
-        
         $examDetail = $maDeThi ? $this->model->getDeThiById($maDeThi) : null;
-        
-        // KIỂM TRA: Nếu đề thi chi tiết chưa nộp, không hiển thị
+
+        // Nếu đề thi chưa nộp thì không cho xem
         if ($examDetail && empty($examDetail['ngayNop'])) {
             $_SESSION['message'] = ['status' => 'danger', 'text' => 'Đề thi chưa được nộp'];
             $examDetail = null;
@@ -460,16 +461,16 @@ class DeThiController
         // Lấy danh sách Niên khóa
         $nienKhoaList = $this->model->getAllNienKhoa();
 
-        // Lấy danh sách môn học
-        $monHocList = $this->getMonHocList();
+        // KHÔNG LẤY DANH SÁCH MÔN HỌC NỮA
+        // Vì tổ trưởng chỉ phụ trách 1 môn
 
-        // Truyền các biến ra view
+        // Load view
         require_once 'views/layouts/header.php';
         require_once 'views/layouts/sidebar/totruong.php';
         require_once 'views/dethi/duyetdethi.php';
         require_once 'views/layouts/footer.php';
-        exit();
     }
+
 
     // THÊM phương thức lấy danh sách môn học
     private function getMonHocList()
@@ -480,7 +481,7 @@ class DeThiController
                 $db = new Database();
                 $this->conn = $db->getConnection();
             }
-            
+
             $sql = "SELECT maMonHoc, tenMonHoc FROM monhoc ORDER BY tenMonHoc";
             $stmt = $this->conn->prepare($sql);
             $stmt->execute();
@@ -547,72 +548,84 @@ class DeThiController
         }
 
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+
+        // Lấy thông tin tổ trưởng
+        $toTruong = $this->model->getToTruongByMaNguoiDung($maNguoiDung);
+
+        // Lấy mã môn học từ bảng tổ trưởng
+        $maMonHocToTruong = $toTruong['maMonHoc'];
+
         $maKhoi = $_GET['maKhoi'] ?? null;
         $maNienKhoa = $_GET['maNienKhoa'] ?? null;
         $maDeThi = $_GET['maDeThi'] ?? null;
-        $maMonHoc = $_GET['maMonHoc'] ?? null;
 
-        // Kiểm tra chọn Khối, Học kỳ
-        if ((isset($_GET['maKhoi']) || isset($_GET['maNienKhoa'])) && (empty($maKhoi) || empty($maNienKhoa))) {
+        // Kiểm tra chọn Khối, Niên khóa
+        if ((isset($_GET['maKhoi']) || isset($_GET['maNienKhoa']))
+            && (empty($maKhoi) || empty($maNienKhoa))
+        ) {
+
             $_SESSION['message'] = [
                 'status' => 'danger',
                 'text'   => 'Vui lòng chọn đầy đủ Khối và Học kỳ!'
             ];
         }
-        // Lấy danh sách đề thi với bộ lọc môn học
-        if ($maKhoi || $maNienKhoa || $maMonHoc) {
-            $exams = $this->model->getLichSuDuyetDeThi($maNguoiDung, $maKhoi, $maNienKhoa, $maMonHoc);
+
+        // Lấy danh sách đề thi tự động theo môn của tổ trưởng
+        if ($maKhoi || $maNienKhoa) {
+            $exams = $this->model->getLichSuDuyetDeThi(
+                $maNguoiDung,
+                $maKhoi,
+                $maNienKhoa,
+                $maMonHocToTruong   // <- SỬA CHỖ NÀY
+            );
         } else {
-            // Nếu không có bộ lọc, không lấy dữ liệu (hoặc lấy tất cả)
             $exams = [];
         }
 
-        // Nếu có maDeThi, lấy chi tiết đề thi
+        // Chi tiết đề thi
         $examDetail = null;
         if ($maDeThi) {
             $examDetail = $this->model->getDeThiById($maDeThi);
         }
 
-        // Lấy danh sách Khối và Niên khóa để filter
+        // Danh sách filter
         $khoiHocList = $this->model->getAllKhoiHoc();
         $nienKhoaList = $this->model->getAllNienKhoa();
-
-        // SỬA: Lấy danh sách môn học từ Model
-        $monHocList = $this->model->getMonHocList();
 
         require_once 'views/layouts/header.php';
         require_once 'views/layouts/sidebar/totruong.php';
         require_once 'views/dethi/lichsuduyetde.php';
-        exit();
+        exit;
     }
 
-// THÊM: Phương thức lấy danh sách môn học cho tổ trưởng
-private function getMonHocListForToTruong($maMonHocTruong = null)
-{
-    try {
-        if (!$this->conn) {
-            $db = new Database();
-            $this->conn = $db->getConnection();
-        }
-        
-        if ($maMonHocTruong) {
-            // Nếu có mã môn của tổ trưởng, chỉ lấy môn đó
-            $sql = "SELECT maMonHoc, tenMonHoc FROM monhoc 
+
+    // THÊM: Phương thức lấy danh sách môn học cho tổ trưởng
+    private function getMonHocListForToTruong($maMonHocTruong = null)
+    {
+        try {
+            if (!$this->conn) {
+                $db = new Database();
+                $this->conn = $db->getConnection();
+            }
+
+            if ($maMonHocTruong) {
+                // Nếu có mã môn của tổ trưởng, chỉ lấy môn đó
+                $sql = "SELECT maMonHoc, tenMonHoc FROM monhoc 
                     WHERE maMonHoc = :maMonHoc 
                     ORDER BY tenMonHoc";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute(['maMonHoc' => $maMonHocTruong]);
-        } else {
-            // Nếu không, lấy tất cả môn học
-            $sql = "SELECT maMonHoc, tenMonHoc FROM monhoc ORDER BY tenMonHoc";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute();
+                $stmt = $this->conn->prepare($sql);
+                $stmt->execute(['maMonHoc' => $maMonHocTruong]);
+            } else {
+                // Nếu không, lấy tất cả môn học
+                $sql = "SELECT maMonHoc, tenMonHoc FROM monhoc ORDER BY tenMonHoc";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->execute();
+            }
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Lỗi lấy danh sách môn học: " . $e->getMessage());
+            return [];
         }
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        error_log("Lỗi lấy danh sách môn học: " . $e->getMessage());
-        return [];
     }
-}
 }

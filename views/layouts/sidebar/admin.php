@@ -60,6 +60,12 @@
                 </a>
             </li> -->
             <li class="nav-item">
+                <a href="index.php?controller=thongbao&action=danhsach" class="nav-link">
+                    <i class="nav-icon fas fa-list"></i>
+                    <span>Danh sách thông báo</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="index.php?controller=tuyensinh&action=danhsachhoso">
                     <i class="fas fa-user-graduate"></i>
                     <span>Quản lý tuyển sinh</span>
