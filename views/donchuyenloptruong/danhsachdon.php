@@ -305,7 +305,15 @@ document.querySelectorAll('.request-item').forEach(el => {
             // ************************************************
             // LOGIC SỬA ĐỔI: ẨN NÚT TỪ CHỐI KHI actionType = approve_only
             // ************************************************
-            const rejectButtonHTML = (actionType === 'approve_only') ? '' : 
+            // ************************************************
+            // LOGIC MỚI: ẨN NÚT TỪ CHỐI NẾU TRƯỜNG ĐẾN ĐÃ DUYỆT
+            // (Lúc này mình là Trường Đi, chỉ còn nhiệm vụ duyệt cho đi, không được từ chối)
+            // ************************************************
+            
+            // Nếu là chuyển trường VÀ Trường Đến đã duyệt -> Ẩn nút từ chối
+            const shouldHideReject = (isTruong && statusDen === 'Đã duyệt');
+
+            const rejectButtonHTML = shouldHideReject ? '' : 
                 `
                 <form method="post" action="?controller=donchuyenloptruong&action=reject" onsubmit="return confirmReject(${d.maDon});">
                     <input type="hidden" name="maDon" value="${d.maDon}">

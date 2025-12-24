@@ -13,7 +13,7 @@ class GiaoVienModel {
         $conn = $this->db->getConnection();
         
         $sql = "SELECT gv.*, nd.hoTen, nd.ngaySinh, nd.gioiTinh, nd.soDienThoai, nd.email, nd.diaChi,
-                       tt.toChuyenMon
+                        tt.toChuyenMon
                 FROM giaovien gv
                 JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
                 LEFT JOIN totruongchuyenmon tt ON gv.maToTruong = tt.maToTruong
@@ -43,12 +43,12 @@ class GiaoVienModel {
         }
     }
 
-    // Lấy thông tin giáo viên theo mã giáo viên
+    // Lấy thông tin giáo viên theo mã giáo viên (PHIÊN BẢN CHÍNH)
     public function getGiaoVienById($maGiaoVien) {
         $conn = $this->db->getConnection();
         
         $sql = "SELECT gv.*, nd.hoTen, nd.ngaySinh, nd.gioiTinh, nd.soDienThoai, nd.email, nd.diaChi,
-                       tt.toChuyenMon
+                        tt.toChuyenMon
                 FROM giaovien gv
                 JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
                 LEFT JOIN totruongchuyenmon tt ON gv.maToTruong = tt.maToTruong
@@ -57,7 +57,8 @@ class GiaoVienModel {
         $stmt = $conn->prepare($sql);
         $stmt->execute([$maGiaoVien]);
         
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        // CHÚ Ý: Hàm này trả về đầy đủ thông tin, đủ dùng cho cả truy cập ngoài và nội bộ
+        return $stmt->fetch(PDO::FETCH_ASSOC); 
     }
 
     // Lấy danh sách tất cả giáo viên
@@ -65,7 +66,7 @@ class GiaoVienModel {
         $conn = $this->db->getConnection();
         
         $sql = "SELECT gv.*, nd.hoTen, nd.soDienThoai, nd.email, tt.toChuyenMon,
-                       (SELECT COUNT(*) FROM phanconggiangday pc WHERE pc.maGiaoVien = gv.maGiaoVien) as soLopPhuTrach
+                        (SELECT COUNT(*) FROM phanconggiangday pc WHERE pc.maGiaoVien = gv.maGiaoVien) as soLopPhuTrach
                 FROM giaovien gv
                 JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
                 LEFT JOIN totruongchuyenmon tt ON gv.maToTruong = tt.maToTruong
@@ -166,8 +167,7 @@ class GiaoVienModel {
             $ngayDauTuan = date('Y-m-d', strtotime($tuan . ' Monday'));
             $stmt->execute([$maGiaoVien, $ngayDauTuan, $ngayDauTuan]);
         } else {
-            // Nếu không có tuần, chỉ lấy những TKB có ngày áp dụng gần nhất (tùy thuộc vào logic controller xử lý ngày áp dụng)
-            // Hiện tại, để đơn giản, chỉ lấy TKB không lọc theo ngày (nếu logic controller đã lọc tuần hiện tại)
+            // Nếu không có tuần, chỉ lấy những TKB không lọc theo ngày
             $stmt->execute([$maGiaoVien, null, null]);
         }
         
@@ -249,7 +249,7 @@ class GiaoVienModel {
         $conn = $this->db->getConnection();
         
         $sql = "SELECT tt.*, 
-                       (SELECT COUNT(*) FROM giaovien g WHERE g.maToTruong = tt.maToTruong) as soGiaoVien
+                        (SELECT COUNT(*) FROM giaovien g WHERE g.maToTruong = tt.maToTruong) as soGiaoVien
                 FROM totruongchuyenmon tt
                 ORDER BY tt.toChuyenMon";
         
@@ -297,7 +297,8 @@ class GiaoVienModel {
     }
 
 
-        ///////////// Yến //////////////
+    ///////////// Yến //////////////
+
     /**
      * Lấy mã Giáo viên (maGiaoVien) từ mã Người dùng (maNguoiDung) - ĐÃ CẬP NHẬT
      */
@@ -723,6 +724,40 @@ class GiaoVienModel {
         
         return false;
     }
+    // Thêm vào GiaoVienModel.php
+
+    /**
+     * Kiểm tra giáo viên đã là GVCN của lớp nào khác chưa
+     * Trả về tên lớp nếu đã là GVCN, ngược lại trả về false
+     */
+    public function checkGVCNExisted($maGiaoVien, $maLopHienTai, $maTruong = null) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT l.tenLop 
+                FROM lophoc l
+                WHERE l.maGiaoVien = :maGiaoVien 
+                AND l.maLop != :maLopHienTai";
+        
+        $params = [
+            ':maGiaoVien' => $maGiaoVien,
+            ':maLopHienTai' => $maLopHienTai
+        ];
+
+        if ($maTruong) {
+            $sql .= " AND l.maTruong = :maTruong";
+            $params[':maTruong'] = $maTruong;
+        }
+
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $result ? $result['tenLop'] : false;
+        } catch (PDOException $e) {
+            error_log("Lỗi kiểm tra trùng GVCN: " . $e->getMessage());
+            return false;
+        }
+    }
 
     // Tìm hàm processAssignment trong GiaoVienModel.php và sửa lại như sau:
     public function processAssignment($maLop, $maGVCN, $assignments, $maTruong = null) {
@@ -740,12 +775,15 @@ class GiaoVienModel {
         $errorsGVBM = [];
         foreach ($assignments as $assign) {
             if (!empty($assign['maMonHoc']) && !empty($assign['maGiaoVien'])) {
+                // SỬ DỤNG HÀM NỘI BỘ getGiaoVienById ĐÃ ĐƯỢC XÓA Ở CUỐI, THAY THẾ BẰNG HÀM PUBLIC ĐỂ LẤY THÔNG TIN
                 if (!$this->checkGVChuyenMon($assign['maGiaoVien'], $assign['maMonHoc'])) {
                     $monHoc = $this->getMonHocById($assign['maMonHoc']);
-                    $giaoVien = $this->getGiaoVienById($assign['maGiaoVien']);
+                    // Gọi hàm public getGiaoVienById để lấy thông tin
+                    $giaoVien = $this->getGiaoVienById($assign['maGiaoVien']); 
                     
                     $errorsGVBM[] = [
                         'monHoc' => $monHoc['tenMonHoc'] ?? 'Môn học #' . $assign['maMonHoc'],
+                        // Lấy hoTen và chuyenMon từ kết quả của hàm public getGiaoVienById
                         'giaoVien' => $giaoVien['hoTen'] ?? 'Giáo viên #' . $assign['maGiaoVien'],
                         'chuyenMon' => $giaoVien['chuyênMon'] ?? ''
                     ];
@@ -1004,23 +1042,6 @@ class GiaoVienModel {
     }
 
     /**
-     * Lấy thông tin giáo viên theo ID
-     */
-    // private function getGiaoVienById($maGiaoVien) {
-    //     $conn = $this->db->getConnection();
-    //     $sql = "SELECT gv.maGiaoVien, nd.hoTen, gv.chuyenMon 
-    //             FROM giaovien gv
-    //             JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-    //             WHERE gv.maGiaoVien = ?";
-    //     try {
-    //         $stmt = $conn->prepare($sql);
-    //         $stmt->execute([$maGiaoVien]);
-    //         return $stmt->fetch(PDO::FETCH_ASSOC);
-    //     } catch (PDOException $e) {
-    //         return ['hoTen' => 'Giáo viên #' . $maGiaoVien];
-    //     }
-    // }
-    /**
      * Lấy danh sách tất cả Khối
      */
     public function getAllKhoi($maTruong = null) {
@@ -1071,48 +1092,45 @@ class GiaoVienModel {
         }
     }
 
-    // Thêm vào GiaoVienModel.php
-
-// Lấy giáo viên chủ nhiệm theo lớp
-public function getGiaoVienChuNhiemByLop($maLop) {
-    $conn = $this->db->getConnection();
-    
-    $sql = "SELECT gv.maGiaoVien, nd.hoTen, 'GVCN' as loaiGiaoVien
-            FROM giaovien gv
-            JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-            JOIN lophoc l ON gv.maGiaoVien = l.maGiaoVien
-            WHERE l.maLop = ?";
-    
-    try {
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$maLop]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("Lỗi lấy GVCN theo lớp: " . $e->getMessage());
-        return [];
+    // Lấy giáo viên chủ nhiệm theo lớp
+    public function getGiaoVienChuNhiemByLop($maLop) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT gv.maGiaoVien, nd.hoTen, 'GVCN' as loaiGiaoVien
+                FROM giaovien gv
+                JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                JOIN lophoc l ON gv.maGiaoVien = l.maGiaoVien
+                WHERE l.maLop = ?";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$maLop]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Lỗi lấy GVCN theo lớp: " . $e->getMessage());
+            return [];
+        }
     }
-}
 
-// Lấy giáo viên bộ môn theo lớp
-public function getGiaoVienBoMonByLop($maLop) {
-    $conn = $this->db->getConnection();
-    
-    $sql = "SELECT DISTINCT gv.maGiaoVien, nd.hoTen, mh.tenMonHoc as loaiGiaoVien
-            FROM giaovien gv
-            JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-            JOIN phanconggiangday pc ON gv.maGiaoVien = pc.maGiaoVien
-            JOIN monhoc mh ON pc.maMonHoc = mh.maMonHoc
-            WHERE pc.maLop = ? AND pc.trangThai = 'Hoạt động'";
-    
-    try {
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$maLop]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("Lỗi lấy GVBM theo lớp: " . $e->getMessage());
-        return [];
+    // Lấy giáo viên bộ môn theo lớp
+    public function getGiaoVienBoMonByLop($maLop) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT DISTINCT gv.maGiaoVien, nd.hoTen, mh.tenMonHoc as loaiGiaoVien
+                FROM giaovien gv
+                JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                JOIN phanconggiangday pc ON gv.maGiaoVien = pc.maGiaoVien
+                JOIN monhoc mh ON pc.maMonHoc = mh.maMonHoc
+                WHERE pc.maLop = ? AND pc.trangThai = 'Hoạt động'";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$maLop]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Lỗi lấy GVBM theo lớp: " . $e->getMessage());
+            return [];
+        }
     }
-}
-
 }
 ?>

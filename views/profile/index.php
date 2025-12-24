@@ -53,11 +53,15 @@ if ($roleSidebar) {
                         <i class="fas fa-camera"></i>
                     </div>
                 </div>
-                <h3 class="profile-name"><?php echo htmlspecialchars($userInfo['hoTen']); ?></h3>
+                <h3 class="profile-name"><?php echo htmlspecialchars($userInfo['hoTen'] ?? 'Chưa cập nhật'); ?></h3>
                 <p class="profile-role"><?php echo $roleName; ?></p>
                 <p class="profile-status">
-                    <span class="status-badge <?php echo ($userInfo['trangThaiTaiKhoan'] == 'HOAT_DONG') ? 'active' : 'inactive'; ?>">
-                        <?php echo ($userInfo['trangThaiTaiKhoan'] == 'HOAT_DONG') ? 'Đang hoạt động' : 'Ngừng hoạt động'; ?>
+                    <span class="status-badge <?php echo ($userInfo['trangThaiTaiKhoan'] ?? '') == 'HOAT_DONG' ? 'active' : 'inactive'; ?>">
+                        <?php 
+                        $trangThai = $userInfo['trangThaiTaiKhoan'] ?? '';
+                        echo $trangThai == 'HOAT_DONG' ? 'Đang hoạt động' : 
+                             ($trangThai == 'KHOA' ? 'Đã khóa' : 'Chưa cập nhật'); 
+                        ?>
                     </span>
                 </p>
             </div>
@@ -77,39 +81,40 @@ if ($roleSidebar) {
                         <div class="info-grid">
                             <div class="info-item">
                                 <label><i class="fas fa-id-card"></i> Họ và tên:</label>
-                                <span><?php echo htmlspecialchars($userInfo['hoTen']); ?></span>
+                                <span><?php echo htmlspecialchars($userInfo['hoTen'] ?? 'Chưa cập nhật'); ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-birthday-cake"></i> Ngày sinh:</label>
-                                <span><?php echo date('d/m/Y', strtotime($userInfo['ngaySinh'])); ?></span>
+                                <span><?php echo !empty($userInfo['ngaySinh']) ? date('d/m/Y', strtotime($userInfo['ngaySinh'])) : 'Chưa cập nhật'; ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-venus-mars"></i> Giới tính:</label>
                                 <span>
                                     <?php 
-                                    switch($userInfo['gioiTinh']) {
+                                    switch($userInfo['gioiTinh'] ?? '') {
                                         case 'NAM': echo 'Nam'; break;
                                         case 'NU': echo 'Nữ'; break;
-                                        default: echo 'Khác';
+                                        case 'KHAC': echo 'Khác'; break;
+                                        default: echo 'Chưa cập nhật';
                                     }
                                     ?>
                                 </span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-envelope"></i> Email:</label>
-                                <span><?php echo htmlspecialchars($userInfo['email']); ?></span>
+                                <span><?php echo htmlspecialchars($userInfo['email'] ?? 'Chưa cập nhật'); ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-phone"></i> Số điện thoại:</label>
-                                <span><?php echo htmlspecialchars($userInfo['soDienThoai']); ?></span>
+                                <span><?php echo htmlspecialchars($userInfo['soDienThoai'] ?? 'Chưa cập nhật'); ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-map-marker-alt"></i> Địa chỉ:</label>
-                                <span><?php echo htmlspecialchars($userInfo['diaChi']); ?></span>
+                                <span><?php echo htmlspecialchars($userInfo['diaChi'] ?? 'Chưa cập nhật'); ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-id-card"></i> CCCD/CMND:</label>
-                                <span><?php echo htmlspecialchars($userInfo['CCCD']); ?></span>
+                                <span><?php echo htmlspecialchars($userInfo['CCCD'] ?? 'Chưa cập nhật'); ?></span>
                             </div>
                         </div>
                     </div>
@@ -119,7 +124,7 @@ if ($roleSidebar) {
                         <div class="info-grid">
                             <div class="info-item">
                                 <label><i class="fas fa-user"></i> Tên đăng nhập:</label>
-                                <span><?php echo htmlspecialchars($userInfo['tenDangNhap']); ?></span>
+                                <span><?php echo htmlspecialchars($userInfo['tenDangNhap'] ?? 'Chưa cập nhật'); ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-shield-alt"></i> Vai trò:</label>
@@ -127,8 +132,12 @@ if ($roleSidebar) {
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-circle"></i> Trạng thái:</label>
-                                <span class="status-badge <?php echo ($userInfo['trangThaiTaiKhoan'] == 'HOAT_DONG') ? 'active' : 'inactive'; ?>">
-                                    <?php echo ($userInfo['trangThaiTaiKhoan'] == 'HOAT_DONG') ? 'Đang hoạt động' : 'Ngừng hoạt động'; ?>
+                                <span class="status-badge <?php echo ($userInfo['trangThaiTaiKhoan'] ?? '') == 'HOAT_DONG' ? 'active' : 'inactive'; ?>">
+                                    <?php 
+                                    $trangThai = $userInfo['trangThaiTaiKhoan'] ?? '';
+                                    echo $trangThai == 'HOAT_DONG' ? 'Đang hoạt động' : 
+                                         ($trangThai == 'KHOA' ? 'Đã khóa' : 'Chưa cập nhật'); 
+                                    ?>
                                 </span>
                             </div>
                         </div>
@@ -140,34 +149,34 @@ if ($roleSidebar) {
                         <div class="info-grid">
                             <div class="info-item">
                                 <label><i class="fas fa-graduation-cap"></i> Mã học sinh:</label>
-                                <span><?php echo $userInfo['maHocSinh'] ?? 'N/A'; ?></span>
+                                <span><?php echo $userInfo['maHocSinh'] ?? 'Chưa cập nhật'; ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-school"></i> Lớp:</label>
-                                <span><?php echo $userInfo['tenLop'] ?? 'N/A'; ?></span>
+                                <span><?php echo $userInfo['tenLop'] ?? 'Chưa cập nhật'; ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-layer-group"></i> Khối:</label>
-                                <span><?php echo $userInfo['tenKhoi'] ?? 'N/A'; ?></span>
+                                <span><?php echo $userInfo['tenKhoi'] ?? 'Chưa cập nhật'; ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-calendar-day"></i> Ngày nhập học:</label>
-                                <span><?php echo isset($userInfo['ngayNhapHoc']) ? date('d/m/Y', strtotime($userInfo['ngayNhapHoc'])) : 'N/A'; ?></span>
+                                <span><?php echo !empty($userInfo['ngayNhapHoc']) ? date('d/m/Y', strtotime($userInfo['ngayNhapHoc'])) : 'Chưa cập nhật'; ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-users"></i> Phụ huynh:</label>
-                                <span><?php echo $userInfo['tenPhuHuynh'] ?? 'N/A'; ?></span>
+                                <span><?php echo $userInfo['tenPhuHuynh'] ?? 'Chưa cập nhật'; ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-info-circle"></i> Trạng thái học tập:</label>
-                                <span class="status-badge <?php echo ($userInfo['trangThaiHocSinh'] == 'DANG_HOC') ? 'active' : 'inactive'; ?>">
+                                <span class="status-badge <?php echo ($userInfo['trangThaiHocSinh'] ?? '') == 'DANG_HOC' ? 'active' : 'inactive'; ?>">
                                     <?php 
-                                    switch($userInfo['trangThaiHocSinh']) {
+                                    switch($userInfo['trangThaiHocSinh'] ?? '') {
                                         case 'DANG_HOC': echo 'Đang học'; break;
                                         case 'DA_TOT_NGHIEP': echo 'Đã tốt nghiệp'; break;
                                         case 'CHUYEN_TRUONG': echo 'Chuyển trường'; break;
                                         case 'THOI_HOC': echo 'Thôi học'; break;
-                                        default: echo 'N/A';
+                                        default: echo 'Chưa cập nhật';
                                     }
                                     ?>
                                 </span>
@@ -181,19 +190,19 @@ if ($roleSidebar) {
                             <div class="info-grid">
                                 <div class="info-item">
                                     <label><i class="fas fa-users-cog"></i> Mã tổ trưởng:</label>
-                                    <span><?php echo $userInfo['maToTruong'] ?? 'N/A'; ?></span>
+                                    <span><?php echo $userInfo['maToTruong'] ?? 'Chưa cập nhật'; ?></span>
                                 </div>
                                 <div class="info-item">
                                     <label><i class="fas fa-user-tie"></i> Tổ chuyên môn:</label>
-                                    <span><?php echo $userInfo['toChuyenMon'] ?? 'N/A'; ?></span>
+                                    <span><?php echo $userInfo['toChuyenMon'] ?? 'Chưa cập nhật'; ?></span>
                                 </div>
                                 <div class="info-item">
                                     <label><i class="fas fa-book"></i> Môn học phụ trách:</label>
-                                    <span><?php echo $userInfo['tenMonHoc'] ?? 'N/A'; ?></span>
+                                    <span><?php echo $userInfo['tenMonHoc'] ?? 'Chưa cập nhật'; ?></span>
                                 </div>
                                 <div class="info-item">
                                     <label><i class="fas fa-chalkboard-teacher"></i> Số lượng giáo viên:</label>
-                                    <span><?php echo $userInfo['soLuongGiaoVien'] ?? '0'; ?> giáo viên</span>
+                                    <span><?php echo isset($userInfo['soLuongGiaoVien']) ? $userInfo['soLuongGiaoVien'] . ' giáo viên' : 'Chưa cập nhật'; ?></span>
                                 </div>
                             </div>
 
@@ -207,14 +216,14 @@ if ($roleSidebar) {
                                             <i class="fas fa-user-tie"></i>
                                         </div>
                                         <div class="member-info">
-                                            <h5><?php echo htmlspecialchars($giaoVien['hoTen']); ?></h5>
-                                            <p class="member-subject"><?php echo $giaoVien['tenMonHoc'] ?? 'N/A'; ?></p>
+                                            <h5><?php echo htmlspecialchars($giaoVien['hoTen'] ?? 'Chưa cập nhật'); ?></h5>
+                                            <p class="member-subject"><?php echo $giaoVien['tenMonHoc'] ?? 'Chưa cập nhật'; ?></p>
                                             <p class="member-type">
                                                 <?php 
-                                                switch($giaoVien['loaiGiaoVien']) {
+                                                switch($giaoVien['loaiGiaoVien'] ?? '') {
                                                     case 'GV_CHU_NHIEM': echo 'GV Chủ nhiệm'; break;
                                                     case 'GV_BO_MON': echo 'GV Bộ môn'; break;
-                                                    default: echo 'N/A';
+                                                    default: echo 'Chưa cập nhật';
                                                 }
                                                 ?>
                                             </p>
@@ -222,6 +231,10 @@ if ($roleSidebar) {
                                     </div>
                                     <?php endforeach; ?>
                                 </div>
+                            </div>
+                            <?php else: ?>
+                            <div class="alert alert-info" style="margin-top: 20px;">
+                                <i class="fas fa-info-circle"></i> Không có giáo viên nào trong tổ
                             </div>
                             <?php endif; ?>
                         </div>
@@ -232,31 +245,31 @@ if ($roleSidebar) {
                         <div class="info-grid">
                             <div class="info-item">
                                 <label><i class="fas fa-chalkboard-teacher"></i> Mã giáo viên:</label>
-                                <span><?php echo $userInfo['maGiaoVien'] ?? 'N/A'; ?></span>
+                                <span><?php echo $userInfo['maGiaoVien'] ?? 'Chưa cập nhật'; ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-book"></i> Chuyên môn:</label>
-                                <span><?php echo $userInfo['chuyenMon'] ?? 'N/A'; ?></span>
+                                <span><?php echo $userInfo['chuyenMon'] ?? 'Chưa cập nhật'; ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-user-tag"></i> Loại giáo viên:</label>
                                 <span>
                                     <?php 
-                                    switch($userInfo['loaiGiaoVien']) {
+                                    switch($userInfo['loaiGiaoVien'] ?? '') {
                                         case 'GV_CHU_NHIEM': echo 'Giáo viên chủ nhiệm'; break;
                                         case 'GV_BO_MON': echo 'Giáo viên bộ môn'; break;
-                                        default: echo 'N/A';
+                                        default: echo 'Chưa cập nhật';
                                     }
                                     ?>
                                 </span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-book-open"></i> Môn học:</label>
-                                <span><?php echo $userInfo['tenMonHoc'] ?? 'N/A'; ?></span>
+                                <span><?php echo $userInfo['tenMonHoc'] ?? 'Chưa cập nhật'; ?></span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-users-cog"></i> Tổ chuyên môn:</label>
-                                <span><?php echo $userInfo['toChuyenMon'] ?? 'N/A'; ?></span>
+                                <span><?php echo $userInfo['toChuyenMon'] ?? 'Chưa cập nhật'; ?></span>
                             </div>
                         </div>
                     </div>
@@ -274,6 +287,7 @@ if ($roleSidebar) {
 </div>
 
 <style>
+/* CSS giữ nguyên như cũ */
 .profile-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -338,6 +352,10 @@ if ($roleSidebar) {
     font-size: 16px;
     opacity: 0.9;
     margin-bottom: 10px;
+}
+
+.profile-status {
+    margin-top: 10px;
 }
 
 .profile-info-section {
@@ -429,6 +447,11 @@ if ($roleSidebar) {
     color: #721c24;
 }
 
+.status-badge.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
 .role-badge {
     background: #e9ecef;
     color: #495057;
@@ -449,6 +472,13 @@ if ($roleSidebar) {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+
+.alert-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
 .team-section {
     border-top: 2px solid #e9ecef;
     padding-top: 20px;
@@ -539,7 +569,7 @@ function openTab(tabName) {
 // Xử lý upload avatar
 document.getElementById('profileAvatar').addEventListener('click', function() {
     // Code xử lý upload avatar sẽ được thêm sau
-    alert('Tính năng upload avatar sẽ được cập nhận sau!');
+    alert('Tính năng upload avatar sẽ được cập nhật sau!');
 });
 </script>
 

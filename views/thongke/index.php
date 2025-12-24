@@ -1,174 +1,259 @@
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-1 text-primary">
-                <i class="fas fa-chart-line me-2"></i>Thống Kê Báo Cáo
-            </h1>
-            <p class="text-muted">Tổng quan hệ thống và các tùy chọn tạo báo cáo chi tiết.</p>
-        </div>
-    </div>
+<?php 
+$showSidebar = false; 
+require_once 'views/layouts/header.php'; 
 
-    <?php 
-    if (isset($_SESSION['error'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <div><?= $_SESSION['error']; ?></div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <?php unset($_SESSION['error']); ?>
-    <?php endif; ?>
-    
-    <?php 
-    if (isset($_SESSION['warning'])): ?>
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            <div><?= $_SESSION['warning']; ?></div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <?php unset($_SESSION['warning']); ?>
-    <?php endif; ?>
+// Xử lý Active Tab
+$tab = isset($_GET['loaiBaoCao']) ? $_GET['loaiBaoCao'] : 'hocLuc';
+$mapTab = ['hocLuc'=>'hoctap', 'hanhKiem'=>'hanhkiem', 'nhanSu'=>'nhansu', 'quyMo'=>'quymo', 'taiChinh'=>'taichinh'];
+$activeTab = $mapTab[$tab] ?? 'hoctap';
+?>
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <h5 class="text-primary mb-3"><i class="fas fa-layer-group me-2"></i>Tổng Quan Hệ Thống</h5>
-        </div>
+<link rel="stylesheet" href="assets/css/thongke.css">
+
+<div style="position: fixed; top: 70px; left: 0; width: 260px; bottom: 0; z-index: 1000; background: #fff; border-right: 1px solid #eaecf4; overflow-y: auto;">
+    <?php require_once 'views/layouts/sidebar/bangiamhieu.php'; ?>
+</div>
+
+<div style="margin-left: 260px; padding: 25px; min-height: 100vh; background-color: #f8f9fc;">
+    <div class="container-fluid p-0">
         
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">Tổng Số Lớp</div>
-                            <div class="h5 mb-0 fw-bold text-gray-800"><?= $tongSoLop ?></div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-school fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0 text-primary fw-bold"><i class="fas fa-chart-pie me-2"></i>Thống Kê & Báo Cáo</h1>
+                <p class="text-muted mb-0 small">Hệ thống quản lý thông tin giáo dục</p>
+            </div>
+            <div class="badge bg-primary p-2 shadow-sm">
+                <i class="far fa-calendar-alt me-1"></i> Năm học: 2024-2025
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs fw-bold text-success text-uppercase mb-1">Lớp Đã Có GVCN</div>
-                            <div class="h5 mb-0 fw-bold text-gray-800"><?= $lopCoGVCN ?></div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-tie fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <?php 
-            $lopChuaGVCN = $tongSoLop - $lopCoGVCN;
-            $tyLeHoanThanh = ($tongSoLop > 0) ? round(($lopCoGVCN / $tongSoLop) * 100) : 0;
-        ?>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">Chưa PC GVCN / Hoàn thành</div>
-                            <div class="h5 mb-0 fw-bold text-gray-800"><?= $lopChuaGVCN ?> / <?= $tyLeHoanThanh ?>%</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-tasks fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs fw-bold text-info text-uppercase mb-1">Tổng Số Giáo Viên</div>
-                            <div class="h5 mb-0 fw-bold text-gray-800"><?= $tongSoGV ?></div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users-cog fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3">
-            <h5 class="card-title mb-0 text-primary">
-                <i class="fas fa-filter me-2"></i>Tạo Báo Cáo Chi Tiết
-            </h5>
-        </div>
-        <div class="card-body">
-            <form action="index.php" method="GET">
-                <input type="hidden" name="controller" value="ThongKe">
-                <input type="hidden" name="action" value="chiTietBaoCao">
-
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label for="loaiBaoCao" class="form-label fw-semibold">1. Loại Báo Cáo</label>
-                        <select name="loaiBaoCao" id="loaiBaoCao" class="form-select" required>
-                            <option value="">-- Chọn Loại Báo Cáo --</option>
-                            <option value="phanCong">Báo cáo Phân công Giáo viên</option>
-                            <option value="hocLuc">Báo cáo Học lực theo Khối/Lớp</option>
-                            <option value="chuyenCan">Báo cáo Chuyên cần theo Khối/Lớp</option>
-                            </select>
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <label for="maKhoi" class="form-label fw-semibold">2. Chọn Khối</label>
-                        <select name="maKhoi" id="maKhoi" class="form-select">
-                             <option value="all">Tất cả Khối</option>
-                             <?php foreach ($danhSachKhoi as $khoi): ?>
-                                <option value="<?= $khoi['maKhoi'] ?>"><?= htmlspecialchars($khoi['tenKhoi']) ?></option>
-                             <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <label for="maLop" class="form-label fw-semibold">3. Chọn Lớp</label>
-                        <select name="maLop" id="maLop" class="form-select">
-                             <option value="all">Tất cả Lớp</option>
-                             <?php foreach ($danhSachLop as $lop): ?>
-                                <option value="<?= $lop['maLop'] ?>"><?= htmlspecialchars($lop['tenLop']) ?></option>
-                             <?php endforeach; ?>
-                        </select>
-                    </div>
+        <div class="card shadow-sm border-0 mb-4 border-top-primary">
+            <div class="card-body bg-white py-3">
+                <form action="index.php" method="GET" id="filterForm">
+                    <input type="hidden" name="controller" value="thongke">
                     
-                    <div class="col-md-1 mb-3">
-                        <label for="hocKy" class="form-label fw-semibold">4. HK</label>
-                        <select name="hocKy" id="hocKy" class="form-select">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                        </select>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Học Kỳ</label>
+                            <select name="hk" class="form-select bg-light border-0">
+                                <option value="1" <?= (isset($_GET['hk']) && $_GET['hk']==1)?'selected':'' ?>>Học kỳ 1</option>
+                                <option value="2" <?= (isset($_GET['hk']) && $_GET['hk']==2)?'selected':'' ?>>Học kỳ 2</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Loại Báo Cáo</label>
+                            <select name="loaiBaoCao" class="form-select bg-light border-0">
+                                <option value="hocLuc" <?= $tab=='hocLuc'?'selected':'' ?>>1. Học tập & Dự báo</option>
+                                <option value="hanhKiem" <?= $tab=='hanhKiem'?'selected':'' ?>>2. Hạnh kiểm</option>
+                                <option value="nhanSu" <?= $tab=='nhanSu'?'selected':'' ?>>3. Nhân sự</option>
+                                <option value="quyMo" <?= $tab=='quyMo'?'selected':'' ?>>4. Quy mô</option>
+                                <option value="taiChinh" <?= $tab=='taiChinh'?'selected':'' ?>>5. Tài chính</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Khối</label>
+                            <select name="maKhoi" id="selectKhoi" class="form-select bg-light border-0">
+                                <option value="all">Toàn trường</option>
+                                <?php foreach($danhSachKhoi as $k): ?>
+                                    <option value="<?= $k['maKhoi'] ?>" <?= (isset($_GET['maKhoi']) && $_GET['maKhoi']==$k['maKhoi'])?'selected':'' ?>><?= $k['tenKhoi'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Lớp</label>
+                            <select name="maLop" id="selectLop" class="form-select bg-light border-0">
+                                <option value="all">Tất cả lớp</option>
+                                <?php 
+                                    $selLop = isset($_GET['maLop']) ? $_GET['maLop'] : 'all';
+                                    foreach($danhSachLop as $l): 
+                                ?>
+                                    <option value="<?= $l['maLop'] ?>" data-khoi="<?= $l['maKhoi'] ?>" <?= ($selLop==$l['maLop'])?'selected':'' ?>><?= $l['tenLop'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="d-flex gap-2">
+                                <button type="submit" name="action" value="index" class="btn btn-primary fw-bold flex-grow-1 shadow-sm">
+                                    <i class="fas fa-filter me-1"></i> Xem
+                                </button>
+                                <button type="submit" name="action" value="export" class="btn btn-success fw-bold flex-grow-1 shadow-sm">
+                                    <i class="fas fa-file-excel me-1"></i> Tải về
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4 border-0">
+            <div class="card-header border-bottom bg-white py-3">
+                <ul class="nav nav-pills card-header-pills" id="mainTabs">
+                    <li class="nav-item"><a class="nav-link fw-bold <?= $activeTab=='hoctap'?'active':'' ?>" data-bs-toggle="tab" href="#hoctap">Học Tập</a></li>
+                    <li class="nav-item"><a class="nav-link fw-bold <?= $activeTab=='hanhkiem'?'active':'' ?>" data-bs-toggle="tab" href="#hanhkiem">Hạnh Kiểm</a></li>
+                    <li class="nav-item"><a class="nav-link fw-bold <?= $activeTab=='nhansu'?'active':'' ?>" data-bs-toggle="tab" href="#nhansu">Nhân Sự</a></li>
+                    <li class="nav-item"><a class="nav-link fw-bold <?= $activeTab=='quymo'?'active':'' ?>" data-bs-toggle="tab" href="#quymo">Quy Mô</a></li>
+                    <li class="nav-item"><a class="nav-link fw-bold <?= $activeTab=='taichinh'?'active':'' ?>" data-bs-toggle="tab" href="#taichinh">Tài Chính</a></li>
+                </ul>
+            </div>
+            
+            <div class="card-body bg-white p-4">
+                <div class="tab-content">
+                    
+                    <div class="tab-pane fade <?= $activeTab=='hoctap'?'show active':'' ?>" id="hoctap">
+                        <div class="alert alert-light border-start border-4 border-info shadow-sm mb-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="fw-bold text-info mb-1"><i class="fas fa-chart-line me-2"></i>Dự Báo Tốt Nghiệp (Khối 12)</h5>
+                                    <p class="mb-0 small text-muted">Dựa trên kết quả học tập hiện tại.</p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <span class="d-inline-block me-3 text-center">
+                                        <span class="d-block display-6 fw-bold text-success"><?= $duBaoTN['TyLeDau'] ?>%</span>
+                                        <small class="text-muted fw-bold">TỶ LỆ ĐẬU</small>
+                                    </span>
+                                    <span class="d-inline-block text-center">
+                                        <span class="d-block display-6 fw-bold text-danger"><?= $duBaoTN['NguyCoRot'] ?></span>
+                                        <small class="text-muted fw-bold">NGUY CƠ</small>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-lg-6">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-header bg-white border-bottom-0 pb-0">
+                                        <h6 class="fw-bold text-dark border-start border-4 border-primary ps-2">PHỔ ĐIỂM HỌC TẬP</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div style="height:320px; position: relative;"><canvas id="chartPhoDiem"></canvas></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-header bg-white border-bottom-0 pb-0">
+                                        <h6 class="fw-bold text-dark border-start border-4 border-success ps-2">SO SÁNH TIẾN BỘ</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div style="height:320px; position: relative;"><canvas id="chartSoSanh"></canvas></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="col-md-2 mb-3 align-self-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-chart-bar me-1"></i> Tạo Báo Cáo
-                        </button>
+                    <div class="tab-pane fade <?= $activeTab=='hanhkiem'?'show active':'' ?>" id="hanhkiem">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-6">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <h5 class="fw-bold mb-4">Cơ Cấu Hạnh Kiểm Toàn Trường</h5>
+                                        <div style="height:350px"><canvas id="chartHanhKiem"></canvas></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="tab-pane fade <?= $activeTab=='nhansu'?'show active':'' ?>" id="nhansu">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-primary mb-3">Giáo Viên Chủ Nhiệm Nhiều Lớp Nhất</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 250px;">Giáo Viên</th>
+                                                <th class="text-center" style="width:100px">Số Lớp</th>
+                                                <th>Danh Sách Lớp Chủ Nhiệm</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php if(!empty($gvTaiCongViec)): foreach($gvTaiCongViec as $g): ?>
+                                            <tr>
+                                                <td class="fw-bold text-dark"><?= $g['hoTen'] ?></td>
+                                                <td class="text-center"><span class="badge bg-danger rounded-pill px-3"><?= $g['soLopCN'] ?></span></td>
+                                                <td class="text-primary fw-bold"><?= $g['danhSachLop'] ?></td>
+                                            </tr>
+                                            <?php endforeach; else: ?><tr><td colspan="3" class="text-center text-muted">Dữ liệu ổn định</td></tr><?php endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade <?= $activeTab=='quymo'?'show active':'' ?>" id="quymo">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-dark mb-3">Thống Kê Sĩ Số Theo Khối</h6>
+                                <table class="table table-bordered border-light">
+                                    <thead class="bg-primary text-white"><tr><th>Khối</th><th class="text-center">Số Lớp</th><th class="text-center">Tổng HS</th><th class="text-center">TB/Lớp</th></tr></thead>
+                                    <tbody>
+                                        <?php if(!empty($siSoKhoi)): foreach($siSoKhoi as $k): $tb = ($k['tong_lop'] > 0) ? round($k['tong_hs']/$k['tong_lop'], 1) : 0; ?>
+                                        <tr>
+                                            <td class="fw-bold"><?= $k['tenKhoi'] ?></td>
+                                            <td class="text-center"><?= $k['tong_lop'] ?></td>
+                                            <td class="text-center fw-bold text-primary"><?= $k['tong_hs'] ?></td>
+                                            <td class="text-center <?= $tb>45?'text-danger fw-bold':'' ?>"><?= $tb ?></td>
+                                        </tr>
+                                        <?php endforeach; endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade <?= $activeTab=='taichinh'?'show active':'' ?>" id="taichinh">
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-3"><div class="p-3 bg-white border rounded shadow-sm h-100"><div class="d-flex justify-content-between mb-2"><span class="text-muted small fw-bold">PHẢI THU</span><i class="fas fa-money-bill-wave text-primary opacity-25 fa-2x"></i></div><h4 class="fw-bold text-primary"><?= number_format($taiChinhKPI['phaiThu']) ?> đ</h4></div></div>
+                            <div class="col-md-3"><div class="p-3 bg-white border rounded shadow-sm h-100"><div class="d-flex justify-content-between mb-2"><span class="text-muted small fw-bold">ĐÃ THU</span><i class="fas fa-check-circle text-success opacity-25 fa-2x"></i></div><h4 class="fw-bold text-success"><?= number_format($taiChinhKPI['thucThu']) ?> đ</h4></div></div>
+                            <div class="col-md-3"><div class="p-3 bg-white border rounded shadow-sm h-100"><div class="d-flex justify-content-between mb-2"><span class="text-muted small fw-bold">CÔNG NỢ</span><i class="fas fa-exclamation-circle text-danger opacity-25 fa-2x"></i></div><h4 class="fw-bold text-danger"><?= number_format($taiChinhKPI['congNo']) ?> đ</h4></div></div>
+                            <div class="col-md-3"><div class="p-3 bg-white border rounded shadow-sm h-100"><div class="d-flex justify-content-between mb-2"><span class="text-muted small fw-bold">TIẾN ĐỘ</span><i class="fas fa-chart-line text-info opacity-25 fa-2x"></i></div><h4 class="fw-bold text-info"><?= $taiChinhKPI['tyLe'] ?>%</h4><div class="progress mt-2" style="height:4px"><div class="progress-bar bg-info" style="width:<?= $taiChinhKPI['tyLe'] ?>%"></div></div></div></div>
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-lg-8">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-header bg-white"><h6 class="m-0 fw-bold">Dòng Tiền Thực Thu</h6></div>
+                                    <div class="card-body"><div style="height:320px"><canvas id="chartDoanhThu"></canvas></div></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-header bg-white"><h6 class="m-0 fw-bold text-danger">Top Nợ Học Phí</h6></div>
+                                    <div class="card-body p-0">
+                                        <table class="table table-striped mb-0 small">
+                                            <thead class="table-light"><tr><th>Lớp</th><th class="text-center">SL</th><th class="text-end">Tiền Nợ</th></tr></thead>
+                                            <tbody><?php if(!empty($topLopNo)) foreach($topLopNo as $n) echo "<tr><td class='fw-bold'>{$n['tenLop']}</td><td class='text-center'><span class='badge bg-danger'>{$n['soHocSinhNo']}</span></td><td class='text-end fw-bold text-danger'>".number_format($n['tongNo'])."</td></tr>"; else echo "<tr><td colspan='3' class='text-center py-3'>Không có nợ</td></tr>"; ?></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                
-            </form>
+            </div>
         </div>
     </div>
 </div>
-<style>
-/* CSS cho card thống kê */
-.border-left-primary { border-left: .25rem solid #4e73df!important;}
-.border-left-success { border-left: .25rem solid #1cc88a!important;}
-.border-left-warning { border-left: .25rem solid #f6c23e!important;}
-.border-left-info { border-left: .25rem solid #36b9cc!important;}
-.text-xs { font-size: 0.7rem; }
-.text-gray-300 { color: #dddfeb!important;}
-</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ThongKeData = {
+        phoDiem: <?= $jsonPhoDiem ?: '[0,0,0,0,0]' ?>,
+        soSanhHK1: <?= $jsonSS_HK1 ?: '[]' ?>,
+        soSanhHK2: <?= $jsonSS_HK2 ?: '[]' ?>,
+        hanhKiem: <?= $jsonHanhKiem ?: '[]' ?>,
+        doanhThuLabels: <?= $jsonLabelsDT ?: '[]' ?>,
+        doanhThuData: <?= $jsonDataDT ?: '[]' ?>
+    };
+</script>
+
+<script src="assets/js/thongke.js"></script>

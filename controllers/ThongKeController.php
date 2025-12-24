@@ -1,137 +1,97 @@
 <?php
-require_once 'models/GiaoVienModel.php';
 require_once 'models/ThongKeModel.php';
-require_once 'models/Database.php';
 
 class ThongKeController {
-    private $giaoVienModel;
-    private $thongKeModel;
+    private $model;
 
     public function __construct() {
-        $this->giaoVienModel = new GiaoVienModel();
-        $this->thongKeModel = new ThongKeModel();
-        
-        if (session_status() === PHP_SESSION_NONE) {
+        $this->model = new ThongKeModel();
+    }
+
+    public function index() {
+        // KIỂM TRA SESSION ĐỂ LẤY MÃ TRƯỜNG
+        if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
         
-        $this->checkPermission(['QTV', 'BGH']);
-    }
-    
-    private function checkPermission($allowedRoles) {
-        if (!isset($_SESSION['user']) || !in_array($_SESSION['user']['vaiTro'], $allowedRoles)) {
-            $_SESSION['error'] = "Bạn không có quyền truy cập chức năng này!";
-            header('Location: index.php?controller=home&action=index');
-            exit;
-        }
-    }
+        // Nếu không có mã trường (chưa đăng nhập hoặc lỗi), gán mặc định hoặc xử lý lỗi
+        $maTruong = isset($_SESSION['user']['maTruong']) ? $_SESSION['user']['maTruong'] : 0;
 
-    /**
-     * Basic Flow 1-2: Hiển thị trang Thống kê Báo cáo tổng quan (Trang chọn lọc)
-     */
-    public function index() {
-        $title = "Thống Kê Báo Cáo";
+        $hocKy = isset($_GET['hk']) ? $_GET['hk'] : '1';
+        $maKhoi = isset($_GET['maKhoi']) ? $_GET['maKhoi'] : 'all';
+        $maLop = isset($_GET['maLop']) ? $_GET['maLop'] : 'all';
+        $tab = isset($_GET['loaiBaoCao']) ? $_GET['loaiBaoCao'] : 'hocLuc';
         
-        try {
-            // Lấy maTruong từ session (giả sử user đã đăng nhập có trường)
-            $maTruong = $_SESSION['user']['maTruong'] ?? null;
-            
-            // Chỉ số tổng quan (Cho Dashboard mini trên trang lọc) - THÊM maTruong
-            $tongSoLop = $this->giaoVienModel->getTotalClasses($maTruong);
-            $lopCoGVCN = $this->giaoVienModel->getClassesWithGVCN($maTruong);
-            $tongSoGV = $this->giaoVienModel->getTotalTeachers($maTruong);
-            
-            // Dữ liệu cho bộ lọc - THÊM maTruong
-            $danhSachKhoi = $this->giaoVienModel->getAllKhoi($maTruong);
-            $danhSachLop = $this->giaoVienModel->getAllClasses($maTruong); 
-            
-        } catch (Exception $e) {
-            $_SESSION['error'] = "Lỗi hệ thống khi tải dữ liệu thống kê tổng quan!";
-            $tongSoLop = $lopCoGVCN = $tongSoGV = 0;
-            $danhSachKhoi = $danhSachLop = [];
+        $mapTab = ['hocLuc'=>'hoctap', 'hanhKiem'=>'hanhkiem', 'nhanSu'=>'nhansu', 'quyMo'=>'quymo', 'taiChinh'=>'taichinh'];
+        $activeTab = $mapTab[$tab] ?? 'hoctap';
+
+        // TRUYỀN $maTruong VÀO CÁC HÀM MODEL
+        $phoDiem = $this->model->getPhoDiem($hocKy, $maKhoi, $maLop, $maTruong);
+        $jsonPhoDiem = json_encode(array_values($phoDiem));
+        
+        $duBaoTN = $this->model->getDuBaoTotNghiep($hocKy, $maTruong);
+        
+        $hanhKiem = $this->model->getThongKeHanhKiem($hocKy, $maKhoi, $maLop, $maTruong);
+        $jsonHanhKiem = json_encode(array_values($hanhKiem));
+        
+        $taiChinhKPI = $this->model->getTaiChinhOverview($hocKy, $maKhoi, $maLop, $maTruong);
+        
+        $duLieuSoSanh = $this->model->getSoSanhHocLuc('2024-2025', $maKhoi, $maLop, $maTruong);
+        $dataSS_HK1 = []; $dataSS_HK2 = []; $tempMap = []; 
+        foreach($duLieuSoSanh as $r) $tempMap[$r['hocLuc']] = $r;
+        foreach(['KEM', 'YEU', 'TRUNG_BINH', 'KHA', 'GIOI'] as $k) {
+            $dataSS_HK1[] = $tempMap[$k]['SL_HK1'] ?? 0;
+            $dataSS_HK2[] = $tempMap[$k]['SL_HK2'] ?? 0;
         }
+        $jsonSS_HK1 = json_encode($dataSS_HK1);
+        $jsonSS_HK2 = json_encode($dataSS_HK2);
 
-        $showSidebar = true;
-        $roleName = strtolower($_SESSION['user']['vaiTro']);
-        $sidebarPath = 'views/layouts/sidebar/' . ($roleName === 'bgh' ? 'bangiamhieu' : $roleName) . '.php';
+        $gvTaiCongViec = $this->model->getTaiCongViecGiaoVien($maTruong);
+        $siSoKhoi = $this->model->getSiSoTrungBinh($maTruong);
+        $doanhThuChart = $this->model->getDoanhThuTheoThang($maTruong);
+        $topLopNo = $this->model->getTopLopNoHocPhi($hocKy, $maTruong);
+        
+        $labelsDT = []; $dataDT = [];
+        foreach($doanhThuChart as $d) { $labelsDT[] = $d['thang']; $dataDT[] = $d['doanhThu']; }
+        $jsonLabelsDT = json_encode($labelsDT);
+        $jsonDataDT = json_encode($dataDT);
 
-        require_once 'views/layouts/header.php';
-        require_once $sidebarPath;
-        require_once 'views/thongke/index.php'; // Quay lại view index.php cho trang lọc
-        require_once 'views/layouts/footer.php';
-        exit();
+        // Lấy danh sách lớp thuộc trường này
+        $danhSachKhoi = $this->model->getAllKhoi(); // Khối thường dùng chung
+        $danhSachLop = $this->model->getAllLopWithKhoi($maTruong);
+
+        // Lấy KPI tổng quan theo trường
+        $kpiData = $this->model->getKPIs($maTruong); // Giả sử bạn muốn dùng biến này ở View
+
+        require_once 'views/thongke/index.php';
     }
 
-    /**
-     * Basic Flow 3-6: Xử lý hiển thị báo cáo chi tiết theo loại (Theo Khối/Lớp)
-     */
-    public function chiTietBaoCao() {
-        $loaiBaoCao = $_GET['loaiBaoCao'] ?? null;
-        $maKhoi = $_GET['maKhoi'] ?? null;
-        $maLop = $_GET['maLop'] ?? null;
-        $hocKy = intval($_GET['hocKy'] ?? 1);   
+    public function export() {
+        if (session_status() == PHP_SESSION_NONE) session_start();
+        $maTruong = isset($_SESSION['user']['maTruong']) ? $_SESSION['user']['maTruong'] : 0;
+
+        $type = $_GET['loaiBaoCao'] ?? 'hocLuc';
+        $hocKy = $_GET['hk'] ?? '1';
+        $maKhoi = $_GET['maKhoi'] ?? 'all';
+        $maLop = $_GET['maLop'] ?? 'all';
+
+        // Truyền $maTruong vào hàm export
+        $data = $this->model->getDataExport($type, 'HK'.$hocKy, $maKhoi, $maLop, $maTruong);
         
-        if (!$loaiBaoCao) {
-            $_SESSION['error'] = "Vui lòng chọn loại báo cáo cần xem.";
-            header('Location: index.php?controller=ThongKe&action=index');
-            exit;
-        }
+        $filename = "BaoCao_" . ucfirst($type) . "_" . date('Ymd_His') . ".xls";
         
-        $title = "Báo Cáo Chi Tiết";
-        $baoCaoData = [];
-        $baoCaoTitle = "";
-
-        try {
-            // Lấy maTruong từ session
-            $maTruong = $_SESSION['user']['maTruong'] ?? null;
-            
-            switch ($loaiBaoCao) {
-                case 'phanCong':
-                    // Sử dụng hàm chi tiết theo Khối/Lớp - THÊM maTruong
-                    $baoCaoData = $this->thongKeModel->getThongKePhanCong($maKhoi, $maLop, $maTruong);
-                    $baoCaoTitle = "Thống kê Phân công Giáo viên Bộ môn và Chủ nhiệm";
-                    $viewFile = 'views/thongke/chi_tiet_bao_cao_phan_cong.php';
-                    break;
-                case 'hocLuc':
-                    // Sử dụng hàm chi tiết theo Khối/Lớp - THÊM maTruong
-                    $baoCaoData = $this->thongKeModel->getThongKeHocLuc($maKhoi, $maLop, $hocKy, $maTruong);
-                    $baoCaoTitle = "Thống kê Xếp loại Học lực Học kỳ $hocKy";
-                    $viewFile = 'views/thongke/chi_tiet_bao_cao_hoc_luc.php';
-                    break;
-                case 'chuyenCan':
-                    // Sử dụng hàm chi tiết theo Khối/Lớp - THÊM maTruong
-                    $baoCaoData = $this->thongKeModel->getThongKeChuyenCan($maKhoi, $maLop, $hocKy, $maTruong);
-                    $baoCaoTitle = "Thống kê Chuyên cần Học kỳ $hocKy";
-                    $viewFile = 'views/thongke/chi_tiet_bao_cao_chuyen_can.php';
-                    break;
-                default:
-                    $_SESSION['error'] = "Loại báo cáo không hợp lệ.";
-                    header('Location: index.php?controller=ThongKe&action=index');
-                    exit;
-            }
-            
-            if (empty($baoCaoData)) {
-                // Alternative Flow 6.2: Không tìm thấy dữ liệu
-                $_SESSION['warning'] = "Không tìm thấy dữ liệu báo cáo phù hợp với bộ lọc.";
-            }
-
-        } catch (Exception $e) {
-            // Exception Flow 7.1: Lỗi hệ thống khi tải báo cáo
-            error_log("Lỗi tạo báo cáo: " . $e->getMessage());
-            $_SESSION['error'] = "Lỗi hệ thống khi tạo báo cáo chi tiết!";
-            header('Location: index.php?controller=ThongKe&action=index');
-            exit;
-        }
-
-        $showSidebar = true;
-        $roleName = strtolower($_SESSION['user']['vaiTro']);
-        $sidebarPath = 'views/layouts/sidebar/' . ($roleName === 'bgh' ? 'bangiamhieu' : $roleName) . '.php';
-
-        require_once 'views/layouts/header.php';
-        require_once $sidebarPath;
-        require_once $viewFile;
-        require_once 'views/layouts/footer.php';
-        exit();
+        if (ob_get_level()) ob_end_clean();
+        header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        echo '<meta http-equiv="content-type" content="text/plain; charset=UTF-8"/>';
+        echo '<table border="1"><tr><th>STT</th>';
+        if(!empty($data)) {
+            foreach(array_keys($data[0]) as $k) echo '<th>'.mb_strtoupper($k, 'UTF-8').'</th>';
+            echo '</tr>'; $i=1;
+            foreach($data as $r) { echo '<tr><td>'.$i++.'</td>'; foreach($r as $c) echo '<td>'.$c.'</td>'; echo '</tr>'; }
+        } else { echo '<td>Không có dữ liệu</td></tr>'; }
+        echo '</table>';
+        exit;
     }
 }
 ?>

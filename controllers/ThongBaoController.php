@@ -44,7 +44,7 @@ class ThongBaoController {
         } elseif ($userRole === 'HOCSINH') {
             require_once 'views/layouts/sidebar/hocsinh.php';
         } elseif ($userRole === 'QTV') {
-            require_once 'views/layouts/sidebar/quantrivien.php';
+            require_once 'views/layouts/sidebar/admin.php';
         } elseif ($userRole === 'PHUHUYNH') {
             require_once 'views/layouts/sidebar/phuhuynh.php';
         } elseif ($userRole === 'TOTRUONG') {
@@ -216,7 +216,7 @@ class ThongBaoController {
         } elseif ($userRole === 'HOCSINH') {
             require_once 'views/layouts/sidebar/hocsinh.php';
         } elseif ($userRole === 'QTV') {
-            require_once 'views/layouts/sidebar/quantrivien.php';
+            require_once 'views/layouts/sidebar/admin.php';
         } elseif ($userRole === 'PHUHUYNH') {
             require_once 'views/layouts/sidebar/phuhuynh.php';
         } elseif ($userRole === 'TOTRUONG') {
@@ -312,7 +312,7 @@ class ThongBaoController {
         } elseif ($userRole === 'HOCSINH') {
             require_once 'views/layouts/sidebar/hocsinh.php';
         } elseif ($userRole === 'QTV') {
-            require_once 'views/layouts/sidebar/quantrivien.php';
+            require_once 'views/layouts/sidebar/admin.php';
         } elseif ($userRole === 'PHUHUYNH') {
             require_once 'views/layouts/sidebar/phuhuynh.php';
         } elseif ($userRole === 'TOTRUONG') {

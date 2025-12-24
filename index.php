@@ -149,7 +149,6 @@ if (file_exists($controllerFile)) {
                     }
                     break;
                 
-                // Trong phần case 'tinnhan' của index.php
                 case 'tinnhan':
                     switch ($action) {
                         case 'guitinnhan':
@@ -168,17 +167,17 @@ if (file_exists($controllerFile)) {
                         case 'guitinnhangiaovien':
                             $controllerInstance->guitinnhangiaovien();
                             break;
-                        case 'getAllGiaoVien': // THÊM DÒNG NÀY
+                        case 'getAllGiaoVien':
                             $controllerInstance->getAllGiaoVien();
                             break;
-                        case 'getGiaoVienByLop': // THÊM DÒNG NÀY
+                        case 'getGiaoVienByLop':
                             $controllerInstance->getGiaoVienByLop();
                             break;
                         default:
                             $controllerInstance->index();
                     }
                     break;
-                
+
                 case 'diem':
                     switch ($action) {
                         case 'xemdiem':
@@ -279,8 +278,7 @@ if (file_exists($controllerFile)) {
                         default:
                             $controllerInstance->index();
                     }
-                    break;    
-                
+                    break;
                 case 'quanlytaikhoan':
                     switch ($action) {
                         case 'index':
@@ -350,13 +348,19 @@ if (file_exists($controllerFile)) {
                     break;
             }
         } else {
-            die("Action không tồn tại: $action");
+            // Xử lý lỗi Action không tồn tại
+            require_once 'controllers/HomeController.php';
+            $home = new HomeController();
+            $home->index(); 
         }
     } else {
-        die("Controller không tồn tại: $controllerClass");
+        // Xử lý lỗi Controller Class không tồn tại
+        require_once 'controllers/HomeController.php';
+        $home = new HomeController();
+        $home->index();
     }
 } else {
-    // Fallback - hiển thị trang chủ
+    // Fallback - hiển thị trang chủ khi Controller file không tồn tại
     require_once 'controllers/HomeController.php';
     $home = new HomeController();
     $home->index();

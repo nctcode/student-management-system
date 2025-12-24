@@ -4,8 +4,9 @@ $gvcnAssignments = $gvcnAssignments ?? [];
 $classes = $classes ?? [];
 ?>
 
+<link rel="stylesheet" href="assets/css/phan_cong.css">
+
 <div class="container-fluid">
-    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-1 text-primary">
@@ -21,7 +22,6 @@ $classes = $classes ?? [];
         </div>
     </div>
 
-    <!-- Thống kê tổng quan -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-0 bg-primary bg-opacity-10 h-100">
@@ -88,7 +88,6 @@ $classes = $classes ?? [];
         </div>
     </div>
 
-    <!-- Danh sách phân công -->
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3">
             <h5 class="card-title mb-0 text-primary">
@@ -158,38 +157,3 @@ $classes = $classes ?? [];
         </div>
     </div>
 </div>
-
-<style>
-.icon-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.icon-sm {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.assignment-row {
-    transition: background-color 0.2s ease;
-}
-
-.assignment-row:hover {
-    background-color: #f8f9fa;
-}
-
-.card {
-    border-radius: 12px;
-}
-
-.badge {
-    font-size: 0.8rem;
-}
-</style>
