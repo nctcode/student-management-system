@@ -88,10 +88,12 @@ $roleName = 'Giáo viên';
                                         </div>
                                     </a>
                                     <a href="index.php?controller=diem&action=nhapdiem" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-edit me-2"></i>Nhập điểm
+                                        <i class="fas fa-edit me-2"></i>
+                                        <strong>Nhập điểm</strong>
                                     </a>
                                     <a href="index.php?controller=chuyencan&action=index" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-user-check me-2"></i>Ghi nhận chuyên cần
+                                        <i class="fas fa-user-check me-2"></i>
+                                        <strong>Ghi nhận chuyên cần</strong>
                                     </a>
                                     <a href="index.php?controller=thoikhoabieu&action=index" class="list-group-item list-group-item-action d-flex align-items-center">
                                         <i class="fas fa-calendar-alt me-3 text-success"></i>
@@ -115,7 +117,8 @@ $roleName = 'Giáo viên';
                                         </div>
                                     </a>
                                     <a href="index.php?controller=baitap&action=danhsach" class="list-group-item list-group-item-action">
-                                        <i class="fas fa-tasks me-2"></i>Bài tập
+                                        <i class="fas fa-tasks me-2"></i>
+                                        <strong>Bài tập</strong>
                                     </a>
                                 </div>
                             </div>

@@ -32,7 +32,6 @@ class ChuyenCanController {
     public function index() {
         $this->checkAuthAndGetMaGV();
         
-        // Lấy danh sách các buổi học mà GV này dạy
         $danhSachBuoiHoc = $this->chuyenCanModel->getBuoiHocGiaoVien($this->maGiaoVien);
         
         $title = "Ghi nhận chuyên cần";
@@ -51,18 +50,20 @@ class ChuyenCanController {
         $maLop = $_GET['maLop'] ?? 0;
         $maBuoiHoc = $_GET['maBuoiHoc'] ?? 0;
 
+        if (!$this->chuyenCanModel->kiemTraQuyenBuoiHoc($maBuoiHoc, $this->maGiaoVien)) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Bạn không có quyền truy cập buổi học này.']);
+            exit;
+        }
+
         if (!$maLop || !$maBuoiHoc) {
             echo json_encode(['error' => 'Vui lòng chọn lớp và buổi học hợp lệ.']);
             exit;
         }
 
-        // Lấy danh sách HS và trạng thái chuyên cần (nếu đã có)
         $danhSachHocSinh = $this->chuyenCanModel->getDanhSachLopDeDiemDanh($maLop, $maBuoiHoc);
-        
-        // Lấy thông tin buổi học để hiển thị
         $thongTinBuoiHoc = $this->chuyenCanModel->getThongTinBuoiHoc($maBuoiHoc);
         
-        // Gộp kết quả
         $result = [
             'danhSachHocSinh' => $danhSachHocSinh,
             'thongTinBuoiHoc' => $thongTinBuoiHoc
@@ -80,16 +81,22 @@ class ChuyenCanController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $maLop = $_POST['maLop'];
             $maBuoiHoc = $_POST['maBuoiHoc'];
+            $ngayDiemDanh = $_POST['ngayDiemDanh'];
             $danhSachTrangThai = $_POST['trangthai'] ?? []; 
             $danhSachGhiChu = $_POST['ghichu'] ?? []; 
+
+            if (!$this->chuyenCanModel->kiemTraQuyenBuoiHoc($maBuoiHoc, $this->maGiaoVien)) {
+                $_SESSION['error'] = "Bạn không có quyền lưu chuyên cần cho buổi học này.";
+                header('Location: index.php?controller=chuyencan&action=index');
+                exit;
+            }
 
             if ($this->chuyenCanModel->luuChuyenCan($maBuoiHoc, $danhSachTrangThai, $danhSachGhiChu)) {
                 $_SESSION['success'] = "Lưu chuyên cần thành công!";
             } else {
                 $_SESSION['error'] = "Không thể lưu chuyên cần. Đã có lỗi xảy ra.";
             }
-
-            $redirectUrl = "index.php?controller=chuyencan&action=index&maLop=$maLop&maBuoiHoc=$maBuoiHoc&autoload=true";
+            $redirectUrl = "index.php?controller=chuyencan&action=index&maLop=$maLop&maBuoiHoc=$maBuoiHoc&ngayDiemDanh=$ngayDiemDanh&autoload=true";
             header("Location: " . $redirectUrl);
             exit;
         }

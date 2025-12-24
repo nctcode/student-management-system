@@ -78,18 +78,18 @@ $userRole = $_SESSION['user']['vaiTro'] ?? '';
                         <div class="col-md-6">
                             <h6>Cha</h6>
                             <p><strong>Họ tên:</strong> <?php echo $hoSo['hoTenCha'] ?? 'N/A'; ?></p>
-                            <p><strong>Năm sinh:</strong> <?php echo $hoSo['namSinhCha'] ?? 'N/A'; ?></p>
+                           
                             <p><strong>Nghề nghiệp:</strong> <?php echo $hoSo['ngheNghiepCha'] ?? 'N/A'; ?></p>
                             <p><strong>SĐT:</strong> <?php echo $hoSo['dienThoaiCha'] ?? 'N/A'; ?></p>
-                            <p><strong>Nơi công tác:</strong> <?php echo $hoSo['noiCongTacCha'] ?? 'N/A'; ?></p>
+                            
                         </div>
                         <div class="col-md-6">
                             <h6>Mẹ</h6>
                             <p><strong>Họ tên:</strong> <?php echo $hoSo['hoTenMe'] ?? 'N/A'; ?></p>
-                            <p><strong>Năm sinh:</strong> <?php echo $hoSo['namSinhMe'] ?? 'N/A'; ?></p>
+                           
                             <p><strong>Nghề nghiệp:</strong> <?php echo $hoSo['ngheNghiepMe'] ?? 'N/A'; ?></p>
                             <p><strong>SĐT:</strong> <?php echo $hoSo['dienThoaiMe'] ?? 'N/A'; ?></p>
-                            <p><strong>Nơi công tác:</strong> <?php echo $hoSo['noiCongTacMe'] ?? 'N/A'; ?></p>
+                           
                         </div>
                     </div>
                     
@@ -98,11 +98,10 @@ $userRole = $_SESSION['user']['vaiTro'] ?? '';
                         <div class="col-12">
                             <h6>Người giám hộ</h6>
                             <p><strong>Họ tên:</strong> <?php echo $hoSo['hoTenNguoiGiamHo']; ?></p>
-                            <p><strong>Năm sinh:</strong> <?php echo $hoSo['namSinhNguoiGiamHo'] ?? 'N/A'; ?></p>
+                           
                             <p><strong>Nghề nghiệp:</strong> <?php echo $hoSo['ngheNghiepNguoiGiamHo'] ?? 'N/A'; ?></p>
                             <p><strong>SĐT:</strong> <?php echo $hoSo['dienThoaiNguoiGiamHo'] ?? 'N/A'; ?></p>
-                            <p><strong>Nơi công tác:</strong> <?php echo $hoSo['noiCongTacNguoiGiamHo'] ?? 'N/A'; ?></p>
-                        </div>
+                            
                     </div>
                     <?php endif; ?>
                 </div>
@@ -177,11 +176,7 @@ $userRole = $_SESSION['user']['vaiTro'] ?? '';
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Ngành học:</strong><br>
-                            <?php echo $hoSo['nganhHoc'] ?? 'N/A'; ?>
-                            </p>
-                        </div>
+                       
                         <div class="col-md-6">
                             <p><strong>Hình thức tuyển sinh:</strong><br>
                             <?php 

@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableBody = document.getElementById('tbodyDiem');
     const hiddenInputsContainer = document.getElementById('hiddenInputsContainer');
     const formLuuDiem = document.getElementById('formLuuDiem'); 
+    const btnHuy = document.getElementById('btnHuyNhapDiem');
     
     const selMaLop = document.getElementById('maLop');
     const selMaMonHoc = document.getElementById('maMonHoc');
@@ -17,6 +18,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const check15Phut = document.getElementById('check15Phut');
     const check1Tiet = document.getElementById('check1Tiet');
     const checkCuoiKy = document.getElementById('checkCuoiKy');
+
+    const modalCanhBao = document.getElementById('modalCanhBaoDiemTrong');
+    const msgCanhBao = document.getElementById('msgCanhBaoDiemTrong');
+    const btnXacNhanLuu = document.getElementById('btnXacNhanLuuDiem');
 
     // === GLOBAL STATE ===
     let currentData = []; 
@@ -47,10 +52,10 @@ document.addEventListener('DOMContentLoaded', function() {
         btnXemBangDiem.disabled = !valid; 
     }
 
-    selMaLop?.addEventListener('change', checkFormValidity);
-    selMaMonHoc?.addEventListener('change', checkFormValidity);
-    selHocKy?.addEventListener('change', checkFormValidity);
-    selNamHoc?.addEventListener('change', checkFormValidity);
+    selMaLop?.addEventListener('change', handleAutoLoad);
+    selMaMonHoc?.addEventListener('change', handleAutoLoad);
+    selHocKy?.addEventListener('change', handleAutoLoad);
+    selNamHoc?.addEventListener('change', handleAutoLoad);
     
     // Gán sự kiện cho Checkbox (Bộ lọc)
     checkMieng?.addEventListener('change', function() {
@@ -79,15 +84,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const maMonHoc = selMaMonHoc.value;
         const hocKy = selHocKy.value;
         const namHoc = selNamHoc.value;
+        
         if (!maLop || !maMonHoc || !hocKy || !namHoc) return;
-        if (!maLop || !maMonHoc || !hocKy || !namHoc) {
-            alert('Vui lòng chọn đầy đủ Lớp, Môn học, Học kỳ và Năm học.');
-            return;
-        }
 
         btnXemBangDiem.disabled = true;
         btnXemBangDiem.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
-        
         cardBangDiem.style.display = 'block';
         tableHead.innerHTML = ''; 
         tableBody.innerHTML = `<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>`;
@@ -96,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(`index.php?controller=diem&action=ajaxGetBangDiem&maLop=${maLop}&maMonHoc=${maMonHoc}&hocKy=${hocKy}&namHoc=${namHoc}`, {
                 cache: 'no-store' 
             });
+            
             if (!response.ok) throw new Error('Lỗi máy chủ khi tải điểm!');
 
             currentData = await response.json(); 
@@ -130,33 +132,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // === HÀM ĐỌC DỮ LIỆU TỪ BẢNG ===
     function updateCurrentDataFromInputs() {
-        if (!tableBody || !tableBody.rows || currentData.length === 0) return;
-
-        const filters = {
-            'MIENG': checkMieng.checked,
-            '15_PHUT': check15Phut.checked,
-            '1_TIET': check1Tiet.checked,
-            'CUOI_KY': checkCuoiKy.checked
-        };
+        if (!tableBody || currentData.length === 0) return;
 
         Array.from(tableBody.rows).forEach((tr, rowIndex) => {
             const hs = currentData[rowIndex];
-            if (!hs) return; 
-
-            const maHocSinh = hs.maHocSinh;
+            
+            if (!hs) return;
 
             for (const type in gradeTypes) {
-                if (filters[type]) { 
-                    
-                    const inputsForType = tr.querySelectorAll(`input[name="diem[${maHocSinh}][${type}][]"]`);
-
-                    if (inputsForType.length > 0) {
-                        hs[type] = []; 
-                        
-                        inputsForType.forEach(input => {
-                            hs[type].push(input.value); 
-                        });
-                    }
+                const inputs = tr.querySelectorAll(`input[name="diem[${hs.maHocSinh}][${type}][]"]`);
+                if (inputs.length > 0) {
+                    hs[type] = Array.from(inputs).map(input => input.value);
                 }
             }
         });
@@ -168,39 +154,42 @@ document.addEventListener('DOMContentLoaded', function() {
         drawTableBody();
     }
 
+    const checkboxMapping = {
+        'MIENG': 'checkMieng',
+        '15_PHUT': 'check15Phut',
+        '1_TIET': 'check1Tiet',
+        'CUOI_KY': 'checkCuoiKy'
+    };
+
     // Vẽ Header động
     function drawTableHeader() {
         tableHead.innerHTML = '';
         const tr = document.createElement('tr');
-        
         tr.innerHTML = '<th>STT</th><th>Mã HS</th><th>Họ tên</th>';
-        
-        const filters = {
-            'MIENG': checkMieng.checked,
-            '15_PHUT': check15Phut.checked,
-            '1_TIET': check1Tiet.checked,
-            'CUOI_KY': checkCuoiKy.checked
-        };
 
         for (const type in gradeTypes) {
-            if (filters[type]) { 
-                const count = columnCounts[type]; 
-                for (let i = 1; i <= count; i++) {
-                    const th = document.createElement('th');
-                    let title = gradeTypes[type];
-                    if (count > 1) {
-                        title += ` (Lần ${i})`;
-                    }
-                    th.textContent = title;
-                    tr.appendChild(th);
-                }
+            const count = columnCounts[type];
+            const checkboxId = checkboxMapping[type];
+            const checkbox = document.getElementById(checkboxId);
+            const isHidden = checkbox ? !checkbox.checked : false;
+
+            for (let i = 1; i <= count; i++) {
+                const th = document.createElement('th');
+                
+                if (isHidden) th.classList.add('column-hidden');
+                
+                let title = gradeTypes[type];
+                th.textContent = count > 1 ? `${title} (Lần ${i})` : title;
+                tr.appendChild(th);
             }
         }
-        if (areAllFiltersChecked()) {
-            const thTBM = document.createElement('th');
-            thTBM.textContent = 'TBM';
-            tr.appendChild(thTBM);
-        }
+        
+        const thTBM = document.createElement('th');
+        thTBM.textContent = 'TBM';
+    
+        if (!areAllFiltersChecked()) thTBM.classList.add('column-hidden');
+        
+        tr.appendChild(thTBM);
         tableHead.appendChild(tr);
     }
 
@@ -209,63 +198,61 @@ document.addEventListener('DOMContentLoaded', function() {
         tableBody.innerHTML = '';
         let stt = 1;
 
-        const filters = {
-            'MIENG': checkMieng.checked,
-            '15_PHUT': check15Phut.checked,
-            '1_TIET': check1Tiet.checked,
-            'CUOI_KY': checkCuoiKy.checked
-        };
-
         currentData.forEach(hs => {
-        const tr = document.createElement('tr');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${stt++}</td><td>${hs.maHocSinh}</td><td>${hs.hoTen}</td>`;
 
-        const tdSTT = document.createElement('td');
-        tdSTT.textContent = stt++;
-        tr.appendChild(tdSTT);
-
-        const tdMaHS = document.createElement('td');
-        tdMaHS.textContent = hs.maHocSinh;
-        tr.appendChild(tdMaHS);
-
-        const tdHoTen = document.createElement('td');
-        tdHoTen.textContent = hs.hoTen;
-        tr.appendChild(tdHoTen);
-
-        for (const type in gradeTypes) {
-            if (filters[type]) { 
+            for (const type in gradeTypes) {
                 const count = columnCounts[type];
                 const scores = hs[type] || [];
-                
+                const checkbox = document.getElementById(checkboxMapping[type]);
+                const isVisible = checkbox ? checkbox.checked : true;
+
                 for (let i = 0; i < count; i++) {
                     const td = document.createElement('td');
+                    
+                    if (!isVisible) td.classList.add('column-hidden');
+
                     const input = document.createElement('input');
                     input.type = 'text';
-                    input.inputMode = 'decimal';
-                    input.className = 'form-control';
+                    input.className = 'form-control text-center';
                     input.name = `diem[${hs.maHocSinh}][${type}][]`;
-                    input.value = scores[i] || ''; 
-
-                    input.addEventListener('input', function() {
-                            tinhTBMHang(tr);
-                        });
+                    input.value = scores[i] || '';
                     
+                    input.addEventListener('input', function() {
+                        let val = this.value.trim().replace(',', '.');
+                        if (val !== '' && (isNaN(val) || parseFloat(val) < 0 || parseFloat(val) > 10)) {
+                            this.classList.add('is-invalid');
+                        } else {
+                            this.classList.remove('is-invalid');
+                        }
+                        tinhTBMHang(tr);
+                    });
                     td.appendChild(input);
                     tr.appendChild(td);
                 }
             }
-        }
-        if (areAllFiltersChecked()) {
-                const tdTBM = document.createElement('td');
-                tdTBM.className = 'tbm-cell font-weight-bold text-danger';
-                tr.appendChild(tdTBM);
-                
-                tinhTBMHang(tr);
-            }
-        tableBody.appendChild(tr);
-    });
+            
+            const tdTBM = document.createElement('td');
+            tdTBM.className = 'tbm-cell font-weight-bold text-danger';
+            
+            if (!areAllFiltersChecked()) tdTBM.classList.add('column-hidden');
+            
+            tr.appendChild(tdTBM);
+            tinhTBMHang(tr);
+            tableBody.appendChild(tr);
+        });
     }
 
     // --- CÁC HÀM CÒN LẠI ---
+
+    function handleAutoLoad() {
+        checkFormValidity();
+        
+        if (selMaLop.value && selMaMonHoc.value && selHocKy.value && selNamHoc.value) {
+            fetchBangDiem();
+        }
+    }
 
     // Tính TBM cho một hàng (tr) và cập nhật ô TBM
     function tinhTBMHang(tr) {
@@ -303,20 +290,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 else if (name.includes('CUOI_KY')) loaiDiem = 'CUOI_KY';
 
                 if (heSo[loaiDiem]) {
-                tongDiem += diemSo * heSo[loaiDiem];
-                tongHeSo += heSo[loaiDiem];
-                
-                if (loaiDiem === 'MIENG') coDiemMieng = true;
-                if (loaiDiem === '15_PHUT') coDiem15Phut = true;
-                if (loaiDiem === '1_TIET') coDiem1Tiet = true;
-                if (loaiDiem === 'CUOI_KY') coDiemCuoiKy = true;
-            }
+                    tongDiem += diemSo * heSo[loaiDiem];
+                    tongHeSo += heSo[loaiDiem];
+                    
+                    if (loaiDiem === 'MIENG') coDiemMieng = true;
+                    if (loaiDiem === '15_PHUT') coDiem15Phut = true;
+                    if (loaiDiem === '1_TIET') coDiem1Tiet = true;
+                    if (loaiDiem === 'CUOI_KY') coDiemCuoiKy = true;
+                }
             }
         });
 
         if (coDiemMieng && coDiem15Phut && coDiem1Tiet && coDiemCuoiKy && tongHeSo > 0) {
-        const tbm = tongDiem / tongHeSo;
-        tbmCell.textContent = tbm.toFixed(2);
+            const tbm = tongDiem / tongHeSo;
+            tbmCell.textContent = tbm.toFixed(2);
         } else {
             tbmCell.textContent = '';
         }
@@ -324,8 +311,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cảnh báo điểm trống
     formLuuDiem?.addEventListener('submit', function(event) {
-        updateCurrentDataFromInputs(); 
+        const invalidInputs = tableBody.querySelectorAll('.is-invalid');
+    
+        if (invalidInputs.length > 0) {
+            event.preventDefault(); 
+            document.getElementById('modalAlertMessage').innerHTML = 
+                `Phát hiện <b>${invalidInputs.length}</b> ô điểm không hợp lệ (phải là số từ 0 đến 10).<br>Vui lòng sửa lại trước khi lưu!`;
+            
+            const modalElement = document.getElementById('modalAlertDiem');
+            const modalInstance = new bootstrap.Modal(modalElement);
+            modalInstance.show();
+            return;
+        }
 
+        if (this.dataset.confirmed === "true") return;
+
+        updateCurrentDataFromInputs(); 
         const inputs = tableBody.querySelectorAll('input[type="text"]');
 
         if (inputs.length === 0) return; 
@@ -337,19 +338,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (emptyFields > 0) {
             event.preventDefault(); 
-            const message = `Cảnh báo:\n\nPhát hiện có ${emptyFields} ô điểm bị bỏ trống.\n\n- Nhấn "OK" để tiếp tục lưu.\n- Nhấn "Hủy" để ở lại trang.`;
-            
-            if (confirm(message)) {
-                formLuuDiem.submit();
-            }
+            msgCanhBao.innerHTML = `Phát hiện có <strong>${emptyFields}</strong> ô điểm bị bỏ trống. Bạn có chắc chắn muốn lưu không?`;
+            const modalInstance = new bootstrap.Modal(modalCanhBao);
+            modalInstance.show();
         }
+    });
+
+    btnHuy?.addEventListener('click', function() {
+        const modalElement = document.getElementById('modalConfirmHuyDiem');
+        const modalInstance = new bootstrap.Modal(modalElement);
+        modalInstance.show();
+    });
+
+    document.getElementById('btnXacNhanHuyDiem')?.addEventListener('click', function() {
+        window.location.href = 'index.php';
+    });
+
+    btnXacNhanLuu?.addEventListener('click', function() {
+        formLuuDiem.dataset.confirmed = "true";
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+        formLuuDiem.submit();
     });
 
     // Tự động tải lại bảng
     function autoLoadTable() {
         if (!selMaLop || !selMaMonHoc || !selHocKy || !selNamHoc || !btnXemBangDiem) return;
-        const urlParams = new URLSearchParams(window.location.search);
         
+        const urlParams = new URLSearchParams(window.location.search);
         const maLop = urlParams.get('maLop');
         const maMonHoc = urlParams.get('maMonHoc');
         const hocKy = urlParams.get('hocKy');

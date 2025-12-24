@@ -132,11 +132,40 @@ public function dangkyhoso() {
             'maBan' => $_POST['maBan'] ?? null
         ];
 
-        // Validate dữ liệu bắt buộc
-        if (empty($data['hoTen']) || empty($data['ngaySinh']) || empty($data['diaChiThuongTru']) || 
-            empty($data['soDienThoaiHocSinh']) || empty($data['soDienThoaiPhuHuynh'])) {
-            $_SESSION['error'] = "Vui lòng điền đầy đủ thông tin bắt buộc!";
-        } else {
+       // ===== VALIDATE DỮ LIỆ =====
+if (empty($data['hoTen']) || empty($data['ngaySinh']) || empty($data['diaChiThuongTru']) || 
+    empty($data['soDienThoaiHocSinh']) || empty($data['soDienThoaiPhuHuynh'])) {
+
+    $_SESSION['error'] = "Vui lòng điền đầy đủ thông tin bắt buộc!";
+
+}
+// Validate họ tên
+elseif (!preg_match('/^[A-Za-zÀ-ỹ\s]+$/u', $data['hoTen'])) {
+
+    $_SESSION['error'] = "Họ tên không được chứa số hoặc ký tự đặc biệt!";
+
+}
+// ===== VALIDATE TẤT CẢ SỐ ĐIỆN THOẠI =====
+else {
+    $phoneFields = [
+        'soDienThoaiHocSinh',
+        'soDienThoaiPhuHuynh',
+        'dienThoaiCha',
+        'dienThoaiMe',
+        'dienThoaiNguoiGiamHo'
+    ];
+
+    foreach ($phoneFields as $field) {
+        if (!empty($data[$field]) && !preg_match('/^0[0-9]{9}$/', $data[$field])) {
+            $_SESSION['error'] = "Số điện thoại không hợp lệ! (phải gồm 10 số, bắt đầu bằng 0)";
+            break;
+        }
+    }
+}
+
+if (!empty($_SESSION['error'])) {
+    // Có lỗi → không xử lý tiếp
+} else {
             // Xử lý upload file
             $uploadResult = $this->handleFileUpload();
             if ($uploadResult['success']) {

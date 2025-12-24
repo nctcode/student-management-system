@@ -35,7 +35,10 @@ if (isset($_SESSION['message'])) {
 
                 <select name="maNienKhoa" class="form-select" style="width: 160px;">
                     <option value="">-- Học kỳ --</option>
-                    <?php foreach ($nienKhoaList as $nk): ?>
+                    <?php foreach ($nienKhoaList as $nk): 
+                        // Loại bỏ học kỳ "Cả năm"
+                        if ($nk['hocKy'] === 'CA_NAM') continue;
+                    ?>
                         <option value="<?= htmlspecialchars($nk['maNienKhoa']) ?>"
                             <?= isset($_GET['maNienKhoa']) && $_GET['maNienKhoa'] == $nk['maNienKhoa'] ? 'selected' : '' ?>>
                             <?= htmlspecialchars($nk['hocKy']) ?>
@@ -141,7 +144,18 @@ if (isset($_SESSION['message'])) {
                         <tr><th>Giáo viên ra đề</th><td><?= htmlspecialchars($examDetail['tenGiaoVien']) ?></td></tr>
                         <tr><th>Ngày nộp</th><td><?= $examDetail['ngayNop'] ?></td></tr>
                         <tr><th>Môn</th><td><?= htmlspecialchars($examDetail['monHoc']) ?></td></tr>
-                        <tr><th>Học kỳ</th><td><?= htmlspecialchars($examDetail['hocKy']) ?></td></tr>
+                        <tr><th>Học kỳ</th><td>
+                            <?php 
+                            // Chỉ hiển thị HK1/HK2, không hiển thị "Cả năm"
+                            $hocKy = $examDetail['hocKy'] ?? '';
+                            if ($hocKy === 'CA_NAM') {
+                                // Nếu là "Cả năm", có thể hiển thị thông báo khác hoặc để trống
+                                echo '<span class="text-muted">Không xác định</span>';
+                            } else {
+                                echo htmlspecialchars($hocKy);
+                            }
+                            ?>
+                        </td></tr>
                         <tr><th>Năm học</th><td><?= htmlspecialchars($examDetail['namHoc']) ?></td></tr>
                         <tr><th>Trạng thái</th><td><?= $examDetail['trangThai'] ?></td></tr>
                         <tr><th>Tổng số câu</th><td><?= count($questions) ?></td></tr>

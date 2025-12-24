@@ -245,6 +245,7 @@ class PhanCongRaDeModel
                 FROM nienkhoa 
                 WHERE ngayBatDau <= CURDATE() 
                 AND ngayKetThuc >= CURDATE()
+                AND hocKy != 'CA_NAM'  -- THÊM ĐIỀU KIỆN NÀY
                 LIMIT 1";
         
         $stmt = $this->conn->prepare($sql);
@@ -260,7 +261,6 @@ class PhanCongRaDeModel
                 CASE hocKy 
                     WHEN 'HK1' THEN 1
                     WHEN 'HK2' THEN 2
-                    WHEN 'CA_NAM' THEN 3
                 END";
         
         $stmt = $this->conn->prepare($sql);

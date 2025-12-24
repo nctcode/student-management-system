@@ -247,4 +247,19 @@ class HomeController
         require_once 'views/errors/500.php';
         require_once 'views/layouts/footer.php';
     }
+    public function totruong() {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['vaiTro'] !== 'TOTRUONG') {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+        
+        // Lấy thông tin tổ trưởng từ session
+        $toTruongInfo = [
+            'hoTen' => $_SESSION['user']['hoTen'],
+            'toChuyenMon' => $_SESSION['user']['toChuyenMon'] ?? 'Chưa xác định',
+            'tenMonHoc' => $_SESSION['user']['tenMonHoc'] ?? 'Chưa xác định'
+        ];
+        
+        require_once 'views/home/totruong.php';
+    }
 }

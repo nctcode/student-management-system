@@ -105,7 +105,7 @@ if (!function_exists('hienThiTrangThai')) {
                                     $hocKy = $phanCong['hocKy'] ?? '';
                                     $namHoc = $phanCong['namHoc'] ?? '';
                                     
-                                    // Mapping học kỳ
+                                    // Mapping học kỳ - chỉ hiển thị HK1/HK2
                                     $hocKyText = '';
                                     if ($maNienKhoa == 2) {
                                         $hocKyText = 'Học kỳ 1';
@@ -115,12 +115,14 @@ if (!function_exists('hienThiTrangThai')) {
                                         switch($hocKy) {
                                             case 'HK1': $hocKyText = 'Học kỳ 1'; break;
                                             case 'HK2': $hocKyText = 'Học kỳ 2'; break;
-                                            case 'CA_NAM': $hocKyText = 'Cả năm'; break;
+                                            // Đã bỏ case 'CA_NAM'
                                             default: $hocKyText = $hocKy;
                                         }
                                     }
                                     
-                                    echo '<span class="badge bg-info">' . $hocKyText . '</span>';
+                                    if (!empty($hocKyText)) {
+                                        echo '<span class="badge bg-info">' . $hocKyText . '</span>';
+                                    }
                                     if (!empty($namHoc)) {
                                         echo '<br><small>' . $namHoc . '</small>';
                                     }
@@ -243,11 +245,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if ($maNienKhoa == 2) {
                                     echo 'Học kỳ 1';
                                     echo '<input type="hidden" name="hocKy" value="1">'; // Giữ giá trị cũ cho form
-                                    echo '<input type="hidden" name="maNienKhoa" value="2">'; // THÊM: Lưu maNienKhoa
+                                    echo '<input type="hidden" name="maNienKhoa" value="2">'; // Lưu maNienKhoa
                                 } elseif ($maNienKhoa == 3) {
                                     echo 'Học kỳ 2';
                                     echo '<input type="hidden" name="hocKy" value="2">';
-                                    echo '<input type="hidden" name="maNienKhoa" value="3">'; // THÊM: Lưu maNienKhoa
+                                    echo '<input type="hidden" name="maNienKhoa" value="3">'; // Lưu maNienKhoa
                                 } elseif (!empty($hocKy)) {
                                     switch($hocKy) {
                                         case 'HK1': 
@@ -258,10 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             echo 'Học kỳ 2';
                                             echo '<input type="hidden" name="hocKy" value="2">';
                                             break;
-                                        case 'CA_NAM': 
-                                            echo 'Cả năm';
-                                            echo '<input type="hidden" name="hocKy" value="3">';
-                                            break;
+                                        // Đã bỏ case 'CA_NAM'
                                         default: 
                                             echo $hocKy;
                                     }
@@ -298,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <option value="">--Chọn học kỳ--</option>
                                 <option value="1">HK1</option>
                                 <option value="2">HK2</option>
-                                <option value="3">Cả năm</option>
+                                <!-- Đã bỏ option "Cả năm" -->
                             </select>
                         </div>
                     <?php endif; ?>
@@ -387,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <td><?= htmlspecialchars($deThi['monHoc']) ?></td>
                                         <td>
                                             <?php 
-                                            // Hiển thị học kỳ
+                                            // Hiển thị học kỳ - chỉ hiển thị HK1/HK2
                                             $maNienKhoa = $deThi['maNienKhoa'] ?? 0;
                                             $hocKy = $deThi['hocKy'] ?? '';
                                             
@@ -395,8 +394,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 echo '<span class="badge bg-primary">HK1</span>';
                                             } elseif ($maNienKhoa == 3) {
                                                 echo '<span class="badge bg-success">HK2</span>';
-                                            } elseif (!empty($hocKy)) {
+                                            } elseif (!empty($hocKy) && $hocKy !== 'CA_NAM') {
                                                 echo '<span class="badge bg-info">' . $hocKy . '</span>';
+                                            } elseif ($hocKy === 'CA_NAM') {
+                                                // Ẩn "Cả năm" hoặc hiển thị khác
+                                                echo '<span class="badge bg-secondary">Không xác định</span>';
                                             }
                                             
                                             if (!empty($deThi['namHoc'])) {

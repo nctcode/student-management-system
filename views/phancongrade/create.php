@@ -46,44 +46,45 @@ require_once __DIR__ . '/../layouts/sidebar/totruong.php';
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
-                        <label class="form-label">Học kỳ *</label>
-                        <select name="maNienKhoa" class="form-select" required id="selectNienKhoa">
-                            <option value="">-- Chọn học kỳ --</option>
-                            <?php if (!empty($danhSachNienKhoa)): ?>
-                                <?php foreach ($danhSachNienKhoa as $nk): 
-                                    // Map học kỳ theo yêu cầu: 2=HK1, 3=HK2
-                                    $hocKyText = '';
-                                    switch($nk['hocKy']) {
-                                        case 'HK1':
-                                            $hocKyText = 'Học kỳ 1';
-                                            break;
-                                        case 'HK2':
-                                            $hocKyText = 'Học kỳ 2';
-                                            break;
-                                        case 'CA_NAM':
-                                            $hocKyText = 'Cả năm';
-                                            break;
-                                        default:
-                                            $hocKyText = $nk['hocKy'];
-                                    }
-                                    
-                                    $selected = '';
-                                    if (isset($nienKhoaHienTai) && $nienKhoaHienTai['maNienKhoa'] == $nk['maNienKhoa']) {
-                                        $selected = 'selected';
-                                    }
-                                ?>
-                                    <option value="<?= $nk['maNienKhoa'] ?>" <?= $selected ?>>
-                                        <?= $hocKyText ?> - <?= $nk['namHoc'] ?>
-                                        <?php if ($nk['maNienKhoa'] == 2): ?>
-                                            (HK1)
-                                        <?php elseif ($nk['maNienKhoa'] == 3): ?>
-                                            (HK2)
-                                        <?php endif; ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                    </div>
+                            <label class="form-label">Học kỳ *</label>
+                            <select name="maNienKhoa" class="form-select" required id="selectNienKhoa">
+                                <option value="">-- Chọn học kỳ --</option>
+                                <?php if (!empty($danhSachNienKhoa)): ?>
+                                    <?php foreach ($danhSachNienKhoa as $nk): 
+                                        // Loại bỏ học kỳ "Cả năm"
+                                        if ($nk['hocKy'] === 'CA_NAM') continue;
+                                        
+                                        // Map học kỳ theo yêu cầu: 2=HK1, 3=HK2
+                                        $hocKyText = '';
+                                        switch($nk['hocKy']) {
+                                            case 'HK1':
+                                                $hocKyText = 'Học kỳ 1';
+                                                break;
+                                            case 'HK2':
+                                                $hocKyText = 'Học kỳ 2';
+                                                break;
+                                            default:
+                                                // Bỏ qua nếu không phải HK1/HK2
+                                                continue 2;
+                                        }
+                                        
+                                        $selected = '';
+                                        if (isset($nienKhoaHienTai) && $nienKhoaHienTai['maNienKhoa'] == $nk['maNienKhoa']) {
+                                            $selected = 'selected';
+                                        }
+                                    ?>
+                                        <option value="<?= $nk['maNienKhoa'] ?>" <?= $selected ?>>
+                                            <?= $hocKyText ?> - <?= $nk['namHoc'] ?>
+                                            <?php if ($nk['maNienKhoa'] == 2): ?>
+                                                (HK1)
+                                            <?php elseif ($nk['maNienKhoa'] == 3): ?>
+                                                (HK2)
+                                            <?php endif; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
                     </div>
                     
 

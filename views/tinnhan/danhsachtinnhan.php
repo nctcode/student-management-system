@@ -68,7 +68,7 @@
                                                 <?= date('H:i d/m/Y', strtotime($tn['thoiGianGui'])) ?>
                                             </small>
                                         </div>
-                                        <p class="mb-1 text-truncate" style="white-space: normal;overflow-wrap: break-word;word-wrap: break-word;word-break: break-all;"><?= $tn['noiDung'] ?></p>
+                                        <p class="mb-1 text-truncate" style="white-space: normal;overflow-wrap: break-word;word-wrap: break-word;word-break: break-all;"><?= strip_tags($tn['noiDung']) ?></p>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div class="flex-grow-1 min-width-0">
                                                 <small class="text-muted">
@@ -102,6 +102,7 @@
                                             
                                                 if ($displayName): 
                                             ?>
+                                            &nbsp;&nbsp;&nbsp;
                                             <small class="text-primary ml-2">
                                                 <i class="fas fa-paperclip"></i> <?= htmlspecialchars($displayName) ?>
                                                 <?php if ($extraFiles > 0): ?>

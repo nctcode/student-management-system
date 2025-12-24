@@ -59,8 +59,8 @@
                                                     $filesInfo = [$filesInfo];
                                                 }
                                                 if (is_array($filesInfo)):
-                                                    foreach ($filesInfo as $fileInfo): // Lặp qua từng file
-                                                        if (empty($fileInfo['duongDan'])) continue; // Bỏ qua nếu file không hợp lệ
+                                                    foreach ($filesInfo as $fileInfo):
+                                                        if (empty($fileInfo['duongDan'])) continue;
                                             
                                                 $tenFile = $fileInfo['tenFile'];
                                                 $duongDan = htmlspecialchars($fileInfo['duongDan']);
@@ -105,7 +105,7 @@
                                                 endif; 
                                             ?>
                                             <?php 
-                                                    endforeach; // Kết thúc vòng lặp file
+                                                    endforeach;
                                                 endif; 
                                             endif; 
                                             ?>
@@ -138,10 +138,11 @@
                         <div class="form-group position-relative">
                             <label><strong>Tin nhắn mới</strong></label>
                             <emoji-picker style="display: none; position: absolute; z-index: 1050; right: 20px; bottom: 150px;"></emoji-picker>
-                            <textarea name="noiDung" id="noiDungTinNhan" class="form-control" rows="3" 
-                                      placeholder="Nhập tin nhắn của bạn..." 
-                                      onkeyup="demKyTu(this)" required>
-                            </textarea>
+                            <?php 
+                                $oldReply = $_SESSION['old_reply_'.$chiTietHoiThoai['maHoiThoai']] ?? ''; 
+                                unset($_SESSION['old_reply_'.$chiTietHoiThoai['maHoiThoai']]);
+                            ?>
+                            <textarea name="noiDung" id="noiDungTinNhan" class="form-control" rows="3" placeholder="Nhập tin nhắn của bạn..."><?= htmlspecialchars($oldReply) ?></textarea>
                             <div class="d-flex justify-content-between align-items-center mt-1">
                                 <small class="form-text text-muted">
                                     <span id="soKyTu">0</span>/1000 ký tự
@@ -158,17 +159,10 @@
                                     menubar: false,
                                     height: 250,
                                     setup: function(editor) {
-                                        editor.on('keyup', function(e) {
+                                        editor.on('keyup Change SetContent', function(e) {
                                             var content = editor.getContent({ format: 'text' });
                                             var fakeTextarea = { value: content };
                                             if (window.demKyTu) { 
-                                                window.demKyTu(fakeTextarea);
-                                            }
-                                        });
-                                        editor.on('Change', function(e) {
-                                            var content = editor.getContent({ format: 'text' });
-                                            var fakeTextarea = { value: content };
-                                            if (window.demKyTu) {
                                                 window.demKyTu(fakeTextarea);
                                             }
                                         });
@@ -187,12 +181,11 @@
                             <small class="form-text text-muted">
                                 • File đính kèm tối đa 10MB<br>
                                 • Định dạng hỗ trợ: PDF, DOC, JPG, PNG, XLSX<br>
-                                • Không gửi nội dung không phù hợp
                             </small>
                         </div>
 
                         <div class="d-flex justify-content-end">
-                            <button type="button" class="btn btn-danger btn-lg" onclick="history.back()">
+                            <button type="button" class="btn btn-danger btn-lg" onclick="window.location.href='index.php'">
                                 <i class="fas fa-times"></i> Hủy
                             </button>
                             <button type="submit" class="btn btn-success btn-lg ms-2">
@@ -207,6 +200,30 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalAlertTN" data-backdrop="static" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-danger text-white border-0 py-3">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Cảnh báo lỗi
+                </h5>
+                <button type="button" class="btn-close-custom" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <i id="iconModalTN" class="fas fa-file-excel fa-3x text-danger mb-3"></i>
+                <p id="msgModalTN" class="mb-0 text-secondary font-weight-bold"></p>
+            </div>
+            <div class="modal-footer border-0 py-3 justify-content-center">
+                <button type="button" class="btn btn-secondary px-4 rounded-pill shadow-sm" data-dismiss="modal" data-bs-dismiss="modal">
+                    <i class="fas fa-check-circle mr-1"></i> Đã hiểu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Tự động scroll xuống cuối khung tin nhắn
 function scrollToBottom() {
@@ -214,43 +231,53 @@ function scrollToBottom() {
     khungTinNhan.scrollTop = khungTinNhan.scrollHeight;
 }
 
-// Đếm ký tự
-function demKyTu(textarea) {
-    const soKyTu = document.getElementById('soKyTu');
-    soKyTu.textContent = textarea.value.length;
-    
-    if (textarea.value.length > 1000) {
-        soKyTu.className = 'text-danger';
-        textarea.classList.add('is-invalid');
-    } else {
-        soKyTu.className = 'text-muted';
-        textarea.classList.remove('is-invalid');
+function showModalTN(message, icon = 'fa-exclamation-circle') {
+    const modalElement = document.getElementById('modalAlertTN');
+    if (!modalElement) return;
+
+    document.getElementById('msgModalTN').innerHTML = message;
+    document.getElementById('iconModalTN').className = `fas ${icon} fa-3x text-danger mb-3`;
+
+    let modalInstance = bootstrap.Modal.getInstance(modalElement);
+    if (!modalInstance) {
+        modalInstance = new bootstrap.Modal(modalElement);
     }
+    modalInstance.show();
 }
 
 // Hiển thị file đính kèm
 function hienThiFile() {
     const fileInput = document.getElementById('fileDinhKem');
     const fileList = document.getElementById('danhSachFile');
+    const maxSize = 10 * 1024 * 1024;
+    const allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls'];
+    if (!fileInput || !fileList) return;
     fileList.innerHTML = '';
+
+    const dt = new DataTransfer();
     
-    for (let i = 0; i < fileInput.files.length; i++) {
-        const file = fileInput.files[i];
-        const fileSize = (file.size / (1024 * 1024)).toFixed(1);
+    Array.from(fileInput.files).forEach((file) => {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (file.size > maxSize) {
+            showModalTN(`File "<b>${file.name}</b>" vượt quá 10MB!`, 'fa-exclamation-circle');
+            return;
+        }
+        if (!allowedTypes.includes(ext)) {
+            showModalTN(`Định dạng "<b>.${ext}</b>" không hỗ trợ!`, 'fa-file-archive');
+            return;
+        }
         
+        dt.items.add(file);
+        const fileSize = (file.size / (1024 * 1024)).toFixed(1);
         const fileItem = document.createElement('div');
         fileItem.className = 'd-flex justify-content-between align-items-center border rounded p-2 mb-2 bg-light';
         fileItem.innerHTML = `
-            <div>
-                <i class="fas fa-file mr-2"></i>
-                <strong>${file.name}</strong> (${fileSize}MB)
-            </div>
-            <button type="button" class="btn btn-sm btn-danger" onclick="xoaFile(${i})">
-                <i class="fas fa-times"></i>
-            </button>
+            <div class="text-truncate" style="max-width: 80%"><strong>${file.name}</strong> (${fileSize}MB)</div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="xoaFile(${dt.items.length - 1})">×</button>
         `;
         fileList.appendChild(fileItem);
-    }
+    });
+    fileInput.files = dt.files;
 }
 
 // Xóa file
@@ -265,21 +292,6 @@ function xoaFile(index) {
     
     hienThiFile();
 }
-
-// Xử lý submit form
-document.getElementById('formGuiTinNhan').addEventListener('submit', function(e) {
-    const textarea = this.querySelector('textarea[name="noiDung"]');
-    if (textarea.value.length > 1000) {
-        e.preventDefault();
-        alert('Tin nhắn không được vượt quá 1000 ký tự!');
-        return;
-    }
-    
-    // Hiển thị loading
-    const submitBtn = this.querySelector('button[type="submit"]');
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
-    submitBtn.disabled = true;
-});
 
 // Tự động scroll và khởi tạo Emoji khi trang load
 document.addEventListener('DOMContentLoaded', function() {
@@ -321,9 +333,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Auto-refresh tin nhắn mỗi 30 giây (tùy chọn)
 setInterval(function() {
 }, 30000);
 </script>
 
 <link rel="stylesheet" href="assets/css/tinnhan.css">
+<script src="assets/js/tinnhan.js"></script>

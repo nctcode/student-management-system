@@ -22,6 +22,7 @@
                                 <th>Ngày giao</th>
                                 <th>Hạn nộp</th>
                                 <th>Trạng thái</th>
+                                <th class="text-center">Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -60,6 +61,12 @@
                                         }
                                     }
                                     ?>
+                                </td>
+                                <td class="text-center">
+                                    <a href="index.php?controller=baitap&action=chitiet_hs&maBaiTap=<?= $bt['maBaiTap'] ?>" 
+                                    class="btn btn-info btn-sm rounded-pill px-3 shadow-sm">
+                                        <i class="fas fa-file-signature"></i> Xem & Nộp bài
+                                    </a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

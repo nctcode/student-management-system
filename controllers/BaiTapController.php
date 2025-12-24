@@ -3,7 +3,6 @@ require_once 'models/BaiTapModel.php';
 require_once 'models/GiaoVienModel.php'; 
 require_once 'models/HocSinhModel.php';
 
-
 class BaiTapController {
     private $baiTapModel;
     private $giaoVienModel;
@@ -73,7 +72,6 @@ class BaiTapController {
         $this->checkAuthAndGetMaGV();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Lấy dữ liệu
             $maLop = $_POST['maLop'] ?? 0;
             $maMonHoc = $_POST['maMonHoc'] ?? 0;
             $tenBT = trim($_POST['tenBT'] ?? '');
@@ -81,8 +79,16 @@ class BaiTapController {
             $hanNop = $_POST['hanNop'] ?? '';
 
             if (empty($maLop) || empty($maMonHoc) || empty($tenBT) || empty($hanNop)) {
-                $_SESSION['error'] = "Vui lòng nhập đầy đủ Tiêu đề, Hạn nộp, Lớp và Môn học!";
-                header("Location: index.php?controller=baitap&action=index"); 
+                $_SESSION['old_baitap'] = $_POST;
+                $_SESSION['error'] = "Vui lòng nhập đầy đủ các thông tin bắt buộc (*)!";
+                header("Location: index.php?controller=baitap&action=index");
+                exit;
+            }
+
+            if (mb_strlen($moTa) > 1000) {
+                $_SESSION['old_baitap'] = $_POST; 
+                $_SESSION['error'] = "Mô tả chi tiết không được vượt quá 1000 ký tự!";
+                header("Location: index.php?controller=baitap&action=index");
                 exit;
             }
             
@@ -103,7 +109,6 @@ class BaiTapController {
             }
 
             // Xử lý upload file
-            $fileDinhKemJSON = null;
             $filesInfo = $this->xuLyUploadFile();
             
             if ($filesInfo !== null) {
@@ -111,7 +116,6 @@ class BaiTapController {
             }
 
             if (!isset($_SESSION['error'])) {
-                // Lưu vào CSDL
                 try {
                     $result = $this->baiTapModel->giaoBaiTap(
                         $this->maGiaoVien,
@@ -122,13 +126,8 @@ class BaiTapController {
                         $hanNop,
                         $fileDinhKemJSON
                     );
-                    
-                    if ($result) {
-                        $_SESSION['success'] = "Giao bài tập thành công!";
-                    } else {
-                        // Lỗi CSDL
-                        $_SESSION['error'] = "Không thể lưu bài tập. Đã có lỗi CSDL!";
-                    }
+                    if ($result) $_SESSION['success'] = "Giao bài tập thành công!";
+                    else $_SESSION['error'] = "Không thể lưu bài tập. Đã có lỗi CSDL!";
                 } catch (Exception $e) {
                     $_SESSION['error'] = "Lỗi: " . $e->getMessage();
                 }
@@ -140,25 +139,18 @@ class BaiTapController {
     }
 
     private function xuLyUploadFile() {
-        if (!isset($_FILES['fileDinhKem']) || empty($_FILES['fileDinhKem']['name'][0])) {
-            return null;
-        }
+        if (!isset($_FILES['fileDinhKem']) || empty($_FILES['fileDinhKem']['name'][0])) return null;
 
         $files = $_FILES['fileDinhKem'];
         $allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls', 'mp4', 'mov', 'avi', 'mp3', 'zip', 'rar', 'txt', 'ppt', 'pptx'];
         $maxSize = 20 * 1024 * 1024;
         $uploadDir = 'uploads/baitap/';
-        
         $uploadedFilesInfo = []; 
 
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
         foreach ($files['name'] as $key => $name) {
-            if ($files['error'][$key] !== UPLOAD_ERR_OK) {
-                continue; 
-            }
+            if ($files['error'][$key] !== UPLOAD_ERR_OK) continue;
 
             $fileSize = $files['size'][$key];
             $fileTmpName = $files['tmp_name'][$key];
@@ -167,7 +159,7 @@ class BaiTapController {
                 $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' bị rỗng (0 byte) và sẽ không được tải lên!";
                 return null;
             }
-            
+
             if ($fileSize > $maxSize) {
                 $_SESSION['error'] = "File '" . htmlspecialchars($name) . "' vượt quá 20MB!";
                 return null; 
@@ -266,7 +258,7 @@ class BaiTapController {
         require_once 'views/layouts/footer.php';
     }
 
-    // Hiển thị chi tiết bài tập VÀ form nộp bài
+    // Hiển thị chi tiết bài tập và form nộp bài
     public function chitiet_hs($maBaiTap) {
         $this->checkAuthAndGetMaHS();
         
@@ -293,8 +285,8 @@ class BaiTapController {
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $maBaiTap = $_POST['maBaiTap'] ?? 0;
-
             $baiTap = $this->baiTapModel->getBaiTapChiTiet($maBaiTap);
+
             if (!$baiTap || $baiTap['maLop'] != $this->maLop) {
                 $_SESSION['error'] = "Lỗi: Bài tập không hợp lệ!";
                 header("Location: index.php?controller=baitap&action=danhsach_hs");
@@ -304,7 +296,6 @@ class BaiTapController {
             $hanNopDate = new DateTime($baiTap['hanNop']);
             $now = new DateTime();
             $hetHan = $now > $hanNopDate;
-
             $newFilesInfo = $this->xuLyUploadFile();
             
             if ($newFilesInfo === null && !isset($_SESSION['error'])) {
@@ -312,6 +303,7 @@ class BaiTapController {
                  header("Location: index.php?controller=baitap&action=chitiet_hs&maBaiTap=" . $maBaiTap);
                  exit;
             }
+
             if (isset($_SESSION['error'])) { 
                  header("Location: index.php?controller=baitap&action=chitiet_hs&maBaiTap=" . $maBaiTap);
                  exit;
@@ -319,6 +311,7 @@ class BaiTapController {
 
             $baiNop = $this->baiTapModel->getBaiNop($maBaiTap, $this->maHocSinh);
             $existingFiles = [];
+
             if ($baiNop && !empty($baiNop['fileDinhKem'])) {
                 $existingFiles = json_decode($baiNop['fileDinhKem'], true);
                 if (!is_array($existingFiles)) { $existingFiles = []; }
@@ -326,7 +319,6 @@ class BaiTapController {
         
             $mergedFiles = array_merge($existingFiles, $newFilesInfo);
             $fileDinhKemJSON = json_encode($mergedFiles);
-
             $trangThai = $hetHan ? 'Nộp trễ' : 'Đã nộp';
 
             $result = $this->baiTapModel->nopBai(
@@ -336,12 +328,9 @@ class BaiTapController {
                 $trangThai
             );
 
-            if ($result) {
-                $_SESSION['success'] = "Thêm file thành công!";
-            } else {
-                $_SESSION['error'] = "Đã có lỗi CSDL xảy ra, không thể thêm file!";
-            }
-
+            if ($result) $_SESSION['success'] = "Thêm file thành công!";
+            else $_SESSION['error'] = "Đã có lỗi CSDL xảy ra, không thể thêm file!";
+            
             header("Location: index.php?controller=baitap&action=chitiet_hs&maBaiTap=" . $maBaiTap);
             exit;
         }
@@ -350,8 +339,8 @@ class BaiTapController {
     // Tải tất cả bài nộp của học sinh dưới dạng file ZIP
     public function taiTatCaBaiNop($maBaiTap) {
         $this->checkAuthAndGetMaGV();
-
         $baiTap = $this->baiTapModel->getBaiTapChiTiet($maBaiTap);
+
         if (!$baiTap || $baiTap['maGV'] != $this->maGiaoVien) {
             $_SESSION['error'] = "Không tìm thấy bài tập hoặc bạn không có quyền!";
             header("Location: index.php?controller=baitap&action=danhsach");
@@ -377,10 +366,9 @@ class BaiTapController {
 
         foreach ($danhSachNopBai as $baiNop) {
             $tenHocSinh = $baiNop['tenHocSinh'];
-            
             $studentDir = $baiNop['maHocSinh'] . '_' . $this->sanitizeVietnameseString($tenHocSinh);
-
             $filesHS = json_decode($baiNop['fileDinhKem'], true);
+            
             if (isset($filesHS['duongDan'])) { $filesHS = [$filesHS]; }
 
             if (is_array($filesHS)) {
@@ -388,7 +376,6 @@ class BaiTapController {
                     if (isset($fileInfo['duongDan']) && file_exists($fileInfo['duongDan'])) {
                         $originalFileName = $fileInfo['tenFile'];
                         $filePathOnServer = $fileInfo['duongDan'];
-                        
                         $zip->addFile($filePathOnServer, $studentDir . '/' . $originalFileName);
                     }
                 }
@@ -399,7 +386,6 @@ class BaiTapController {
         $sanitizedLop = $this->sanitizeVietnameseString($baiTap['tenLop']);
         $sanitizedMon = $this->sanitizeVietnameseString($baiTap['tenMonHoc']);
         $sanitizedTenBT = $this->sanitizeVietnameseString($baiTap['tenBT']);
-
         $downloadFileName = $sanitizedLop . '_' . $sanitizedMon . '_' . $sanitizedTenBT . '.zip';
 
         header('Content-Type: application/zip');
@@ -409,7 +395,6 @@ class BaiTapController {
         header('Expires: 0');
         
         readfile($zipFileName);
-        
         unlink($zipFileName);
         exit;
     }
@@ -417,7 +402,6 @@ class BaiTapController {
     // Chuẩn hóa chuỗi tiếng Việt sang không dấu và an toàn cho tên file
     private function sanitizeVietnameseString($str) {
         $str = trim($str);
-        
         $str = preg_replace("/(à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ)/", 'a', $str);
         $str = preg_replace("/(è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ)/", 'e', $str);
         $str = preg_replace("/(ì|í|ị|ỉ|ĩ)/", 'i', $str);
@@ -425,7 +409,6 @@ class BaiTapController {
         $str = preg_replace("/(ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ)/", 'u', $str);
         $str = preg_replace("/(ỳ|ý|ỵ|ỷ|ỹ)/", 'y', $str);
         $str = preg_replace("/(đ)/", 'd', $str);
-        
         $str = preg_replace("/(À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ)/", 'A', $str);
         $str = preg_replace("/(È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ)/", 'E', $str);
         $str = preg_replace("/(Ì|Í|Ị|Ỉ|Ĩ)/", 'I', $str);
@@ -433,13 +416,9 @@ class BaiTapController {
         $str = preg_replace("/(Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ)/", 'U', $str);
         $str = preg_replace("/(Ỳ|Ý|Ỵ|Ỷ|Ỹ)/", 'Y', $str);
         $str = preg_replace("/(Đ)/", 'D', $str);
-  
         $str = preg_replace('/[^A-Za-z0-9 ]/', '', $str); 
-        
         $str = str_replace(' ', '_', $str);
-      
         $str = preg_replace('/_+/', '_', $str);
-        
         return $str;
     }
 
@@ -457,6 +436,7 @@ class BaiTapController {
         }
 
         $baiTap = $this->baiTapModel->getBaiTapChiTiet($maBaiTap);
+
         if (!$baiTap) {
              $_SESSION['error'] = "Không tìm thấy bài tập!";
             header("Location: index.php?controller=baitap&action=danhsach_hs");
@@ -465,7 +445,6 @@ class BaiTapController {
         
         $hanNopDate = new DateTime($baiTap['hanNop']);
         $now = new DateTime();
-        
         $baiNop = $this->baiTapModel->getBaiNop($maBaiTap, $this->maHocSinh);
         
         if (!$baiNop || empty($baiNop['fileDinhKem'])) {
@@ -475,6 +454,7 @@ class BaiTapController {
         }
 
         $files = json_decode($baiNop['fileDinhKem'], true);
+
         if (!is_array($files) || !isset($files[$fileKey])) {
             $_SESSION['error'] = "Không tìm thấy file để xóa!";
             header("Location: index.php?controller=baitap&action=chitiet_hs&maBaiTap=" . $maBaiTap);
@@ -483,21 +463,21 @@ class BaiTapController {
         
         $fileToRemove = $files[$fileKey];
         $filePath = $fileToRemove['duongDan'];
-       
         unset($files[$fileKey]);
         
-        if (file_exists($filePath)) {
-            unlink($filePath);
-        }
+        if (file_exists($filePath)) unlink($filePath);
         
-        $newFileDinhKemJSON = json_encode(array_values($files));
-        
-        $result = $this->baiTapModel->updateFileDinhKemBaiNop($baiNop['maBaiNop'], $newFileDinhKemJSON);
-
-        if ($result) {
-            $_SESSION['success'] = "Xóa file thành công!";
+        if (empty($files)) {
+            $result = $this->baiTapModel->xoaBaiNop($baiNop['maBaiNop']);
+            
+            if ($result) $_SESSION['success'] = "Đã xóa file và bài làm (do không còn file đính kèm)!";
+            else $_SESSION['error'] = "Lỗi hệ thống khi xóa bài làm!";
         } else {
-            $_SESSION['error'] = "Lỗi CSDL khi xóa file!";
+            $newFileDinhKemJSON = json_encode(array_values($files));
+            $result = $this->baiTapModel->updateFileDinhKemBaiNop($baiNop['maBaiNop'], $newFileDinhKemJSON);
+
+            if ($result) $_SESSION['success'] = "Xóa file thành công!";
+            else $_SESSION['error'] = "Lỗi CSDL khi xóa file!";
         }
         
         header("Location: index.php?controller=baitap&action=chitiet_hs&maBaiTap=" . $maBaiTap);

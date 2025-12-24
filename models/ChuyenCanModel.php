@@ -134,6 +134,14 @@ class ChuyenCanModel {
         }
     }
 
+    public function kiemTraQuyenBuoiHoc($maBuoiHoc, $maGiaoVien) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT COUNT(*) FROM buoihoc WHERE maBuoiHoc = ? AND maGiaoVien = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maBuoiHoc, $maGiaoVien]);
+        return $stmt->fetchColumn() > 0;
+    }
+
     /**
      * Tạo buổi học tự động từ thời khóa biểu
      */

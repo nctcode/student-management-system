@@ -165,9 +165,22 @@ $monHocList = $monHocList ?? [];
                             <label class="form-label"><i class="fas fa-calendar-alt"></i> Học kỳ</label>
                             <select name="maNienKhoa" class="form-select">
                                 <option value="">-- Tất cả học kỳ --</option>
-                                <?php foreach ($nienKhoaList as $nk): ?>
+                                <?php foreach ($nienKhoaList as $nk): 
+                                    // Loại bỏ học kỳ "Cả năm"
+                                    if ($nk['hocKy'] === 'CA_NAM') continue;
+                                ?>
                                     <option value="<?= $nk['maNienKhoa'] ?>" <?= ($maNienKhoa == $nk['maNienKhoa']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($nk['hocKy']) ?> - <?= htmlspecialchars($nk['namHoc'] ?? '') ?>
+                                        <?php 
+                                        // Hiển thị học kỳ thân thiện
+                                        $hocKyText = '';
+                                        switch($nk['hocKy']) {
+                                            case 'HK1': $hocKyText = 'Học kỳ 1'; break;
+                                            case 'HK2': $hocKyText = 'Học kỳ 2'; break;
+                                            // Đã bỏ case 'CA_NAM'
+                                            default: $hocKyText = $nk['hocKy'];
+                                        }
+                                        echo htmlspecialchars($hocKyText) . ' - ' . htmlspecialchars($nk['namHoc'] ?? '');
+                                        ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>

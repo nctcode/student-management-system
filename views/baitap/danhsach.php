@@ -35,7 +35,8 @@
                                 <th>Môn</th>
                                 <th>Ngày giao</th>
                                 <th>Hạn nộp</th>
-                                <th>Đính kèm</th>
+                                <th class="col-file-dinh-kem">Đính kèm</th>
+                                <th class="text-center">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -52,7 +53,7 @@
                                 <td><?= htmlspecialchars($bt['tenMonHoc']) ?></td>
                                 <td><?= date('d/m/Y H:i', strtotime($bt['ngayGiao'])) ?></td>
                                 <td><?= date('d/m/Y H:i', strtotime($bt['hanNop'])) ?></td>
-                                <td>
+                                <td class="col-file-dinh-kem">
                                     <?php 
                                     if (!empty($bt['fileDinhKem'])): 
                                         $filesInfo = json_decode($bt['fileDinhKem'], true);
@@ -73,7 +74,7 @@
                                     
                                         if ($displayName): 
                                     ?>
-                                    <small class="text-primary">
+                                    <small class="text-primary" title="<?= htmlspecialchars($displayName) ?>">
                                         <i class="fas fa-paperclip"></i> <?= htmlspecialchars($displayName) ?>
                                         <?php if ($extraFiles > 0): ?>
                                             <span class="badge badge-pill badge-secondary ml-1">+<?= $extraFiles ?></span>
@@ -85,6 +86,12 @@
                                         echo '<small class="text-muted">Không có</small>';
                                     endif; 
                                     ?>
+                                </td>
+                                <td class="text-center">
+                                    <a href="index.php?controller=baitap&action=chitiet&maBaiTap=<?= $bt['maBaiTap'] ?>" 
+                                    class="btn btn-info btn-sm rounded-pill px-3 shadow-sm">
+                                        <i class="fas fa-eye"></i> Xem
+                                    </a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

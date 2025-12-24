@@ -109,7 +109,13 @@ class HocSinhModel {
         $stmt = $conn->prepare($sql);
         $stmt->execute([$maHocSinh]);
         
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Debug
+        error_log("Query getHocSinhById: maHocSinh = " . $maHocSinh);
+        error_log("Result: " . print_r($result, true));
+        
+        return $result;
     }
 
     // Lấy tất cả học sinh (cho admin)
@@ -134,6 +140,7 @@ class HocSinhModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Lấy sĩ số của một lớp
     public function getSoLuongHocSinhByLop($maLop) {
         $conn = $this->db->getConnection();
         
