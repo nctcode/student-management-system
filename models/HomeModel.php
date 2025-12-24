@@ -112,12 +112,12 @@ class HomeModel
         $stmt->execute([$maGiaoVien]);
         $stats['pending_assignments'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
-        // Tiết dạy hôm nay
-        $sql = "SELECT COUNT(*) as total FROM thoikhoabieu 
-                WHERE maGiaoVien = ? AND ngayApDung = CURDATE()";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$maGiaoVien]);
-        $stats['today_lessons'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        // // Tiết dạy hôm nay
+        // $sql = "SELECT COUNT(*) as total FROM thoikhoabieu 
+        //         WHERE maGiaoVien = ? AND ngayApDung = CURDATE()";
+        // $stmt = $conn->prepare($sql);
+        // $stmt->execute([$maGiaoVien]);
+        // $stats['today_lessons'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
         // Lớp chủ nhiệm
         $sql = "SELECT COUNT(*) as total FROM lophoc 
@@ -148,8 +148,9 @@ class HomeModel
         // Tỷ lệ chuyên cần
         $sql = "SELECT 
                 COUNT(*) as total,
-                SUM(CASE WHEN trangThai = 'Co_mat' THEN 1 ELSE 0 END) as present 
-                FROM chuyencan 
+                SUM(CASE WHEN cc.trangThai = 'Co_mat' THEN 1 ELSE 0 END) as present 
+                FROM chuyencan cc
+                JOIN BUOIHOC bh ON cc.maBuoiHoc = bh.maBuoiHoc
                 WHERE maHocSinh = ? AND ngayHoc >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
         $stmt = $conn->prepare($sql);
         $stmt->execute([$maHocSinh]);
@@ -207,8 +208,9 @@ class HomeModel
             // Chuyên cần của con
             $sql = "SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN trangThai = 'Co_mat' THEN 1 ELSE 0 END) as present 
-                    FROM chuyencan 
+                    SUM(CASE WHEN cc.trangThai = 'CO_MAT' THEN 1 ELSE 0 END) as present 
+                    FROM chuyencan cc
+                    JOIN BUOIHOC bh ON cc.maBuoiHoc = bh.maBuoiHoc
                     WHERE maHocSinh = ? AND ngayHoc >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$maHocSinh]);
@@ -218,7 +220,7 @@ class HomeModel
 
             // Số con đang học
             $sql = "SELECT COUNT(*) as total FROM hocsinh 
-                    WHERE maPhuHuynh = ? AND trangThai = 'DANG_HOC'";
+                    WHERE maPhuHuynh = ? AND trangThai = 'DANG_HOC'";       
             $stmt = $conn->prepare($sql);
             $stmt->execute([$maPhuHuynh]);
             $stats['total_children'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
@@ -290,39 +292,40 @@ class HomeModel
     }
 
     // Lấy lịch học/dạy hôm nay
-    public function getTodaySchedule($maNguoiDung, $role)
-    {
+    public function getTodaySchedule($maNguoiDung, $role){
         $conn = $this->db->getConnection();
+        $today = date('Y-m-d'); // Lấy ngày hiện tại
 
         if ($role === 'GIAOVIEN') {
             // Lấy mã giáo viên từ mã người dùng
             $maGiaoVien = $this->getMaGiaoVien($maNguoiDung);
             if (!$maGiaoVien) return [];
 
-            $sql = "SELECT tkb.*, mh.tenMonHoc, '' as tenLop 
-                    FROM thoikhoabieu tkb
-                    JOIN monhoc mh ON tkb.maMonHoc = mh.maMonHoc
-                    WHERE tkb.maGiaoVien = ? AND tkb.ngayApDung = CURDATE()
-                    ORDER BY tkb.tietBatDau";
+            $sql = "SELECT bh.*, mh.tenMonHoc, l.tenLop, l.maLop
+                    FROM buoihoc bh
+                    JOIN monhoc mh ON bh.maMonHoc = mh.maMonHoc
+                    JOIN lophoc l ON bh.maLop = l.maLop
+                    WHERE bh.maGiaoVien = ? AND bh.ngayHoc = ?
+                    ORDER BY bh.tietBatDau";
             $stmt = $conn->prepare($sql);
-            $stmt->execute([$maGiaoVien]);
+            $stmt->execute([$maGiaoVien, $today]);
+            
         } else if ($role === 'HOCSINH') {
             // Lấy mã học sinh và lớp từ mã người dùng
             $studentInfo = $this->getStudentInfo($maNguoiDung);
-            if (!$studentInfo) return [];
+            if (!$studentInfo || empty($studentInfo['maLop'])) return [];
 
-            // SỬA LẠI: Vì thoikhoabieu không có maLop, chúng ta cần tìm cách khác
-            // Giả sử lịch học được lưu trong bảng khác như buoihoc hoặc dựa vào phân công giảng dạy
             $sql = "SELECT bh.*, mh.tenMonHoc, gv.maGiaoVien, nd.hoTen as tenGiaoVien, l.tenLop
                     FROM buoihoc bh
                     JOIN monhoc mh ON bh.maMonHoc = mh.maMonHoc
                     JOIN giaovien gv ON bh.maGiaoVien = gv.maGiaoVien
                     JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
                     JOIN lophoc l ON bh.maLop = l.maLop
-                    WHERE bh.maLop = ? AND bh.ngayHoc = CURDATE()
-                    ORDER BY bh.tietHoc";
+                    WHERE bh.maLop = ? AND bh.ngayHoc = ?
+                    ORDER BY bh.tietBatDau";
             $stmt = $conn->prepare($sql);
-            $stmt->execute([$studentInfo['maLop']]);
+            $stmt->execute([$studentInfo['maLop'], $today]);
+            
         } else {
             return [];
         }

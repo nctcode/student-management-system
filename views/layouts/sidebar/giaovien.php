@@ -10,10 +10,11 @@
                     <span>Dashboard</span>
                 </a>
             </li>
+            
             <li class="nav-item">
-                <a class="nav-link" href="index.php?controller=ketquahoctap&action=thongke">
-                    <i class="fas fa-history"></i>
-                    <span>Thống kê kết quả học tập</span>
+                <a class="nav-link" href="index.php?controller=danhsachlop&action=index">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Danh sách lớp</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -22,16 +23,39 @@
                     <span>Thời khóa biểu</span>
                 </a>
             </li>
-            <li>
-                <a href="index.php?controller=diem&action=nhapdiem">
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=diem&action=nhapdiem">
                     <i class="fas fa-fw fa-pen-to-square"></i>
                     <span>Nhập điểm</span>
                 </a>
             </li>
-            <li>
-                <a href="index.php?controller=chuyencan&action=index">
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" 
+                   data-bs-toggle="collapse" 
+                   data-bs-target="#collapseBaiTap"
+                   aria-expanded="false" 
+                   aria-controls="collapseBaiTap">
+                    <i class="fas fa-fw fa-book"></i>
+                    <span>Bài tập</span>
+                    <i class="fas fa-fw fa-angle-right sidebar-arrow"></i>
+                </a>
+                <div id="collapseBaiTap" class="collapse" aria-labelledby="headingBaiTap" data-bs-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="index.php?controller=baitap&action=index">Giao bài tập</a>
+                        <a class="collapse-item" href="index.php?controller=baitap&action=danhsach">Danh sách đã giao</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=chuyencan&action=index">
                     <i class="fas fa-user-check"></i>
                     <span>Chuyên cần</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?controller=hanhkiem&action=index">
+                    <i class="fas fa-star"></i>
+                    <span>Hạnh Kiểm</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -51,34 +75,16 @@
                     </div>
                 </div>
             </li>
-
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" 
-                   data-bs-toggle="collapse" 
-                   data-bs-target="#collapseBaiTap"
-                   aria-expanded="false" 
-                   aria-controls="collapseBaiTap">
-                    <i class="fas fa-fw fa-book"></i>
-                    <span>Bài tập</span>
-                    <i class="fas fa-fw fa-angle-right sidebar-arrow"></i>
-                </a>
-                <div id="collapseBaiTap" class="collapse" aria-labelledby="headingBaiTap" data-bs-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="index.php?controller=baitap&action=index">Giao bài tập</a>
-                        <a class="collapse-item" href="index.php?controller=baitap&action=danhsach">Danh sách đã giao</a>
-                    </div>
-                </div>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <span>Lớp chủ nhiệm</span>
+                <a class="nav-link" href="index.php?controller=dethi&action=index">
+                    <i class="fas fa-file-alt"></i> 
+                    <span>Tạo đề thi</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Báo cáo</span>
+                <a class="nav-link" href="index.php?controller=ketquahoctap&action=thongke">
+                    <i class="fas fa-history"></i>
+                    <span>Thống kê kết quả học tập</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -92,7 +98,6 @@
                     </span>
                 </a>
             </li>
-            
         </ul>
     </div>
 </nav>

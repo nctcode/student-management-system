@@ -451,132 +451,144 @@ private function deleteOldDetail($vaiTroCu, $maNguoiDung) {
 }
 
    public function deleteUser($id) {
-    try {
-        $this->conn->beginTransaction();
-        
-        // TẮT kiểm tra khóa ngoại tạm thời
-        $this->conn->exec("SET FOREIGN_KEY_CHECKS = 0");
-        
-        // 1. Xóa tất cả dữ liệu liên quan từ các bảng chi tiết
-        $this->deleteAllRelatedData($id);
-        
-        // 2. Xóa từ nguoidung
-        $sql1 = "DELETE FROM nguoidung WHERE maTaiKhoan = ?";
-        $stmt1 = $this->conn->prepare($sql1);
-        $stmt1->execute([$id]);
-        
-        // 3. Xóa từ taikhoan
-        $sql2 = "DELETE FROM taikhoan WHERE maTaiKhoan = ?";
-        $stmt2 = $this->conn->prepare($sql2);
-        $stmt2->execute([$id]);
-        
-        // BẬT lại kiểm tra khóa ngoại
-        $this->conn->exec("SET FOREIGN_KEY_CHECKS = 1");
-        
-        $this->conn->commit();
-        return true;
-        
-    } catch (Exception $e) {
-        $this->conn->rollBack();
-        // Đảm bảo luôn bật lại khóa ngoại
-        $this->conn->exec("SET FOREIGN_KEY_CHECKS = 1");
-        
-        error_log("💥 deleteUser error: " . $e->getMessage());
-        throw new Exception("Không thể xóa tài khoản: " . $e->getMessage());
+        try {
+            $this->conn->beginTransaction();
+            
+            // TẮT kiểm tra khóa ngoại tạm thời
+            $this->conn->exec("SET FOREIGN_KEY_CHECKS = 0");
+            
+            // 1. Xóa tất cả dữ liệu liên quan từ các bảng chi tiết
+            $this->deleteAllRelatedData($id);
+            
+            // 2. Xóa từ nguoidung
+            $sql1 = "DELETE FROM nguoidung WHERE maTaiKhoan = ?";
+            $stmt1 = $this->conn->prepare($sql1);
+            $stmt1->execute([$id]);
+            
+            // 3. Xóa từ taikhoan
+            $sql2 = "DELETE FROM taikhoan WHERE maTaiKhoan = ?";
+            $stmt2 = $this->conn->prepare($sql2);
+            $stmt2->execute([$id]);
+            
+            // BẬT lại kiểm tra khóa ngoại
+            $this->conn->exec("SET FOREIGN_KEY_CHECKS = 1");
+            
+            $this->conn->commit();
+            return true;
+            
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            // Đảm bảo luôn bật lại khóa ngoại
+            $this->conn->exec("SET FOREIGN_KEY_CHECKS = 1");
+            
+            error_log("💥 deleteUser error: " . $e->getMessage());
+            throw new Exception("Không thể xóa tài khoản: " . $e->getMessage());
+        }
     }
-}
 
-private function deleteAllRelatedData($maTaiKhoan) {
-    try {
-        // Lấy maNguoiDung từ nguoidung
-        $sql = "SELECT maNguoiDung FROM nguoidung WHERE maTaiKhoan = ?";
+    private function deleteAllRelatedData($maTaiKhoan) {
+        try {
+            // Lấy maNguoiDung từ nguoidung
+            $sql = "SELECT maNguoiDung FROM nguoidung WHERE maTaiKhoan = ?";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([$maTaiKhoan]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$result || !isset($result['maNguoiDung'])) {
+                return;
+            }
+            
+            $maNguoiDung = $result['maNguoiDung'];
+            
+            // Xóa từ TẤT CẢ các bảng chi tiết có thể
+            $tables = ['giaovien', 'hocsinh', 'phuhuynh', 'bangiamhieu'];
+            
+            foreach ($tables as $table) {
+                try {
+                    $sql = "DELETE FROM $table WHERE maNguoiDung = ?";
+                    $stmt = $this->conn->prepare($sql);
+                    $stmt->execute([$maNguoiDung]);
+                    error_log("✅ Cleaned $table for user $maTaiKhoan");
+                } catch (Exception $e) {
+                    // Bỏ qua lỗi nếu bảng không tồn tại hoặc không có dữ liệu
+                    error_log("⚠️ No data in $table for user $maTaiKhoan");
+                }
+            }
+            
+        } catch (Exception $e) {
+            error_log("⚠️ deleteAllRelatedData warning: " . $e->getMessage());
+            // KHÔNG throw - tiếp tục xóa
+        }
+    }
+    public function toggleUserStatus($id) {
+        try {
+            // CÁCH ĐƠN GIẢN NHẤT - update trực tiếp
+            $sql = "UPDATE taikhoan SET trangThai = IF(trangThai = 'HOAT_DONG', 'DA_KHOA', 'HOAT_DONG') WHERE maTaiKhoan = ?";
+            $stmt = $this->conn->prepare($sql);
+            return $stmt->execute([$id]);
+            
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    public function updatePassword($tenDangNhap, $newPassword) {
+        try {
+            $sql = "UPDATE taikhoan SET matKhau = ? WHERE tenDangNhap = ?";
+            $stmt = $this->conn->prepare($sql);
+            // SỬA: dùng $newPassword (đã được hash từ controller)
+            return $stmt->execute([$newPassword, $tenDangNhap]); // ĐÚNG
+        } catch (Exception $e) {
+            error_log("Lỗi updatePassword: " . $e->getMessage());
+            return false;
+        }
+    }
+        public function getMaPhuHuynhByMaNguoiDung($maNguoiDung) {
+        $sql = "SELECT maPhuHuynh FROM phuhuynh WHERE maNguoiDung = :maNguoiDung";
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$maTaiKhoan]);
+        $stmt->execute([':maNguoiDung' => $maNguoiDung]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if (!$result || !isset($result['maNguoiDung'])) {
-            return;
-        }
-        
-        $maNguoiDung = $result['maNguoiDung'];
-        
-        // Xóa từ TẤT CẢ các bảng chi tiết có thể
-        $tables = ['giaovien', 'hocsinh', 'phuhuynh', 'bangiamhieu'];
-        
-        foreach ($tables as $table) {
-            try {
-                $sql = "DELETE FROM $table WHERE maNguoiDung = ?";
-                $stmt = $this->conn->prepare($sql);
-                $stmt->execute([$maNguoiDung]);
-                error_log("✅ Cleaned $table for user $maTaiKhoan");
-            } catch (Exception $e) {
-                // Bỏ qua lỗi nếu bảng không tồn tại hoặc không có dữ liệu
-                error_log("⚠️ No data in $table for user $maTaiKhoan");
-            }
-        }
-        
-    } catch (Exception $e) {
-        error_log("⚠️ deleteAllRelatedData warning: " . $e->getMessage());
-        // KHÔNG throw - tiếp tục xóa
+        return $result ? $result['maPhuHuynh'] : null;
     }
-}
-  public function toggleUserStatus($id) {
-    try {
-        // CÁCH ĐƠN GIẢN NHẤT - update trực tiếp
-        $sql = "UPDATE taikhoan SET trangThai = IF(trangThai = 'HOAT_DONG', 'DA_KHOA', 'HOAT_DONG') WHERE maTaiKhoan = ?";
+
+    public function getMaGiaoVienByMaNguoiDung($maNguoiDung) {
+        $sql = "SELECT maGiaoVien FROM giaovien WHERE maNguoiDung = :maNguoiDung";
         $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([$id]);
+        $stmt->execute([':maNguoiDung' => $maNguoiDung]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
-    } catch (Exception $e) {
-        return false;
+        return $result ? $result['maGiaoVien'] : null;
     }
-}
 
-   public function updatePassword($tenDangNhap, $newPassword) {
-    try {
-        $sql = "UPDATE taikhoan SET matKhau = ? WHERE tenDangNhap = ?";
+    public function getMaHocSinhByMaNguoiDung($maNguoiDung) {
+        $sql = "SELECT maHocSinh FROM hocsinh WHERE maNguoiDung = :maNguoiDung";
         $stmt = $this->conn->prepare($sql);
-        // SỬA: dùng $newPassword (đã được hash từ controller)
-        return $stmt->execute([$newPassword, $tenDangNhap]); // ĐÚNG
-    } catch (Exception $e) {
-        error_log("Lỗi updatePassword: " . $e->getMessage());
-        return false;
+        $stmt->execute([':maNguoiDung' => $maNguoiDung]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $result ? $result['maHocSinh'] : null;
     }
-}
-    public function getMaPhuHuynhByMaNguoiDung($maNguoiDung) {
-    $sql = "SELECT maPhuHuynh FROM phuhuynh WHERE maNguoiDung = :maNguoiDung";
-    $stmt = $this->conn->prepare($sql);
-    $stmt->execute([':maNguoiDung' => $maNguoiDung]);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    return $result ? $result['maPhuHuynh'] : null;
-}
 
-public function getMaGiaoVienByMaNguoiDung($maNguoiDung) {
-    $sql = "SELECT maGiaoVien FROM giaovien WHERE maNguoiDung = :maNguoiDung";
-    $stmt = $this->conn->prepare($sql);
-    $stmt->execute([':maNguoiDung' => $maNguoiDung]);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    return $result ? $result['maGiaoVien'] : null;
-}
-
-public function getMaHocSinhByMaNguoiDung($maNguoiDung) {
-    $sql = "SELECT maHocSinh FROM hocsinh WHERE maNguoiDung = :maNguoiDung";
-    $stmt = $this->conn->prepare($sql);
-    $stmt->execute([':maNguoiDung' => $maNguoiDung]);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    return $result ? $result['maHocSinh'] : null;
-}
-
-public function getMaTruongByMaNguoiDung($maNguoiDung) {
-    $sql = "SELECT maTruong FROM nguoidung WHERE maNguoiDung = :maNguoiDung";
-    $stmt = $this->conn->prepare($sql);
-    $stmt->execute([':maNguoiDung' => $maNguoiDung]);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    return $result ? $result['maTruong'] : null;
-}
+    public function getMaTruongByMaNguoiDung($maNguoiDung) {
+        $sql = "SELECT maTruong FROM nguoidung WHERE maNguoiDung = :maNguoiDung";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maNguoiDung' => $maNguoiDung]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $result ? $result['maTruong'] : null;
+    }
+    // Thêm vào class TaiKhoanModel trong models/TaiKhoanModel.php
+    public function getStudentClassInfo($maHocSinh) {
+        $sql = "SELECT hs.maLop, l.tenLop, k.tenKhoi as khoi
+                FROM hocsinh hs
+                JOIN lophoc l ON hs.maLop = l.maLop
+                JOIN khoi k ON l.maKhoi = k.maKhoi
+                WHERE hs.maHocSinh = ?";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$maHocSinh]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
 ?>

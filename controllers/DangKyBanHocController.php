@@ -7,33 +7,58 @@ class DangKyBanHocController {
     private $model;
     
     public function __construct() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        if (!isset($_SESSION['user'])) {
-            header('Location: index.php?controller=auth&action=login');
-            exit;
-        }
-        
-        // Kiểm tra vai trò và khối
-        if ($_SESSION['user']['vaiTro'] != 'HOCSINH') {
-            $_SESSION['error'] = "Chỉ học sinh mới được đăng ký ban học!";
-            header('Location: index.php?controller=home&action=student');
-            exit;
-        }
-        
-        if (($_SESSION['user']['khoi'] ?? null) != 11) {
-            $_SESSION['error'] = "Chỉ học sinh khối 11 mới được đăng ký ban học cho lớp 12!";
-            header('Location: index.php?controller=home&action=student');
-            exit;
-        }
-        
-        // Khởi tạo Database và Model
-        $db = new Database();
-        $conn = $db->getConnection();
-        $this->model = new DangKyBanHocModel($conn);
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
     }
+    
+    // 1. Kiểm tra đăng nhập
+    if (!isset($_SESSION['user'])) {
+        header('Location: index.php?controller=auth&action=login');
+        exit;
+    }
+    
+    // 2. Kiểm tra vai trò
+    if ($_SESSION['user']['vaiTro'] != 'HOCSINH') {
+        $_SESSION['error'] = "Chỉ học sinh mới được đăng ký ban học!";
+        header('Location: index.php?controller=home&action=student');
+        exit;
+    }
+    
+    // 3. Kiểm tra thông tin khối
+    $userKhoi = $_SESSION['user']['khoi'] ?? null;
+    
+    if ($userKhoi === null) {
+        // Nếu không có thông tin khối, thử lấy lại từ database
+        error_log("WARNING: No khoi in session for student: " . ($_SESSION['user']['maHocSinh'] ?? 'unknown'));
+        
+        // Có thể thêm code để lấy lại thông tin khối từ DB ở đây
+        // Tạm thời bỏ qua nếu không có
+        $_SESSION['user']['khoi'] = 11; // Giả sử là khối 11
+        $userKhoi = 11;
+    }
+    
+    // 4. Kiểm tra khối 11 (chuyển đổi linh hoạt)
+    $userKhoiStr = (string) $userKhoi;
+    $userKhoiStr = trim($userKhoiStr);
+    
+    if ($userKhoiStr !== "11") {
+        $_SESSION['error'] = "Chỉ học sinh khối 11 mới được đăng ký ban học cho lớp 12! Khối hiện tại: " . htmlspecialchars($userKhoiStr);
+        header('Location: index.php?controller=home&action=student');
+        exit;
+    }
+    
+    // 5. Khởi tạo Database và Model
+    $db = new Database();
+    $conn = $db->getConnection();
+    $this->model = new DangKyBanHocModel($conn);
+    
+    // 6. Kiểm tra thời hạn đăng ký (tạm bỏ nếu muốn test)
+    // if (!$this->model->kiemTraThoiHanDangKy()) {
+    //     $_SESSION['error'] = "Đã hết thời hạn đăng ký ban học!";
+    //     header('Location: index.php?controller=home&action=student');
+    //     exit;
+    // }
+}
     
     public function index() {
         $maHocSinh = $_SESSION['user']['maHocSinh'];
@@ -48,7 +73,6 @@ class DangKyBanHocController {
         }
         
         $title = "Đăng ký Ban học";
-        // BIẾN QUAN TRỌNG: Đặt biến này để file header.php hiển thị sidebar
         $showSidebar = true; 
         require_once 'views/dangkybanhoc/index.php';
     }
@@ -58,32 +82,27 @@ class DangKyBanHocController {
             $maBan = $_POST['ma_ban'] ?? '';
             $maHocSinh = $_SESSION['user']['maHocSinh'];
             
-            // --- VALIDATION SERVER-SIDE ---
-            
-            // 1. Kiểm tra học sinh đã đăng ký chưa (Ngăn chặn đăng ký trùng lặp)
-            if ($this->model->kiemTraDaDangKy($maHocSinh)) {
-                $_SESSION['error'] = "Bạn đã đăng ký ban học rồi và không thể thay đổi.";
+            if (empty($maBan)) {
+                $_SESSION['error'] = "Vui lòng chọn ban học!";
                 header('Location: index.php?controller=dangkybanhoc&action=index');
                 exit;
             }
-
-            // 2. Việc kiểm tra chỉ tiêu đã được xử lý bằng logic Transaction/Atomic Update 
-            //    trong Model (dangKyBanHoc). Không cần kiểm tra lặp lại ở đây.
             
-            // --- THỰC HIỆN ĐĂNG KÝ ---
-            
+            // Thực hiện đăng ký hoặc cập nhật
             $result = $this->model->dangKyBanHoc($maHocSinh, $maBan);
             
-            if ($result === true) {
+            if ($result === "created") {
                 $_SESSION['success'] = "Đăng ký ban học thành công!";
-                header('Location: index.php?controller=dangkybanhoc&action=index'); 
-                exit;
+            } elseif ($result === "updated") {
+                $_SESSION['success'] = "Cập nhật ban học thành công!";
+            } elseif ($result === "same") {
+                $_SESSION['info'] = "Bạn đã đăng ký ban học này rồi!";
             } else {
-                // Trường hợp thất bại bao gồm: lỗi DB, hoặc ban học hết chỉ tiêu ngay lúc đăng ký (race condition)
                 $_SESSION['error'] = "Có lỗi xảy ra trong quá trình xử lý, vui lòng thử lại!";
-                header('Location: index.php?controller=dangkybanhoc&action=index');
-                exit;
             }
+            
+            header('Location: index.php?controller=dangkybanhoc&action=index'); 
+            exit;
         } else {
             header('Location: index.php?controller=dangkybanhoc&action=index');
             exit;

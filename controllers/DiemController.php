@@ -43,7 +43,6 @@ class DiemController {
             exit;
         }
         $maGiaoVien = $giaoVienInfo['maGiaoVien'];
-        
         $danhSachPhanCong = $this->diemModel->getLopVaMonHocGiaoVien($maGiaoVien);
         
         $title = "Nhập điểm";
@@ -87,16 +86,31 @@ class DiemController {
             $maMonHoc = $_POST['maMonHoc'];
             $hocKy = $_POST['hocKy'];
             $namHoc = $_POST['namHoc'];
-            $danhSachDiem = $_POST['diem']?? []; 
-            
+
+            $errorRedirectUrl = sprintf(
+                "index.php?controller=diem&action=nhapdiem&maLop=%s&maMonHoc=%s&hocKy=%s&namHoc=%s&autoload=true",
+                urlencode($maLop), urlencode($maMonHoc), urlencode($hocKy), urlencode($namHoc)
+            );
+
             $giaoVienInfo = $this->giaoVienModel->getGiaoVienByMaNguoiDung($_SESSION['user']['maNguoiDung']);
+            $maGiaoVien = $giaoVienInfo['maGiaoVien'];
+
+            if (!$this->diemModel->kiemTraPhanCong($maGiaoVien, $maLop, $maMonHoc)) {
+                $_SESSION['error'] = "Bảo mật: Bạn không có quyền nhập điểm cho lớp hoặc môn học này!";
+                header("Location: index.php?controller=diem&action=nhapdiem");
+                exit;
+            }
+
+            $danhSachDiem = $_POST['diem']?? []; 
+            $giaoVienInfo = $this->giaoVienModel->getGiaoVienByMaNguoiDung($_SESSION['user']['maNguoiDung']);
+            
             if (!$giaoVienInfo) {
                 $_SESSION['error'] = "Lỗi xác thực thông tin giáo viên!";
                 header("Location: index.php?controller=diem&action=nhapdiem"); 
                 exit;
             }
-            $maGiaoVien = $giaoVienInfo['maGiaoVien'];
 
+            $maGiaoVien = $giaoVienInfo['maGiaoVien'];
             $danhSachDiemDaChuanHoa = [];
 
             foreach ($danhSachDiem as $maHS => $cacLoaiDiem) {
@@ -106,13 +120,19 @@ class DiemController {
                             $diemSo = str_replace(',', '.', $diemSo);
 
                             if ($diemSo !== '' && $diemSo !== null) {
-                                // Kiểm tra ký tự không hợp lệ hoặc ngoài phạm vi
-                                if (!is_numeric($diemSo) || $diemSo < 0 || $diemSo > 10) {
-                                    $_SESSION['error'] = "Lỗi điểm không hợp lệ (mã HS: $maHS, loại: $loaiDiem). Vui lòng chỉ nhập số từ 0 đến 10!";
-                                    header("Location: index.php?controller=diem&action=nhapdiem"); 
+                                if (!is_numeric($diemSo)) {
+                                    $_SESSION['error'] = "Lỗi điểm không hợp lệ (mã HS: $maHS, loại: $loaiDiem). Điểm không chứa chữ cái hoặc ký tự đặc biệt!";
+                                    header("Location: " . $errorRedirectUrl);
+                                    exit;
+                                } elseif($diemSo < 0 || $diemSo > 10) {
+                                    $_SESSION['error'] = "Lỗi điểm không hợp lệ (mã HS: $maHS, loại: $loaiDiem). Điểm phải nằm trong khoảng 0 đến 10!";
+                                    header("Location: " . $errorRedirectUrl);
                                     exit;
                                 }
                                 $danhSachDiemDaChuanHoa[$maHS][$loaiDiem][] = $diemSo;
+                            } else{
+                                $danhSachDiemDaChuanHoa[$maHS][$loaiDiem][] = ''; 
+                                continue;
                             }
                         }
                     }
@@ -120,20 +140,12 @@ class DiemController {
             }
 
             if ($this->diemModel->luuBangDiem($maMonHoc, $maGiaoVien, $hocKy, $namHoc, $maLop, $danhSachDiemDaChuanHoa)) {
-                $_SESSION['success'] = "Lưu điểm thành công!";
+                $_SESSION['success'] = "Bảng điểm đã được cập nhật thành công!";
             } else {
-                // Lỗi CSDL
-                $_SESSION['error'] = "Lỗi không thể lưu điểm. Đã có lỗi xảy ra!";
+                $_SESSION['error'] = "Đã xảy ra lỗi khi lưu dữ liệu vào hệ thống!";
             }
 
-            $redirectUrl = sprintf(
-                "Location: index.php?controller=diem&action=nhapdiem&maLop=%s&maMonHoc=%s&hocKy=%s&namHoc=%s&autoload=true",
-                urlencode($maLop),
-                urlencode($maMonHoc),
-                urlencode($hocKy),
-                urlencode($namHoc)
-            );
-            header($redirectUrl);
+            header("Location: " . $errorRedirectUrl);
             exit;
         }
     }
@@ -145,7 +157,7 @@ class DiemController {
 
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
-
+        $maPhuHuynh = $_SESSION['user']['maPhuHuynh'] ?? null;
         $danhSachCon = []; 
         $maHocSinhChon = null; 
         $hocSinhInfo = null;
@@ -158,7 +170,7 @@ class DiemController {
                 $maLopChon = $hocSinhInfo['maLop']; 
             }
         } elseif ($userRole === 'PHUHUYNH') {
-            $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maNguoiDung);
+            $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maPhuHuynh);
 
             if (empty($danhSachCon)) {
                 $_SESSION['error'] = "Tài khoản của bạn không được liên kết với hồ sơ học sinh nào!";
@@ -199,8 +211,7 @@ class DiemController {
 
         $danhSachKyHoc = [];
         $bangDiemData = []; 
-        $viewMode = 'none'; // Trạng thái: none, single, all
-        
+        $viewMode = 'none';
         $namHocChon = $_GET['namHoc'] ?? null;
         $hocKyChon = $_GET['hocKy'] ?? null;
 
@@ -246,6 +257,7 @@ class DiemController {
 
         $userRole = $_SESSION['user']['vaiTro'] ?? '';
         $maNguoiDung = $_SESSION['user']['maNguoiDung'];
+        $maPhuHuynh = $_SESSION['user']['maPhuHuynh'] ?? null;
 
         $hocSinhInfo = null;
         $maHocSinhChon = null;
@@ -258,7 +270,7 @@ class DiemController {
                 $maLopChon = $hocSinhInfo['maLop'];
             }
         } elseif ($userRole === 'PHUHUYNH') {
-            $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maNguoiDung);
+            $danhSachCon = $this->hocSinhModel->getHocSinhByPhuHuynh($maPhuHuynh);
             $maHocSinhFromGet = $_GET['maHocSinh'] ?? null;
             
             if ($maHocSinhFromGet) {
@@ -306,15 +318,12 @@ class DiemController {
         
         $mpdf = new \Mpdf\Mpdf(['default_font' => 'dejavusans']);
         $mpdf->SetTitle("Bang diem - " . $hocSinhInfo['hoTen']);
-
         ob_start(); 
         
         require 'views/diem/pdf_template.php'; 
         
         $html = ob_get_clean(); 
-        
         $mpdf->WriteHTML($html);
-    
         $baseNameRaw = '';
         
         if ($namHocChon === 'all') {
@@ -331,7 +340,6 @@ class DiemController {
     // Hàm để làm sạch tên file
     private function sanitizeVietnameseString($str) {
         $str = trim($str);
-        
         $str = preg_replace("/(à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ)/", 'a', $str);
         $str = preg_replace("/(è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ)/", 'e', $str);
         $str = preg_replace("/(ì|í|ị|ỉ|ĩ)/", 'i', $str);
@@ -339,7 +347,6 @@ class DiemController {
         $str = preg_replace("/(ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ)/", 'u', $str);
         $str = preg_replace("/(ỳ|ý|ỵ|ỷ|ỹ)/", 'y', $str);
         $str = preg_replace("/(đ)/", 'd', $str);
-        
         $str = preg_replace("/(À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ)/", 'A', $str);
         $str = preg_replace("/(È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ)/", 'E', $str);
         $str = preg_replace("/(Ì|Í|Ị|Ỉ|Ĩ)/", 'I', $str);

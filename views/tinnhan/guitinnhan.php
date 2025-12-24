@@ -1,3 +1,7 @@
+<?php
+// Thêm vào đầu file guitinnhan.php (trước phần HTML)
+$maTruong = $_SESSION['user']['maTruong'] ?? '';
+?>
 <div class="container-fluid">
     <h1 class="h3 mb-4 text-gray-800"><strong>Gửi tin nhắn</strong></h1>
     
@@ -85,8 +89,18 @@
                         </div>
                         <div id="paginationPH" class="pagination-container mt-2"></div>
                     </div>
-
-                    <div class="mt-3">
+                    <br>
+                    <div class="row">
+                        <div class="form-group text-end">
+                            <button type="button" class="btn btn-sm btn-info mr-2" id="btnChonTatCaLop">
+                                <i class="fas fa-check-double"></i> Chọn tất cả (HS & PH)
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" id="btnBoChonTatCa">
+                                <i class="fas fa-undo"></i> Bỏ chọn tất cả
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-end">
                         <strong>Đã chọn: <span id="soLuongChon">0</span></strong>
                     </div>
                 </div>
@@ -107,18 +121,21 @@
                             <input type="hidden" name="nguoiNhan" id="hiddenNguoiNhan">
                         </div>
                         <br>
+
+                        <?php 
+                        $old = $_SESSION['old_tinnhan'] ?? null;
+                        unset($_SESSION['old_tinnhan']); 
+                        ?>
                         <div class="form-group">
                             <label><strong>Tiêu đề (*)</strong></label>
-                            <input type="text" name="tieuDe" class="form-control" required placeholder="Nhập tiêu đề tin nhắn">
+                            <input type="text" name="tieuDe" class="form-control"
+                            value="<?= htmlspecialchars($old['tieuDe'] ?? '') ?>" placeholder="Nhập tiêu đề tin nhắn">
                         </div>
                         <br>
                         <div class="form-group position-relative">
                             <label><strong>Nội dung tin nhắn (*)</strong></label>
                             <emoji-picker style="display: none; position: absolute; z-index: 1050; right: 20px; bottom: 150px;"></emoji-picker>
-                            <textarea name="noiDung"  id="noiDungTinNhan" class="form-control" rows="6" required 
-                                      placeholder="Nhập nội dung tin nhắn..." 
-                                      onkeyup="demKyTu(this)">
-                            </textarea>
+                            <textarea name="noiDung"  id="noiDungTinNhan" class="form-control" rows="6" placeholder="Nhập nội dung tin nhắn..."><?= $old['noiDung'] ?? '' ?></textarea>
                             <div class="d-flex justify-content-between align-items-center mt-1">
                                 <small class="form-text text-muted">
                                     <span id="soKyTu">0</span>/1000 ký tự
@@ -135,17 +152,10 @@
                                     menubar: false,
                                     height: 250,
                                     setup: function(editor) {
-                                        editor.on('keyup', function(e) {
+                                        editor.on('keyup Change SetContent', function(e) {
                                             var content = editor.getContent({ format: 'text' });
                                             var fakeTextarea = { value: content };
                                             if (window.demKyTu) { 
-                                                window.demKyTu(fakeTextarea);
-                                            }
-                                        });
-                                        editor.on('Change', function(e) {
-                                            var content = editor.getContent({ format: 'text' });
-                                            var fakeTextarea = { value: content };
-                                            if (window.demKyTu) {
                                                 window.demKyTu(fakeTextarea);
                                             }
                                         });
@@ -153,6 +163,9 @@
                                 });
                             </script>
                         </div>
+                        <script>
+                            window.oldNguoiNhan = "<?= $old['nguoiNhan'] ?? '' ?>";
+                        </script>
                         <br>
                         <div class="form-group">
                             <label><strong>Đính kèm file</strong></label>
@@ -168,7 +181,7 @@
                         </div>
                         <br>
                         <div class="d-flex justify-content-end">
-                            <button type="button" class="btn btn-danger btn-lg" onclick="history.back()">
+                            <button type="button" class="btn btn-danger btn-lg" onclick="window.location.href='index.php'">
                                 <i class="fas fa-times"></i> Hủy
                             </button>
                             <button type="submit" class="btn btn-success btn-lg ms-2">
@@ -182,7 +195,33 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalAlertTN" data-backdrop="static" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-danger text-white border-0 py-3">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Cảnh báo lỗi
+                </h5>
+                <button type="button" class="btn-close-custom" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <i id="iconModalTN" class="fas fa-file-excel fa-3x text-danger mb-3"></i>
+                <p id="msgModalTN" class="mb-0 text-secondary font-weight-bold"></p>
+            </div>
+            <div class="modal-footer border-0 py-3 justify-content-center">
+                <button type="button" class="btn btn-secondary px-4 rounded-pill shadow-sm" data-dismiss="modal" data-bs-dismiss="modal">
+                    <i class="fas fa-check-circle mr-1"></i> Đã hiểu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Trong phần script của guitinnhan.php - thêm biến toàn cục
+    const maTruong = '<?= $maTruong ?>';
     document.addEventListener('DOMContentLoaded', function() {
     const picker = document.querySelector('emoji-picker');
     const emojiBtn = document.getElementById('emojiBtn');

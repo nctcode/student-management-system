@@ -57,6 +57,7 @@ for ($i = $namHocHienTai + 1; $i >= $namHocHienTai - 5; $i--) {
                     <div class="form-group">
                         <label for="hocKy"><strong>Chọn Học kỳ:</strong></label>
                         <select id="hocKy" class="form-control" required>
+                            <option value="">Chọn Học kỳ</option>
                             <option value="HK1">Học kỳ 1</option>
                             <option value="HK2">Học kỳ 2</option>
                         </select>
@@ -122,14 +123,96 @@ for ($i = $namHocHienTai + 1; $i >= $namHocHienTai - 5; $i--) {
                 </div>
 
                 <div class="mt-3 d-flex justify-content-end">
-                    <a href="index.php?controller=diem&action=index" class="btn btn-danger btn-lg">
+                    <button type="button" id="btnHuyNhapDiem" class="btn btn-danger btn-lg">
                         <i class="fas fa-times"></i> Hủy
-                    </a>
+                    </button>
                     <button type="submit" class="btn btn-success btn-lg ms-2">
                         <i class="fas fa-save"></i> Lưu điểm
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalConfirmHuyDiem" data-backdrop="static" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-danger text-white border-0 py-3">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Xác nhận thoát
+                </h5>
+                <button type="button" class="btn-close-custom" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                <p class="mb-0 text-secondary">Bạn có chắc chắn muốn hủy? <br><strong>Tất cả điểm số vừa nhập chưa lưu sẽ bị mất.</strong></p>
+            </div>
+            <div class="modal-footer border-0 py-3 justify-content-center">
+                <button type="button" class="btn btn-secondary px-4 rounded-pill shadow-sm" data-dismiss="modal" data-bs-dismiss="modal">
+                    Quay lại
+                </button>
+                <button type="button" id="btnXacNhanHuyDiem" class="btn btn-danger px-4 rounded-pill shadow-sm">
+                    Xác nhận và Thoát
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCanhBaoDiemTrong" data-backdrop="static" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-primary text-white border-0 py-3">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Cảnh báo dữ liệu
+                </h5>
+                <button type="button" class="btn-close-custom" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <i class="fas fa-edit fa-3x text-warning mb-3"></i>
+                <p class="mb-0 text-secondary" id="msgCanhBaoDiemTrong"></p>
+                <div class="mt-2 small text-muted">
+                    - Nhấn <strong>"Tiếp tục lưu"</strong> để nộp bảng điểm.<br>
+                    - Nhấn <strong>"Hủy"</strong> để kiểm tra lại các ô trống.
+                </div>
+            </div>
+            <div class="modal-footer border-0 py-3 justify-content-center">
+                <button type="button" class="btn btn-danger px-4 rounded-pill shadow-sm" data-dismiss="modal" data-bs-dismiss="modal">
+                    <i class="fas fa-times-circle mr-1"></i> Hủy
+                </button>
+                <button type="button" id="btnXacNhanLuuDiem" class="btn btn-success px-4 rounded-pill shadow-sm">
+                    <i class="fas fa-save mr-1"></i> Tiếp tục lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAlertDiem" data-backdrop="static" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-danger text-white border-0 py-3">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-exclamation-circle mr-2"></i> Lỗi nhập liệu
+                </h5>
+                <button type="button" class="btn-close-custom" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                <p id="modalAlertMessage" class="mb-0 text-secondary font-weight-bold"></p>
+            </div>
+            <div class="modal-footer border-0 py-3 justify-content-center">
+                <button type="button" class="btn btn-secondary px-4 rounded-pill shadow-sm" data-dismiss="modal" data-bs-dismiss="modal">
+                    <i class="fas fa-check-circle mr-1"></i> Đã hiểu
+                </button>
+            </div>
         </div>
     </div>
 </div>

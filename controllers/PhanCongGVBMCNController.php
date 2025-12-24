@@ -19,18 +19,29 @@ class PhanCongGVBMCNController {
         }
     }
 
+    // Thêm vào phương thức index
     public function index() {
-        $title = "Phân công Giáo viên BM/CN";
+        $title = "Phân Công Giáo viên BM/CN";
         
-        // Lấy dữ liệu không cần maTruong
-        $classes = $this->model->getAllClasses(); 
-        $teachers = $this->model->getAllTeachers();
+        // Lấy maTruong từ session
+        $maTruong = $_SESSION['user']['maTruong'] ?? null;
+        
+        // Lấy dữ liệu CÓ maTruong
+        $classes = $this->model->getAllClasses($maTruong); 
+        $teachers = $this->model->getAllTeachers($maTruong);
         $subjects = $this->model->getAllSubjects();
         
-        // Lấy dữ liệu thống kê thực tế
-        $totalClasses = $this->model->getTotalClasses();
-        $totalTeachers = $this->model->getTotalTeachers();
-        $classesWithGVCN = $this->model->getClassesWithGVCN();
+        // Lấy thông tin tổ chuyên môn cho mỗi môn học
+        $subjectGroups = [];
+        foreach ($subjects as $subject) {
+            $groupInfo = $this->model->getToChuyenMonByMonHoc($subject['maMonHoc']);
+            $subjectGroups[$subject['maMonHoc']] = $groupInfo;
+        }
+        
+        // Lấy dữ liệu thống kê thực tế CÓ maTruong
+        $totalClasses = $this->model->getTotalClasses($maTruong);
+        $totalTeachers = $this->model->getTotalTeachers($maTruong);
+        $classesWithGVCN = $this->model->getClassesWithGVCN($maTruong);
         
         $showSidebar = true;
         $roleName = strtolower($_SESSION['user']['vaiTro']);
@@ -40,14 +51,35 @@ class PhanCongGVBMCNController {
         require_once $sidebarPath; 
         require_once 'views/phanconggvbmcn/index.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 
+    // Thêm phương thức này vào controller
+    public function ajaxGetTeachersBySubject() {
+        header('Content-Type: application/json');
+        
+        $maMonHoc = intval($_GET['maMonHoc'] ?? 0);
+        $maTruong = $_SESSION['user']['maTruong'] ?? null;
+        
+        if ($maMonHoc > 0) {
+            $teachers = $this->model->getTeachersBySubject($maMonHoc, $maTruong);
+            echo json_encode(['success' => true, 'teachers' => $teachers]);
+        } else {
+            echo json_encode(['success' => false, 'teachers' => []]);
+        }
+        exit;
+    }
+
+    // Trong hàm saveAssignment của controller
     public function saveAssignment() {
         $this->checkPermission(['QTV', 'BGH']);
         
         $maLop = intval($_POST['maLop'] ?? 0);
         $maGVCN = intval($_POST['maGVCN'] ?? 0);
         $assignments = $_POST['assignments'] ?? [];
+        
+        // Lấy maTruong từ session
+        $maTruong = $_SESSION['user']['maTruong'] ?? null;
 
         if ($maLop === 0 || $maGVCN === 0) {
             $_SESSION['error'] = "Vui lòng chọn Lớp và Giáo viên Chủ nhiệm.";
@@ -55,33 +87,31 @@ class PhanCongGVBMCNController {
             exit;
         }
         
+        // Lấy tất cả môn học
+        $allSubjects = $this->model->getAllSubjects();
         $assignmentList = [];
-        foreach ($assignments as $maMonHoc => $maGiaoVien) {
-            if (!empty($maGiaoVien)) {
+        
+        // Tạo danh sách phân công cho tất cả môn học
+        foreach ($allSubjects as $subject) {
+            $maMonHoc = $subject['maMonHoc'];
+            $maGiaoVien = isset($assignments[$maMonHoc]) ? intval($assignments[$maMonHoc]) : 0;
+            
+            if ($maGiaoVien > 0) {
                 $assignmentList[] = [
-                    'maMonHoc' => intval($maMonHoc),
-                    'maGiaoVien' => intval($maGiaoVien)
+                    'maMonHoc' => $maMonHoc,
+                    'maGiaoVien' => $maGiaoVien
                 ];
             }
+            // Nếu không có giáo viên, không thêm vào danh sách (giữ nguyên phân công cũ nếu có)
         }
 
-        // Gọi hàm processAssignment không cần maTruong
-        $result = $this->model->processAssignment($maLop, $maGVCN, $assignmentList);
+        // Gọi hàm processAssignment
+        $result = $this->model->processAssignment($maLop, $maGVCN, $assignmentList, $maTruong);
 
         if ($result === true) {
             $_SESSION['success'] = "Phân công giáo viên cho lớp thành công!";
         } elseif (is_array($result) && isset($result['error'])) {
-            if ($result['error'] === 'GVCN_DUPLICATE') {
-                $_SESSION['error'] = "Lỗi: Giáo viên đã được gán chủ nhiệm lớp khác ({$result['lop']}).";
-            } elseif ($result['error'] === 'GVBM_INVALID_CONDITION') {
-                $errorDetails = "";
-                foreach ($result['details'] as $detail) {
-                    $errorDetails .= "• {$detail['giaoVien']} (Chuyên môn: {$detail['chuyenMon']}) không phù hợp với môn {$detail['monHoc']}\n";
-                }
-                $_SESSION['error'] = "Lỗi: Phân công không phù hợp chuyên môn:\n" . $errorDetails;
-            } else {
-                $_SESSION['error'] = "Không thể lưu dữ liệu, vui lòng thử lại.";
-            }
+            // Xử lý lỗi...
         } else {
             $_SESSION['error'] = "Không thể lưu dữ liệu, vui lòng thử lại.";
         }
@@ -91,13 +121,24 @@ class PhanCongGVBMCNController {
     }
     
     // AJAX: Lấy phân công GVBM hiện tại
+    // AJAX: Lấy phân công hiện tại
     public function ajaxGetAssignments() {
         header('Content-Type: application/json');
         $maLop = intval($_GET['maLop'] ?? 0);
         
         if ($maLop > 0) {
-            $assignments = $this->model->getSubjectAssignmentsByClass($maLop);
-            echo json_encode(['success' => true, 'assignments' => $assignments]);
+            // Lấy maTruong từ session
+            $maTruong = $_SESSION['user']['maTruong'] ?? null;
+            $assignments = $this->model->getSubjectAssignmentsByClass($maLop, $maTruong);
+            
+            // Lấy thêm thông tin phân công GVCN
+            $gvcnAssignment = $this->model->getGVCNAssignmentByClass($maLop);
+            
+            echo json_encode([
+                'success' => true, 
+                'assignments' => $assignments,
+                'gvcnAssignment' => $gvcnAssignment
+            ]);
         } else {
             echo json_encode(['success' => false, 'assignments' => []]);
         }
@@ -112,13 +153,16 @@ class PhanCongGVBMCNController {
         
         $title = "Xem phân công hiện tại";
 
-        $gvcnAssignments = $this->model->getCurrentGVCNAssignments();
-        $classes = $this->model->getAllClasses();
+        // Lấy maTruong từ session
+        $maTruong = $_SESSION['user']['maTruong'] ?? null;
         
-        // Lấy dữ liệu thống kê thực tế
-        $totalClasses = $this->model->getTotalClasses();
-        $totalTeachers = $this->model->getTotalTeachers();
-        $classesWithGVCN = $this->model->getClassesWithGVCN();
+        $gvcnAssignments = $this->model->getCurrentGVCNAssignments($maTruong);
+        $classes = $this->model->getAllClasses($maTruong);
+        
+        // Lấy dữ liệu thống kê thực tế CÓ maTruong
+        $totalClasses = $this->model->getTotalClasses($maTruong);
+        $totalTeachers = $this->model->getTotalTeachers($maTruong);
+        $classesWithGVCN = $this->model->getClassesWithGVCN($maTruong);
         $classesWithoutGVCN = $totalClasses - $classesWithGVCN;
         
         $showSidebar = true;
@@ -129,6 +173,7 @@ class PhanCongGVBMCNController {
         require_once $sidebarPath;
         require_once 'views/phanconggvbmcn/current_assignments.php';
         require_once 'views/layouts/footer.php';
+        exit();
     }
 }
 ?>

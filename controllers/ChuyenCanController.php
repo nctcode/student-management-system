@@ -12,7 +12,6 @@ class ChuyenCanController {
         $this->giaoVienModel = new GiaoVienModel(); 
     }
 
-    // Kiểm tra quyền (GV) và lấy maGiaoVien
     private function checkAuthAndGetMaGV() {
         if (!isset($_SESSION['user']) || $_SESSION['user']['vaiTro'] !== 'GIAOVIEN') {
             $_SESSION['error'] = "Bạn không có quyền truy cập!";
@@ -29,12 +28,11 @@ class ChuyenCanController {
         $this->maGiaoVien = $giaoVienInfo['maGiaoVien'];
     }
 
-    // Hiển thị trang chọn Lớp, Môn
+    // Hiển thị trang chọn Lớp, Buổi học
     public function index() {
         $this->checkAuthAndGetMaGV();
         
-        // Lấy danh sách các tiết học (Buổi học) mà GV này dạy
-        $danhSachTietHoc = $this->chuyenCanModel->getTietHocGiaoVien($this->maGiaoVien);
+        $danhSachBuoiHoc = $this->chuyenCanModel->getBuoiHocGiaoVien($this->maGiaoVien);
         
         $title = "Ghi nhận chuyên cần";
         $showSidebar = true; 
@@ -45,29 +43,30 @@ class ChuyenCanController {
         require_once 'views/layouts/footer.php';
     }
 
-    // HÀM MỚI: Xử lý AJAX để lấy bảng điểm danh
+    // Xử lý AJAX để lấy bảng điểm danh
     public function ajaxGetBangDiemDanh() {
         $this->checkAuthAndGetMaGV();
         
         $maLop = $_GET['maLop'] ?? 0;
-        $maTietHoc = $_GET['maTietHoc'] ?? 0;
-        $ngayDiemDanh = $_GET['ngayDiemDanh'] ?? date('Y-m-d'); 
+        $maBuoiHoc = $_GET['maBuoiHoc'] ?? 0;
 
-        if (!$maLop || !$maTietHoc) {
-            echo json_encode(['error' => 'Vui lòng chọn lớp và tiết học hợp lệ.']);
+        if (!$this->chuyenCanModel->kiemTraQuyenBuoiHoc($maBuoiHoc, $this->maGiaoVien)) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Bạn không có quyền truy cập buổi học này.']);
             exit;
         }
 
-        // Lấy danh sách HS và trạng thái chuyên cần (nếu đã có)
-        $danhSachHocSinh = $this->chuyenCanModel->getDanhSachLopDeDiemDanh($maLop, $maTietHoc, $ngayDiemDanh);
+        if (!$maLop || !$maBuoiHoc) {
+            echo json_encode(['error' => 'Vui lòng chọn lớp và buổi học hợp lệ.']);
+            exit;
+        }
+
+        $danhSachHocSinh = $this->chuyenCanModel->getDanhSachLopDeDiemDanh($maLop, $maBuoiHoc);
+        $thongTinBuoiHoc = $this->chuyenCanModel->getThongTinBuoiHoc($maBuoiHoc);
         
-        // Lấy thông tin tiết học để hiển thị
-        $thongTinTietHoc = $this->chuyenCanModel->getThongTinTietHoc($maTietHoc);
-        
-        // Gộp kết quả
         $result = [
             'danhSachHocSinh' => $danhSachHocSinh,
-            'thongTinTietHoc' => $thongTinTietHoc
+            'thongTinBuoiHoc' => $thongTinBuoiHoc
         ];
 
         header('Content-Type: application/json');
@@ -81,19 +80,48 @@ class ChuyenCanController {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $maLop = $_POST['maLop'];
-            $maTietHoc = $_POST['maTietHoc'];
+            $maBuoiHoc = $_POST['maBuoiHoc'];
             $ngayDiemDanh = $_POST['ngayDiemDanh'];
-            $danhSachTrangThai = $_POST['trangthai']; 
-            $danhSachGhiChu = $_POST['ghichu']; 
+            $danhSachTrangThai = $_POST['trangthai'] ?? []; 
+            $danhSachGhiChu = $_POST['ghichu'] ?? []; 
 
-            if ($this->chuyenCanModel->luuChuyenCan($maTietHoc, $ngayDiemDanh, $danhSachTrangThai, $danhSachGhiChu)) {
+            if (!$this->chuyenCanModel->kiemTraQuyenBuoiHoc($maBuoiHoc, $this->maGiaoVien)) {
+                $_SESSION['error'] = "Bạn không có quyền lưu chuyên cần cho buổi học này.";
+                header('Location: index.php?controller=chuyencan&action=index');
+                exit;
+            }
+
+            if ($this->chuyenCanModel->luuChuyenCan($maBuoiHoc, $danhSachTrangThai, $danhSachGhiChu)) {
                 $_SESSION['success'] = "Lưu chuyên cần thành công!";
             } else {
                 $_SESSION['error'] = "Không thể lưu chuyên cần. Đã có lỗi xảy ra.";
             }
-
-            $redirectUrl = "index.php?controller=chuyencan&action=index&maLop=$maLop&maTietHoc=$maTietHoc&ngayDiemDanh=$ngayDiemDanh&autoload=true";
+            $redirectUrl = "index.php?controller=chuyencan&action=index&maLop=$maLop&maBuoiHoc=$maBuoiHoc&ngayDiemDanh=$ngayDiemDanh&autoload=true";
             header("Location: " . $redirectUrl);
+            exit;
+        }
+    }
+
+    // Chức năng tạo buổi học từ TKB (cho admin)
+    public function taoBuoiHoc() {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['vaiTro'] !== 'QTV') {
+            $_SESSION['error'] = "Bạn không có quyền thực hiện chức năng này!";
+            header('Location: index.php?controller=home&action=index');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $maNienKhoa = $_POST['maNienKhoa'];
+            $ngayBatDau = $_POST['ngayBatDau'];
+            $ngayKetThuc = $_POST['ngayKetThuc'];
+
+            if ($this->chuyenCanModel->taoBuoiHocTuTKB($maNienKhoa, $ngayBatDau, $ngayKetThuc)) {
+                $_SESSION['success'] = "Tạo buổi học từ TKB thành công!";
+            } else {
+                $_SESSION['error'] = "Không thể tạo buổi học. Đã có lỗi xảy ra.";
+            }
+
+            header("Location: index.php?controller=admin&action=thoikhoabieu");
             exit;
         }
     }

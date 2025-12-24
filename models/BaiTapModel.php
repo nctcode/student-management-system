@@ -262,5 +262,17 @@ class BaiTapModel {
             return false;
         }
     }
+
+    public function xoaBaiNop($maBaiNop) {
+        $conn = $this->db->getConnection();
+        $sql = "DELETE FROM bainop WHERE maBaiNop = :maBaiNop";
+        try {
+            $stmt = $conn->prepare($sql);
+            return $stmt->execute(['maBaiNop' => $maBaiNop]);
+        } catch (Exception $e) {
+            error_log("Lỗi xóa bài nộp: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

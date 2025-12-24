@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const hiddenInputNguoiNhan = document.getElementById('hiddenNguoiNhan');
     const soLuongChonSpan = document.getElementById('soLuongChon');
     const formGuiTinNhan = document.getElementById('formGuiTinNhan');
+    const btnChonTatCaLop = document.getElementById('btnChonTatCaLop');
+    const btnBoChonTatCa = document.getElementById('btnBoChonTatCa');
 
     // --- Gán sự kiện ---
     selectLop?.addEventListener('change', loadData);
@@ -30,25 +32,38 @@ document.addEventListener('DOMContentLoaded', function() {
     timKiemInput?.addEventListener('keyup', handleFilter);
     chonTatCaHS?.addEventListener('change', () => chonTatCa('HS'));
     chonTatCaPH?.addEventListener('change', () => chonTatCa('PH'));
+    btnChonTatCaLop?.addEventListener('click', handleChonTatCaLop);
+    btnBoChonTatCa?.addEventListener('click', handleBoChonTatCa);
     
-    formGuiTinNhan?.addEventListener('submit', function() {
+    
+    formGuiTinNhan?.addEventListener('submit', function(e) {
+        if (window.tinymce) tinymce.triggerSave();
+        
         hiddenInputNguoiNhan.value = danhSachDaChon.map(item => item.maNguoiDung).join(',');
         
+        if (document.getElementById('selectLop') && (!hiddenInputNguoiNhan.value || hiddenInputNguoiNhan.value === "")) {
+            e.preventDefault(); 
+            showModalTN("Vui lòng chọn ít nhất một người nhận tin nhắn!", 'fa-users');
+            return;
+        }
+
         const loai = [checkHocSinh.checked ? 'HOCSINH' : '', checkPhuHuynh.checked ? 'PHUHUYNH' : '']
                      .filter(Boolean).join(',');
         
         let loaiInput = formGuiTinNhan.querySelector('input[name="loaiNguoiNhan"]');
+        
         if (!loaiInput) {
             loaiInput = document.createElement('input');
             loaiInput.type = 'hidden';
             loaiInput.name = 'loaiNguoiNhan';
             formGuiTinNhan.appendChild(loaiInput);
         }
+
         loaiInput.value = loai;
     });
 
-    // --- Hàm xử lý chính ---
 
+    // --- Hàm xử lý chính ---
     async function loadData() {
         const maLop = selectLop.value;
         if (!maLop) {
@@ -56,17 +71,46 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        console.log('Mã lớp được chọn:', maLop);
+
         try {
             if(tbodyHS) tbodyHS.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Đang tải...</td></tr>`;
             if(tbodyPH) tbodyPH.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Đang tải...</td></tr>`;
 
+            const urlParams = new URLSearchParams({
+                maLop: maLop
+            });
+
+            const hsUrl = `index.php?controller=tinnhan&action=getHocSinhByLop&${urlParams}`;
+            console.log('URL request học sinh:', hsUrl);
+
             const [hsResponse, phResponse] = await Promise.all([
-                fetch(`index.php?controller=tinnhan&action=getHocSinhByLop&maLop=${maLop}`),
-                fetch(`index.php?controller=tinnhan&action=getPhuHuynhByLop&maLop=${maLop}`)
+                fetch(hsUrl),
+                fetch(`index.php?controller=tinnhan&action=getPhuHuynhByLop&${urlParams}`)
             ]);
 
             dataHocSinh = await hsResponse.json();
             dataPhuHuynh = await phResponse.json();
+
+            if (window.oldNguoiNhan && window.oldNguoiNhan.trim() !== "") {
+                const arrayOldIds = window.oldNguoiNhan.split(',');
+                
+                const allData = [...dataHocSinh, ...dataPhuHuynh];
+                arrayOldIds.forEach(oldId => {
+                    const match = allData.find(item => item.maNguoiDung.toString() === oldId.toString());
+                    if (match) {
+                        if (!danhSachDaChon.some(x => x.maNguoiDung.toString() === oldId.toString())) {
+                            danhSachDaChon.push({
+                                maNguoiDung: match.maNguoiDung.toString(),
+                                ten: match.hoTen
+                            });
+                        }
+                    }
+                });
+            }
+        
+            console.log('Dữ liệu học sinh trả về:', dataHocSinh);
+            console.log('Dữ liệu phụ huynh trả về:', dataPhuHuynh);
             
             currentPageHS = 1;
             currentPagePH = 1;
@@ -117,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderTable(loai, data, page) {
         const tbody = (loai === 'HS') ? tbodyHS : tbodyPH;
+        
         if (!tbody) return;
         
         tbody.innerHTML = '';
@@ -135,8 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const tr = document.createElement('tr');
             const maNguoiDung = item.maNguoiDung;
             const ten = item.hoTen;
-            const isChecked = danhSachDaChon.some(ng => ng.maNguoiDung === maNguoiDung);
-
+            const isChecked = danhSachDaChon.some(ng => ng.maNguoiDung.toString() === maNguoiDung);
             const tdCheck = document.createElement('td');
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -162,6 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             tbody.appendChild(tr);
         });
+        capNhatDanhSachNguoiNhan();
     }
     
     function createTd(text) {
@@ -172,6 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderPagination(loai, totalItems, currentPage) {
         const container = document.getElementById(`pagination${loai}`);
+        
         if (!container) return;
         
         container.innerHTML = '';
@@ -223,21 +269,14 @@ document.addEventListener('DOMContentLoaded', function() {
         danhSachDaChon.forEach(item => {
             const badge = document.createElement('span');
             badge.className = 'badge badge-primary mr-2 mb-2 p-2';
-            
-            // Thêm tên
             badge.appendChild(document.createTextNode(item.ten + ' '));
-
-            // Tạo nút 'x'
             const closeButton = document.createElement('span');
             closeButton.innerHTML = '×';
             closeButton.style.cursor = 'pointer';
             closeButton.style.marginLeft = '5px';
-            
-            // Gán sự kiện click
             closeButton.addEventListener('click', () => {
                 window.xoaNguoiNhan(item.maNguoiDung);
             });
-            
             badge.appendChild(closeButton);
             containerNguoiNhan.appendChild(badge);
         });
@@ -245,48 +284,149 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.xoaNguoiNhan = function(maNguoiDung) {
         danhSachDaChon = danhSachDaChon.filter(item => item.maNguoiDung !== maNguoiDung);
-        renderAll(); // Tải lại bảng để bỏ check
+        renderAll();
     }
 
     window.chonTatCa = function(loai) {
         const isChecked = (loai === 'HS') ? chonTatCaHS.checked : chonTatCaPH.checked;
-        const tbody = (loai === 'HS') ? tbodyHS : tbodyPH;
+        const sourceData = (loai === 'HS') ? filteredHocSinh : filteredPhuHuynh;
+
+        if (isChecked) {
+            sourceData.forEach(item => {
+                const daTonTai = danhSachDaChon.some(selected => selected.maNguoiDung == item.maNguoiDung);
+                
+                if (!daTonTai) {
+                    danhSachDaChon.push({
+                        maNguoiDung: item.maNguoiDung,
+                        ten: item.hoTen
+                    });
+                }
+            });
+        } else {
+            const idsToRemove = sourceData.map(item => item.maNguoiDung);
+            danhSachDaChon = danhSachDaChon.filter(selected => !idsToRemove.includes(selected.maNguoiDung));
+        }
+        renderAll();
+    }
+
+    // Hàm chọn tất cả cả HS và PH
+    function handleChonTatCaLop() {
+        if (filteredHocSinh.length === 0 && filteredPhuHuynh.length === 0) {
+            alert('Chưa có dữ liệu lớp học để chọn!');
+            return;
+        }
+
+        if (!checkHocSinh.checked) {
+            checkHocSinh.checked = true;
+            toggleViews();
+        }
+
+        if (!checkPhuHuynh.checked) {
+            checkPhuHuynh.checked = true;
+            toggleViews();
+        }
+
+        const allUsers = [];
         
-        tbody.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            if (checkbox.checked !== isChecked) {
-                checkbox.checked = isChecked;
-                checkbox.dispatchEvent(new Event('change'));
-            }
-        });
+        if (checkHocSinh.checked) {
+            filteredHocSinh.forEach(hs => {
+                if (!danhSachDaChon.some(item => item.maNguoiDung === hs.maNguoiDung)) {
+                    danhSachDaChon.push({ 
+                        maNguoiDung: hs.maNguoiDung, 
+                        ten: hs.hoTen 
+                    });
+                }
+            });
+            if(chonTatCaHS) chonTatCaHS.checked = true;
+        }
+
+        if (checkPhuHuynh.checked) {
+            filteredPhuHuynh.forEach(ph => {
+                if (!danhSachDaChon.some(item => item.maNguoiDung === ph.maNguoiDung)) {
+                    danhSachDaChon.push({ 
+                        maNguoiDung: ph.maNguoiDung, 
+                        ten: ph.hoTen 
+                    });
+                }
+            });
+            if(chonTatCaPH) chonTatCaPH.checked = true;
+        }
+
+        renderAll();
+    }
+
+    // Hàm bỏ chọn tất cả
+    function handleBoChonTatCa() {
+        danhSachDaChon = [];
+        if(chonTatCaHS) chonTatCaHS.checked = false;
+        if(chonTatCaPH) chonTatCaPH.checked = false;
+        renderAll();
     }
     
+
     // --- Các hàm phụ ---
     window.demKyTu = function(textarea) {
-        const soKyTu = document.getElementById('soKyTu');
-        if (!soKyTu) return;
-        soKyTu.textContent = textarea.value.length;
-        soKyTu.className = (textarea.value.length > 1000) ? 'text-danger' : 'text-muted';
+        const soKyTuSpan = document.getElementById('soKyTu');
+        
+        if (!soKyTuSpan) return;
+
+        const content = (textarea.value || "").replace(/(\r\n|\n|\r)/gm, "").trim();
+        const length = content.length;
+        soKyTuSpan.textContent = length;
+
+        if (length > 1000) soKyTuSpan.classList.add('text-danger');
+        else soKyTuSpan.classList.remove('text-danger');
+    }
+
+    function showModalTN(message, icon = 'fa-file-excel') {
+        const modalElement = document.getElementById('modalAlertTN');
+        
+        if (!modalElement) return;
+
+        document.getElementById('msgModalTN').innerHTML = message;
+        document.getElementById('iconModalTN').className = `fas ${icon} fa-3x text-danger mb-3`;
+        const modalInstance = new bootstrap.Modal(modalElement);
+        modalInstance.show();
     }
 
     window.hienThiFile = function() {
         const fileInput = document.getElementById('fileDinhKem');
         const fileList = document.getElementById('danhSachFile');
         if (!fileInput || !fileList) return;
-        
+
+        const dt = new DataTransfer();
         fileList.innerHTML = '';
-        for (let i = 0; i < fileInput.files.length; i++) {
-            const file = fileInput.files.item(i);
-            if (file) {
+        let errorMessages = [];
+        const maxSize = 10 * 1024 * 1024;
+        const allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls'];
+
+        Array.from(fileInput.files).forEach(file => {
+            const ext = file.name.split('.').pop().toLowerCase();
+            let fileError = "";
+
+            if (file.size > maxSize) fileError = `vượt quá 10MB`;
+            else if (!allowedTypes.includes(ext)) fileError = `sai định dạng (.${ext})`;
+            
+            if (fileError !== "") {
+                errorMessages.push(`<li>File <b>${file.name}</b> (${fileError})</li>`);
+            } else {
+                dt.items.add(file);
                 const fileSize = (file.size / (1024 * 1024)).toFixed(1);
-                
                 const fileItem = document.createElement('div');
-                fileItem.className = 'd-flex justify-content-between align-items-center border rounded p-2 mb-2';
+                fileItem.className = 'd-flex justify-content-between align-items-center border rounded p-2 mb-2 bg-light';
                 fileItem.innerHTML = `
-                    <div><strong>${file.name}</strong> (${fileSize}MB)</div>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="xoaFile(${i})">×</button>
+                    <div><i class="fas fa-file mr-2 text-primary"></i><strong>${file.name}</strong> (${fileSize}MB)</div>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="xoaFile(${dt.items.length - 1})">×</button>
                 `;
                 fileList.appendChild(fileItem);
             }
+        });
+
+        fileInput.files = dt.files;
+
+        if (errorMessages.length > 0) {
+            const combinedMsg = `<div class='text-left'>Phát hiện <b>${errorMessages.length}</b> tệp không hợp lệ và đã bị loại bỏ: <ul class='mt-2'>${errorMessages.join('')}</ul></div>`;
+            showModalTN(combinedMsg, 'fa-file-excel');
         }
     }
 
@@ -294,9 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.getElementById('fileDinhKem');
         const dt = new DataTransfer();
         const files = Array.from(fileInput.files);
-        
         files.splice(index, 1); 
-        
         files.forEach(file => dt.items.add(file));
         fileInput.files = dt.files;
         hienThiFile(); 

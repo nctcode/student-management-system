@@ -30,6 +30,19 @@ if (file_exists($controllerFile)) {
         if (method_exists($controllerInstance, $action)) {
             // Xử lý các action cần tham số
             switch ($controller) {
+                case 'auth':
+                    switch ($action) {
+                        case 'login':
+                        case 'logout':
+                        case 'register':
+                        case 'changePassword':
+                        case 'resetPassword':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->$action();
+                    }
+                    break;
                 case 'donchuyenloptruong':
                     switch ($action) {
                         case 'index':
@@ -238,8 +251,14 @@ if (file_exists($controllerFile)) {
                 
                 case 'ketquahoctap':
                     switch ($action) {
+                        case 'index':
+                        case 'view':
+                            $controllerInstance->$action();
                         case 'thongke':
                             $controllerInstance->thongke();
+                            break;
+                        case 'xuatExcel': 
+                            $controllerInstance->xuatExcel();
                             break;
                         default:
                             $controllerInstance->thongke();
@@ -276,9 +295,59 @@ if (file_exists($controllerFile)) {
                             $controllerInstance->index();
                     }
                     break;
+                
+                case 'phancongrade':
+                    switch ($action) {
+                        case 'index':
+                        case 'view':
+                        case 'create':
+                        case 'getGiaoVienByMonHoc':
+                        case 'store':
+                        case 'edit':
+                        case 'update':
+                        case 'delete':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                
+                case 'dethi':
+                    switch ($action) {
+                        case 'index':
+                        case 'view':
+                        case 'create':
+                        case 'edit':
+                        case 'update':
+                        case 'delete':
+                            $controllerInstance->$action();
+                            break;
+                        case 'store':
+                        case 'capNhatTrangThai':
+                        case 'duyet':
+                        case 'lichSuDuyetDeThi':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
 
                 default:
                     $controllerInstance->$action();
+                
+                case 'hanhkiem':
+                    switch ($action) {
+                        case 'index':
+                        case 'save':
+                        case 'store':
+                        case 'changeHocKy':
+                            $controllerInstance->$action();
+                            break;
+                        default:
+                            $controllerInstance->index();
+                    }
+                    break;
             }
         } else {
             die("Action không tồn tại: $action");
@@ -292,4 +361,4 @@ if (file_exists($controllerFile)) {
     $home = new HomeController();
     $home->index();
 }
-?>
+?>  

@@ -1,8 +1,28 @@
- .content {
-     margin-left: 250px;
-     /* sidebar rộng 250px */
-     margin-right: auto;
-     padding: 20px;
-     min-height: calc(100vh - 60px);
-     background-color: #f0f2f5;
- }
+/* Trong file thongkeketquahoctap.css */
+.content {
+    margin-left: 250px;
+    padding: 20px;
+    min-height: calc(100vh - 60px);
+    background-color: #f0f2f5;
+}
+/* Trong thongkeketquahoctap.css hoặc header.css */
+.sidebar-menu a.active {
+    background: linear-gradient(135deg, var(--accent) 0%, #2980b9 100%) !important;
+    color: white !important;
+    border-left-color: var(--primary) !important;
+    font-weight: 600;
+}
+
+/* Đảm bảo Bootstrap collapse hoạt động */
+.collapse.show {
+    display: block !important;
+}
+
+/* Màu cho active link trong collapse */
+.collapse-inner a.active {
+    background: linear-gradient(135deg, var(--accent) 0%, #2980b9 100%) !important;
+    color: white !important;
+    border-radius: 5px;
+    margin: 2px 10px;
+    padding: 8px 15px !important;
+}

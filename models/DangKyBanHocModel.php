@@ -36,23 +36,59 @@ class DangKyBanHocModel {
         return false;
     }
     
-    // 4. Thực hiện đăng ký (Bao gồm Transaction)
+    // 4. Thực hiện đăng ký HOẶC CẬP NHẬT ban học
     public function dangKyBanHoc($maHocSinh, $maBan) {
         $this->conn->beginTransaction();
         
         try {
-            // Thêm đăng ký (Đã thống nhất tên bảng)
-            $sql = "INSERT INTO dangkybanhoc (maHocSinh, maBan) VALUES (?, ?)";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$maHocSinh, $maBan]);
+            // Kiểm tra xem học sinh đã đăng ký chưa
+            $sqlCheck = "SELECT id, maBan FROM dangkybanhoc WHERE maHocSinh = ?";
+            $stmtCheck = $this->conn->prepare($sqlCheck);
+            $stmtCheck->execute([$maHocSinh]);
+            $existingRegistration = $stmtCheck->fetch(PDO::FETCH_ASSOC);
             
-            // Cập nhật số lượng đã đăng ký trong bảng banhoc
-            $sqlUpdate = "UPDATE banhoc SET soLuongDaDangKy = soLuongDaDangKy + 1 WHERE maBan = ?";
-            $stmtUpdate = $this->conn->prepare($sqlUpdate);
-            $stmtUpdate->execute([$maBan]);
+            if ($existingRegistration) {
+                // ĐÃ ĐĂNG KÝ RỒI: CẬP NHẬT ban học
+                $oldMaBan = $existingRegistration['maBan'];
+                
+                if ($oldMaBan == $maBan) {
+                    // Nếu chọn cùng ban, không làm gì
+                    $this->conn->rollBack();
+                    return "same"; // Không thay đổi
+                }
+                
+                // 1. Giảm số lượng đăng ký của ban cũ
+                $sqlDecrease = "UPDATE banhoc SET soLuongDaDangKy = soLuongDaDangKy - 1 WHERE maBan = ?";
+                $stmtDecrease = $this->conn->prepare($sqlDecrease);
+                $stmtDecrease->execute([$oldMaBan]);
+                
+                // 2. Cập nhật đăng ký mới
+                $sqlUpdate = "UPDATE dangkybanhoc SET maBan = ?, ngayDangKy = NOW() WHERE maHocSinh = ?";
+                $stmtUpdate = $this->conn->prepare($sqlUpdate);
+                $stmtUpdate->execute([$maBan, $maHocSinh]);
+                
+                // 3. Tăng số lượng đăng ký của ban mới
+                $sqlIncrease = "UPDATE banhoc SET soLuongDaDangKy = soLuongDaDangKy + 1 WHERE maBan = ?";
+                $stmtIncrease = $this->conn->prepare($sqlIncrease);
+                $stmtIncrease->execute([$maBan]);
+                
+                $this->conn->commit();
+                return "updated"; // Cập nhật thành công
+            } else {
+                // CHƯA ĐĂNG KÝ: THÊM MỚI
+                $sqlInsert = "INSERT INTO dangkybanhoc (maHocSinh, maBan) VALUES (?, ?)";
+                $stmtInsert = $this->conn->prepare($sqlInsert);
+                $stmtInsert->execute([$maHocSinh, $maBan]);
+                
+                // Cập nhật số lượng đã đăng ký trong bảng banhoc
+                $sqlUpdateBan = "UPDATE banhoc SET soLuongDaDangKy = soLuongDaDangKy + 1 WHERE maBan = ?";
+                $stmtUpdateBan = $this->conn->prepare($sqlUpdateBan);
+                $stmtUpdateBan->execute([$maBan]);
+                
+                $this->conn->commit();
+                return "created"; // Tạo mới thành công
+            }
             
-            $this->conn->commit();
-            return true;
         } catch (Exception $e) {
             $this->conn->rollBack();
             error_log("Lỗi đăng ký ban học: " . $e->getMessage());
@@ -60,15 +96,25 @@ class DangKyBanHocModel {
         }
     }
     
-    // 5. Lấy thông tin đăng ký của học sinh
+    // 6. Lấy thông tin đăng ký của học sinh
     public function getThongTinDangKy($maHocSinh) {
-        $sql = "SELECT dk.*, bh.tenBan 
+        $sql = "SELECT dk.*, bh.tenBan, bh.chiTieu, bh.soLuongDaDangKy
                 FROM dangkybanhoc dk 
                 JOIN banhoc bh ON dk.maBan = bh.maBan 
                 WHERE dk.maHocSinh = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$maHocSinh]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    // 7. Kiểm tra học sinh có thể chọn lại (thời hạn đăng ký)
+    public function kiemTraThoiHanDangKy() {
+        // Giả sử thời hạn đăng ký
+        $now = date('Y-m-d');
+        $startDate = '2025-12-15';
+        $endDate = '2025-12-31';
+        
+        return ($now >= $startDate && $now <= $endDate);
     }
 }
 ?>

@@ -8,97 +8,70 @@ class ThoiKhoaBieuModel {
         $this->db = new Database();
     }
 
-    // --- SỬA: taoThoiKhoaBieu() - Thêm kiểm tra trùng lịch theo Tuần ---
+    // Lấy môn học theo khối
+    public function getMonHocByKhoi($maKhoi) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT mh.*, mk.soTiet 
+                FROM monhoc mh 
+                JOIN monhoc_khoi mk ON mh.maMonHoc = mk.maMonHoc 
+                WHERE mk.maKhoi = ? 
+                ORDER BY mh.tenMonHoc"; 
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maKhoi]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Tạo TKB cố định
     public function taoThoiKhoaBieu($data) {
         $conn = $this->db->getConnection();
         
-        // $data['ngayApDung'] là ngày đại diện cho tuần đang tạo
-        $ngayApDung = $data['ngayApDung']; 
-        
-        // 1. Kiểm tra trùng lịch dạy của giáo viên TRONG TUẦN ĐANG TẠO
+        // 1. Kiểm tra trùng lịch dạy của giáo viên
         if ($this->kiemTraTrungLichGiaoVien(
             $data['maGiaoVien'], 
             $data['loaiLich'], 
             $data['tietBatDau'], 
-            $data['tietKetThuc'], 
-            $ngayApDung // <-- Truyền ngày áp dụng (để lấy tuần)
+            $data['tietKetThuc']
         )) {
-            $_SESSION['error'] = "Giáo viên đã có lịch dạy trùng giờ trong tuần này!";
+            $_SESSION['error'] = "Giáo viên đã có lịch dạy trùng giờ!";
             return false;
         }
         
-        // 2. Kiểm tra trùng lịch của Lớp học TRONG TUẦN ĐANG TẠO
+        // 2. Kiểm tra trùng lịch của Lớp học
         if ($this->kiemTraTrungLich(
             $data['maLop'], 
             $data['loaiLich'], 
             $data['tietBatDau'], 
-            $data['tietKetThuc'], 
-            $ngayApDung // <-- Truyền ngày áp dụng (để lấy tuần)
+            $data['tietKetThuc']
         )) {
-            $_SESSION['error'] = "Lớp học đã có tiết học trùng giờ trong tuần này!";
+            $_SESSION['error'] = "Lớp học đã có tiết học trùng giờ!";
             return false;
-        }
-
-        $maMonHoc = $data['maMonHoc'];
-        if ($maMonHoc > 5) {
-            $this->themMonHocMoi($maMonHoc, $data['maKhoi']);
         }
         
         $sql = "INSERT INTO thoikhoabieu 
-                (ngayApDung, maLop, maMonHoc, maGiaoVien, tietBatDau, tietKetThuc, phongHoc, loaiLich) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                (maLop, maMonHoc, maGiaoVien, tietBatDau, tietKetThuc, phongHoc, loaiLich, maKhoi, maNienKhoa) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $conn->prepare($sql);
         return $stmt->execute([
-            $ngayApDung,
             $data['maLop'], 
-            $maMonHoc,
+            $data['maMonHoc'],
             $data['maGiaoVien'], 
             $data['tietBatDau'],
             $data['tietKetThuc'],
             $data['phongHoc'],
-            $data['loaiLich']
+            $data['loaiLich'],
+            $data['maKhoi'],
+            $data['maNienKhoa']
         ]);
     }
 
-    // Các hàm helper (Giữ nguyên)
-    private function themMonHocMoi($maMonHoc, $maKhoi) {
+    // Lấy TKB cố định theo lớp
+    public function getTKBTheoLop($maLop) {
         $conn = $this->db->getConnection();
         
-        $monHocList = [
-            6 => 'Lịch Sử', 7 => 'Địa Lý', 8 => 'Sinh Học',
-            9 => 'Tin Học', 10 => 'Thể Dục', 11 => 'GD Quốc Phòng',
-            12 => 'GD Công Dân', 13 => 'Công Nghệ', 14 => 'Mỹ Thuật',
-            15 => 'Âm Nhạc'
-        ];
-        
-        if (isset($monHocList[$maMonHoc])) {
-            $sqlCheck = "SELECT COUNT(*) as count FROM monhoc WHERE maMonHoc = ?";
-            $stmtCheck = $conn->prepare($sqlCheck);
-            $stmtCheck->execute([$maMonHoc]);
-            $result = $stmtCheck->fetch(PDO::FETCH_ASSOC);
-            
-            if ($result['count'] == 0) {
-                $sqlInsert = "INSERT INTO monhoc (maMonHoc, tenMonHoc, soTiet, maKhoi) VALUES (?, ?, 70, ?)";
-                $stmtInsert = $conn->prepare($sqlInsert);
-                $stmtInsert->execute([$maMonHoc, $monHocList[$maMonHoc], $maKhoi]);
-            }
-        }
-    }
-
-    // --- SỬA: getTKBTheoLop() - Lọc theo Tuần ---
-    public function getTKBTheoLop($maLop, $ngayApDungTuan = null) {
-        $conn = $this->db->getConnection();
-        
-        $conditionTuan = "";
-        $params = [$maLop];
-        
-        if ($ngayApDungTuan) {
-            // Lọc theo tuần (MySQL YEARWEEK mode 3: Thứ 2 là ngày đầu tuần)
-            $conditionTuan = " AND YEARWEEK(tkb.ngayApDung, 3) = YEARWEEK(?, 3)"; 
-            $params[] = $ngayApDungTuan; 
-        }
-
         $sql = "SELECT tkb.*, mh.tenMonHoc, 
                         nd.hoTen as tenGiaoVien, l.tenLop
                 FROM thoikhoabieu tkb
@@ -107,78 +80,34 @@ class ThoiKhoaBieuModel {
                 LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
                 LEFT JOIN lophoc l ON tkb.maLop = l.maLop
                 WHERE tkb.maLop = ? 
-                {$conditionTuan}
                 ORDER BY FIELD(tkb.loaiLich, 'THU_2', 'THU_3', 'THU_4', 'THU_5', 'THU_6', 'THU_7'), tkb.tietBatDau";
         
         $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
+        $stmt->execute([$maLop]);
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    // getMonHocByKhoi (Giữ nguyên)
-    public function getMonHocByKhoi($maKhoi) {
+    // Lấy lịch dạy của giáo viên (TKB cố định)
+    public function getLichDayByGiaoVien($maGiaoVien) {
         $conn = $this->db->getConnection();
-        
-        $sql = "SELECT * FROM monhoc 
-                WHERE maKhoi = ? OR maKhoi IS NULL 
-                ORDER BY tenMonHoc"; 
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$maKhoi]);
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    // getAllMonHoc (Giữ nguyên)
-    public function getAllMonHoc() {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT maMonHoc, tenMonHoc, soTiet FROM monhoc ORDER BY tenMonHoc";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    // --- SỬA: getLichDayByGiaoVien() - Lọc theo Tuần ---
-    public function getLichDayByGiaoVien($maGiaoVien, $ngayApDungTuan = null) {
-        $conn = $this->db->getConnection();
-        
-        $conditionTuan = "";
-        $params = [$maGiaoVien];
-        
-        if ($ngayApDungTuan) {
-            $conditionTuan = " AND YEARWEEK(tkb.ngayApDung, 3) = YEARWEEK(?, 3)";
-            $params[] = $ngayApDungTuan; 
-        }
         
         $sql = "SELECT tkb.*, mh.tenMonHoc, l.tenLop, l.maLop
                 FROM thoikhoabieu tkb
                 JOIN monhoc mh ON tkb.maMonHoc = mh.maMonHoc
                 JOIN lophoc l ON tkb.maLop = l.maLop
                 WHERE tkb.maGiaoVien = ?
-                {$conditionTuan}
                 ORDER BY FIELD(tkb.loaiLich, 'THU_2', 'THU_3', 'THU_4', 'THU_5', 'THU_6', 'THU_7'), tkb.tietBatDau";
         
         $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
+        $stmt->execute([$maGiaoVien]);
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // --- SỬA: getAllThoiKhoaBieu (cho QTV) - Lọc theo Tuần ---
-    public function getAllThoiKhoaBieu($ngayApDungTuan = null) {
+    // Lấy tất cả TKB cố định
+    public function getAllThoiKhoaBieu() {
         $conn = $this->db->getConnection();
-        
-        $conditionTuan = "";
-        $params = [];
-        
-        if ($ngayApDungTuan) {
-            $conditionTuan = " AND YEARWEEK(tkb.ngayApDung, 3) = YEARWEEK(?, 3)";
-            $params[] = $ngayApDungTuan;
-        }
         
         $sql = "SELECT tkb.*, mh.tenMonHoc, gv.maGiaoVien, nd.hoTen as tenGiaoVien, 
                         l.tenLop
@@ -187,61 +116,56 @@ class ThoiKhoaBieuModel {
                 LEFT JOIN giaovien gv ON tkb.maGiaoVien = gv.maGiaoVien
                 LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
                 LEFT JOIN lophoc l ON tkb.maLop = l.maLop
-                WHERE 1=1 
-                {$conditionTuan}
-                ORDER BY tkb.ngayApDung, tkb.loaiLich, tkb.tietBatDau";
+                ORDER BY tkb.loaiLich, tkb.tietBatDau";
         
         $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
+        $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    // --- SỬA: xoaTietHoc() - Thêm điều kiện ngayApDung để xóa chính xác tuần ---
-    public function xoaTietHoc($maLop, $loaiLich, $tietBatDau, $tietKetThuc, $ngayApDung) {
+    // Xóa tiết học TKB cố định
+    public function xoaTietHoc($maLop, $loaiLich, $tietBatDau, $tietKetThuc) {
         $conn = $this->db->getConnection();
         
         $sql = "DELETE FROM thoikhoabieu 
                 WHERE maLop = ? 
                 AND loaiLich = ? 
                 AND tietBatDau = ? 
-                AND tietKetThuc = ?
-                AND YEARWEEK(ngayApDung, 3) = YEARWEEK(?, 3)"; // <-- Lọc theo tuần
+                AND tietKetThuc = ?";
         
         $stmt = $conn->prepare($sql);
-        return $stmt->execute([$maLop, $loaiLich, $tietBatDau, $tietKetThuc, $ngayApDung]);
+        return $stmt->execute([$maLop, $loaiLich, $tietBatDau, $tietKetThuc]);
     }
 
-    // --- SỬA: kiemTraTrungLichGiaoVien - Lọc theo Tuần ---
-    public function kiemTraTrungLichGiaoVien($maGiaoVien, $loaiLich, $tietBatDau, $tietKetThuc, $ngayApDung) {
+    // Kiểm tra trùng lịch giáo viên (TKB cố định)
+    public function kiemTraTrungLichGiaoVien($maGiaoVien, $loaiLich, $tietBatDau, $tietKetThuc) {
         $conn = $this->db->getConnection();
         
         $sql = "SELECT COUNT(*) as count 
                 FROM thoikhoabieu tkb
                 WHERE tkb.maGiaoVien = ? 
                 AND tkb.loaiLich = ? 
-                AND YEARWEEK(tkb.ngayApDung, 3) = YEARWEEK(?, 3) -- <-- LỌC THEO TUẦN
                 AND ((tkb.tietBatDau BETWEEN ? AND ?) 
-                     OR (tkb.tietKetThuc BETWEEN ? AND ?) 
-                     OR (? BETWEEN tkb.tietBatDau AND tkb.tietKetThuc) 
-                     OR (? BETWEEN tkb.tietBatDau AND tkb.tietKetThuc))";
+                    OR (tkb.tietKetThuc BETWEEN ? AND ?) 
+                    OR (? BETWEEN tkb.tietBatDau AND tkb.tietKetThuc) 
+                    OR (? BETWEEN tkb.tietBatDau AND tkb.tietKetThuc))";
         
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$maGiaoVien, $loaiLich, $ngayApDung, $tietBatDau, $tietKetThuc, $tietBatDau, $tietKetThuc, $tietBatDau, $tietKetThuc]);
+        $stmt->execute([$maGiaoVien, $loaiLich, $tietBatDau, $tietKetThuc, $tietBatDau, $tietKetThuc, $tietBatDau, $tietKetThuc]);
         
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['count'] > 0;
     }
 
-    // --- SỬA: kiemTraTrungLich - Lọc theo Tuần ---
-    public function kiemTraTrungLich($maLop, $loaiLich, $tietBatDau, $tietKetThuc, $ngayApDung) {
+    // Kiểm tra trùng lịch lớp (TKB cố định)
+    public function kiemTraTrungLich($maLop, $loaiLich, $tietBatDau, $tietKetThuc) {
         $conn = $this->db->getConnection();
         
         $sql = "SELECT COUNT(*) as count 
                 FROM thoikhoabieu tkb
                 WHERE tkb.maLop = ? 
                 AND tkb.loaiLich = ? 
-                AND YEARWEEK(tkb.ngayApDung, 3) = YEARWEEK(?, 3) -- <-- LỌC THEO TUẦN
                 AND (
                     (tkb.tietBatDau BETWEEN ? AND ?) 
                     OR (tkb.tietKetThuc BETWEEN ? AND ?) 
@@ -251,7 +175,7 @@ class ThoiKhoaBieuModel {
         $stmt = $conn->prepare($sql);
         
         $stmt->execute([
-            $maLop, $loaiLich, $ngayApDung, 
+            $maLop, $loaiLich, 
             $tietBatDau, $tietKetThuc, 
             $tietBatDau, $tietKetThuc, 
             $tietBatDau, $tietKetThuc
@@ -261,7 +185,7 @@ class ThoiKhoaBieuModel {
         return $result['count'] > 0;
     }
 
-    // Các hàm khác giữ nguyên...
+    // Lấy chi tiết lớp
     public function getChiTietLop($maLop) {
         $conn = $this->db->getConnection();
         
@@ -278,6 +202,7 @@ class ThoiKhoaBieuModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
+    // Xóa TKB cố định
     public function xoaThoiKhoaBieu($maThoiKhoaBieu) {
         $conn = $this->db->getConnection();
         
@@ -285,28 +210,252 @@ class ThoiKhoaBieuModel {
         $stmt = $conn->prepare($sql);
         return $stmt->execute([$maThoiKhoaBieu]);
     }
+    
+    // Lấy giáo viên theo môn học
     public function getGiaoVienByMonHoc($maMonHoc) {
         $conn = $this->db->getConnection();
-    try {
-        $sql = "SELECT 
-                    gv.maGiaoVien,
-                    nd.hoTen,
-                    gv.chuyenMon,
-                    gv.loaiGiaoVien
-                FROM giaovien gv
-                INNER JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
-                WHERE gv.maMonHoc = :maMonHoc
-                ORDER BY nd.hoTen";
+        try {
+            $sql = "SELECT 
+                        gv.maGiaoVien,
+                        nd.hoTen,
+                        gv.chuyenMon,
+                        gv.loaiGiaoVien
+                    FROM giaovien gv
+                    INNER JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                    WHERE gv.maMonHoc = :maMonHoc
+                    ORDER BY nd.hoTen";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':maMonHoc', $maMonHoc, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (PDOException $e) {
+            error_log("Lỗi khi lấy danh sách giáo viên theo môn học: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    // ========== CÁC HÀM CHO BUỔI HỌC THEO TUẦN ==========
+
+    // Lấy TKB theo lớp và tuần (từ bảng buoihoc)
+    public function getTKBTheoLopVaTuan($maLop, $ngayApDungTuan) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT bh.*, mh.tenMonHoc, 
+                        nd.hoTen as tenGiaoVien, l.tenLop
+                FROM buoihoc bh
+                JOIN monhoc mh ON bh.maMonHoc = mh.maMonHoc
+                LEFT JOIN giaovien gv ON bh.maGiaoVien = gv.maGiaoVien
+                LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN lophoc l ON bh.maLop = l.maLop
+                WHERE bh.maLop = ? 
+                AND YEARWEEK(bh.ngayHoc, 3) = YEARWEEK(?, 3)
+                ORDER BY bh.ngayHoc, bh.tietBatDau";
         
         $stmt = $conn->prepare($sql);
-        $stmt->bindParam(':maMonHoc', $maMonHoc, PDO::PARAM_INT);
+        $stmt->execute([$maLop, $ngayApDungTuan]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }   
+
+    // Tạo buổi học (lịch theo tuần)
+    public function taoBuoiHoc($data) {
+        $conn = $this->db->getConnection();
+        
+        // 1. Kiểm tra trùng lịch dạy của giáo viên
+        if ($this->kiemTraTrungLichGiaoVienBuoiHoc(
+            $data['maGiaoVien'], 
+            $data['tietBatDau'], 
+            $data['tietKetThuc'],
+            $data['ngayHoc']
+        )) {
+            $_SESSION['error'] = "Giáo viên đã có lịch dạy trùng giờ trong tuần này!";
+            return false;
+        }
+        
+        // 2. Kiểm tra trùng lịch của Lớp học
+        if ($this->kiemTraTrungLichBuoiHoc(
+            $data['maLop'], 
+            $data['tietBatDau'], 
+            $data['tietKetThuc'],
+            $data['ngayHoc']
+        )) {
+            $_SESSION['error'] = "Lớp học đã có tiết học trùng giờ trong tuần này!";
+            return false;
+        }
+        
+        // Lấy niên khóa hiện tại (hoặc theo logic của bạn)
+        $maNienKhoa = $this->getNienKhoaHienTai();
+        
+        // Sửa câu SQL để bao gồm maNienKhoa
+        $sql = "INSERT INTO buoihoc 
+                (maLop, maMonHoc, maGiaoVien, tietBatDau, tietKetThuc, phongHoc, ngayHoc, maNienKhoa) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        $stmt = $conn->prepare($sql);
+        return $stmt->execute([
+            $data['maLop'], 
+            $data['maMonHoc'],
+            $data['maGiaoVien'], 
+            $data['tietBatDau'],
+            $data['tietKetThuc'],
+            $data['phongHoc'],
+            $data['ngayHoc'],
+            $maNienKhoa  // Thêm giá trị niên khóa
+        ]);
+    }
+
+    // Thêm phương thức lấy niên khóa hiện tại
+    private function getNienKhoaHienTai() {
+        $conn = $this->db->getConnection();
+        
+        // Lấy niên khóa hiện tại dựa trên ngày
+        $sql = "SELECT maNienKhoa FROM nienkhoa 
+                WHERE ? BETWEEN ngayBatDau AND ngayKetThuc
+                LIMIT 1";
+        
+        $stmt = $conn->prepare($sql);
+        $currentDate = date('Y-m-d');
+        $stmt->execute([$currentDate]);
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result) {
+            return $result['maNienKhoa'];
+        } else {
+            // Trả về niên khóa mặc định nếu không tìm thấy
+            return 1; // Hoặc logic khác phù hợp với hệ thống
+        }
+    }
+
+    // Xóa buổi học theo tuần
+    public function xoaBuoiHoc($maLop, $tietBatDau, $tietKetThuc, $ngayHoc) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "DELETE FROM buoihoc 
+                WHERE maLop = ? 
+                AND tietBatDau = ? 
+                AND tietKetThuc = ?
+                AND ngayHoc = ?";
+        
+        $stmt = $conn->prepare($sql);
+        return $stmt->execute([$maLop, $tietBatDau, $tietKetThuc, $ngayHoc]);
+    }
+
+    // Kiểm tra trùng lịch giáo viên cho buổi học
+    public function kiemTraTrungLichGiaoVienBuoiHoc($maGiaoVien, $tietBatDau, $tietKetThuc, $ngayHoc) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as count 
+                FROM buoihoc bh
+                WHERE bh.maGiaoVien = ? 
+                AND bh.ngayHoc = ?
+                AND ((bh.tietBatDau BETWEEN ? AND ?) 
+                    OR (bh.tietKetThuc BETWEEN ? AND ?) 
+                    OR (? BETWEEN bh.tietBatDau AND bh.tietKetThuc) 
+                    OR (? BETWEEN bh.tietBatDau AND bh.tietKetThuc))";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maGiaoVien, $ngayHoc, $tietBatDau, $tietKetThuc, $tietBatDau, $tietKetThuc, $tietBatDau, $tietKetThuc]);
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] > 0;
+    }
+
+    // Kiểm tra trùng lịch lớp cho buổi học
+    public function kiemTraTrungLichBuoiHoc($maLop, $tietBatDau, $tietKetThuc, $ngayHoc) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as count 
+                FROM buoihoc bh
+                WHERE bh.maLop = ? 
+                AND bh.ngayHoc = ?
+                AND (
+                    (bh.tietBatDau BETWEEN ? AND ?) 
+                    OR (bh.tietKetThuc BETWEEN ? AND ?) 
+                    OR (? <= bh.tietKetThuc AND ? >= bh.tietBatDau) 
+                )";
+        
+        $stmt = $conn->prepare($sql);
+        
+        $stmt->execute([
+            $maLop, $ngayHoc,
+            $tietBatDau, $tietKetThuc, 
+            $tietBatDau, $tietKetThuc, 
+            $tietBatDau, $tietKetThuc
+        ]);
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] > 0;
+    }
+
+    // Lấy tất cả buổi học
+    public function getAllBuoiHoc() {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT bh.*, mh.tenMonHoc, nd.hoTen as tenGiaoVien, l.tenLop
+                FROM buoihoc bh
+                JOIN monhoc mh ON bh.maMonHoc = mh.maMonHoc
+                LEFT JOIN giaovien gv ON bh.maGiaoVien = gv.maGiaoVien
+                LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                LEFT JOIN lophoc l ON bh.maLop = l.maLop
+                ORDER BY bh.ngayHoc, bh.tietBatDau";
+        
+        $stmt = $conn->prepare($sql);
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-    } catch (PDOException $e) {
-        error_log("Lỗi khi lấy danh sách giáo viên theo môn học: " . $e->getMessage());
-        return [];
     }
-}
+
+    // Xóa buổi học theo ID
+    public function xoaBuoiHocById($maBuoiHoc) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "DELETE FROM buoihoc WHERE maBuoiHoc = ?";
+        
+        $stmt = $conn->prepare($sql);
+        return $stmt->execute([$maBuoiHoc]);
+    }
+
+    // Kiểm tra buổi học đã tồn tại
+    public function kiemTraBuoiHocTonTai($maLop, $tietBatDau, $tietKetThuc, $ngayHoc) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as count 
+                FROM buoihoc 
+                WHERE maLop = ? 
+                AND ngayHoc = ?
+                AND ((tietBatDau BETWEEN ? AND ?) 
+                    OR (tietKetThuc BETWEEN ? AND ?) 
+                    OR (? BETWEEN tietBatDau AND tietKetThuc) 
+                    OR (? BETWEEN tietBatDau AND tietKetThuc))";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maLop, $ngayHoc, $tietBatDau, $tietKetThuc, $tietBatDau, $tietKetThuc, $tietBatDau, $tietKetThuc]);
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] > 0;
+    }
+    // Lấy lịch dạy của giáo viên theo tuần
+    public function getLichDayByGiaoVienVaTuan($maGiaoVien, $ngayApDungTuan) {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT bh.*, mh.tenMonHoc, l.tenLop, l.maLop,
+                    nd.hoTen as tenGiaoVien
+                FROM buoihoc bh
+                JOIN monhoc mh ON bh.maMonHoc = mh.maMonHoc
+                JOIN lophoc l ON bh.maLop = l.maLop
+                LEFT JOIN giaovien gv ON bh.maGiaoVien = gv.maGiaoVien
+                LEFT JOIN nguoidung nd ON gv.maNguoiDung = nd.maNguoiDung
+                WHERE bh.maGiaoVien = ?
+                AND YEARWEEK(bh.ngayHoc, 3) = YEARWEEK(?, 3)
+                ORDER BY bh.ngayHoc, bh.tietBatDau";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maGiaoVien, $ngayApDungTuan]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

@@ -228,6 +228,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const namHocInput = document.getElementById('namHoc');
     const hocKyInput = document.getElementById('hocKy');
     const maHocSinhSelect = document.getElementById('maHocSinhSelect');
+    const btnXemDiem = formChonKy.querySelector('button[type="submit"]');
 
     if (maHocSinhSelect) {
         maHocSinhSelect.addEventListener('change', function() {
@@ -253,9 +254,20 @@ document.addEventListener('DOMContentLoaded', function() {
             namHocInput.value = '';
             hocKyInput.value = '';
         }
+        if (btnXemDiem) {
+            btnXemDiem.disabled = !selectedValue; 
+        }
     }
 
-    kyHocSelect.addEventListener('change', updateHiddenInputs);
+    if (kyHocSelect) {
+        kyHocSelect.addEventListener('change', function() {
+            updateHiddenInputs();
+            
+            if (kyHocSelect.value) {
+                formChonKy.submit();
+            }
+        });
+    }
     updateHiddenInputs();
 });
 </script>
@@ -277,9 +289,9 @@ if ($viewMode === 'single' && !empty($bangDiemData['single']['bangDiem'])):
         }
     }
 ?>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         if (<?= count($labels) ?> > 0) {
             const ctx = document.getElementById('myGradeChart');
@@ -301,7 +313,8 @@ if ($viewMode === 'single' && !empty($bangDiemData['single']['bangDiem'])):
                         borderColor: 'rgba(231, 76, 60, 1)',
                         borderWidth: 1,
                         type: 'bar', 
-                        order: 2 
+                        order: 2,
+                        maxBarThickness: 100
                     },
                     {
                         label: 'Điểm TB của lớp',
@@ -321,6 +334,10 @@ if ($viewMode === 'single' && !empty($bangDiemData['single']['bangDiem'])):
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -331,12 +348,29 @@ if ($viewMode === 'single' && !empty($bangDiemData['single']['bangDiem'])):
                         legend: {
                             display: true,
                             position: 'bottom'
+                        },
+                        tooltip: {
+                            enabled: true,
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2);
+                                    }
+                                    return label;
+                                }
+                            }
                         }
                     }
                 }
             });
         }
     });
-    </script>
+</script>
 <?php endif; ?>
 <?php ?>

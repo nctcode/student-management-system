@@ -1,4 +1,5 @@
 <?php
+require_once 'models/TaiKhoanModel.php';
 class AuthController { 
     private $model;
 
@@ -8,6 +9,15 @@ class AuthController {
         }
         require_once 'models/TaiKhoanModel.php';
         $this->model = new TaiKhoanModel();
+    }
+    public function index() {
+        // Kiểm tra nếu đã đăng nhập thì chuyển hướng về trang chủ
+        if (isset($_SESSION['user'])) {
+            $this->redirectByRole($_SESSION['user']['vaiTro']);
+            return;
+        }
+        // Nếu chưa đăng nhập, chuyển đến trang login
+        $this->login();
     }
 
     public function changePassword() {
@@ -183,6 +193,10 @@ class AuthController {
             if ($maPhuHuynh) {
                 $_SESSION['user']['maPhuHuynh'] = $maPhuHuynh;
             }
+            $maTruong = $this->model->getMaTruongByMaNguoiDung($maNguoiDung);
+            if ($maTruong) {
+                $_SESSION['user']['maTruong'] = $maTruong;
+            }
         }
         
         // 🆕 THÊM: Lấy mã giáo viên nếu vai trò là GIAOVIEN
@@ -191,13 +205,34 @@ class AuthController {
             if ($maGiaoVien) {
                 $_SESSION['user']['maGiaoVien'] = $maGiaoVien;
             }
+            $maTruong = $this->model->getMaTruongByMaNguoiDung($maNguoiDung);
+            if ($maTruong) {
+                $_SESSION['user']['maTruong'] = $maTruong;
+            }
         }
         
-        // 🆕 THÊM: Lấy mã học sinh nếu vai trò là HOCSINH
+        // Tìm đến phần này trong processLogin() (khoảng dòng 142-150):
         if ($user['vaiTro'] === 'HOCSINH') {
+            $maTruong = $this->model->getMaTruongByMaNguoiDung($maNguoiDung);
+            if ($maTruong) {
+                $_SESSION['user']['maTruong'] = $maTruong;
+            }
             $maHocSinh = $this->model->getMaHocSinhByMaNguoiDung($maNguoiDung);
             if ($maHocSinh) {
                 $_SESSION['user']['maHocSinh'] = $maHocSinh;
+                
+                // 🔥 THÊM: Lấy thông tin lớp và khối của học sinh
+                $studentInfo = $this->model->getStudentClassInfo($maHocSinh);
+                if ($studentInfo) {
+                    $_SESSION['user']['maLop'] = $studentInfo['maLop'];
+                    $_SESSION['user']['tenLop'] = $studentInfo['tenLop'];
+                    $_SESSION['user']['khoi'] = $studentInfo['khoi']; // Quan trọng: lấy khối
+                    
+                    // DEBUG: Ghi log để kiểm tra
+                    error_log("Student Info for maHocSinh=$maHocSinh: " . print_r($studentInfo, true));
+                } else {
+                    error_log("WARNING: No student info found for maHocSinh=$maHocSinh");
+                }
             }
         }
         
@@ -215,7 +250,8 @@ class AuthController {
     
     header('Location: index.php?controller=auth&action=login');
     exit;
-}   private function redirectByRole($role) {
+}
+   private function redirectByRole($role) {
         error_log("Redirecting by role: " . $role);
         
         switch ($role) {

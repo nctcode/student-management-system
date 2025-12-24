@@ -26,10 +26,9 @@
 
             <hr>
             <h6><strong>Mô tả bài tập:</strong></h6>
-            <div class="p-3 bg-light rounded" style="min-height: 100px;">
+            <div class="p-3 bg-light rounded" style="min-height: 100px; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
                 <?= $baiTap['moTa'] ?>
             </div>
-
             <hr>
             <h6><strong>Tài liệu đính kèm:</strong></h6>
             <?php 
@@ -136,7 +135,7 @@
                                     }
                                     ?>
                                 </td>
-                                <td>
+                                <td class="col-file-dinh-kem">
                                     <?php
                                     $filesHS = json_decode($baiNop['fileDinhKem'], true);
                                     if (isset($filesHS['duongDan'])) { $filesHS = [$filesHS]; }
@@ -144,8 +143,10 @@
                                     foreach ($filesHS as $fileInfo):
                                         $fileSizeMB = round($fileInfo['kichThuoc'] / 1024 / 1024, 2);
                                     ?>
-                                    <a href="<?= htmlspecialchars($fileInfo['duongDan']) ?>" download="<?= htmlspecialchars($fileInfo['tenFile']) ?>" 
-                                        class="btn btn-sm btn-outline-primary mb-1">
+                                    <a href="<?= htmlspecialchars($fileInfo['duongDan']) ?>" 
+                                        download="<?= htmlspecialchars($fileInfo['tenFile']) ?>" 
+                                        class="btn btn-sm btn-outline-primary mb-1 btn-file-limit"
+                                        title="<?= htmlspecialchars($fileInfo['tenFile'])?> (<?= $fileSizeMB ?> MB)">
                                         <i class="fas fa-download mr-1"></i>
                                         <?= htmlspecialchars($fileInfo['tenFile']) ?> (<?= $fileSizeMB ?> MB)
                                     </a><br>

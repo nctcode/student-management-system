@@ -12,7 +12,7 @@ window.demKyTu = function(textarea) {
     const soKyTu = document.getElementById('soKyTu');
     if (!soKyTu) return;
     
-    const maxLength = 1000; // Giới hạn ký tự
+    const maxLength = 1000;
     soKyTu.textContent = textarea.value.length;
     
     if (textarea.value.length > maxLength) {
@@ -27,66 +27,62 @@ function getFileExtension(filename) {
     return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2).toLowerCase();
 }
 
-// Hiển thị file đính kèm VÀ lọc file lỗi (cho Giáo viên)
+function showBTAlert(message, iconClass = 'fa-exclamation-triangle') {
+    const modalElement = document.getElementById('modalAlertBT');
+    const msgElement = document.getElementById('msgAlertBT');
+    const iconContainer = modalElement.querySelector('.modal-body i');
+
+    if (modalElement && msgElement) {
+        msgElement.innerHTML = message;
+        
+        if (iconContainer) {
+            iconContainer.className = `fas ${iconClass} fa-3x text-danger mb-3`;
+        }
+        
+        const modalInstance = new bootstrap.Modal(modalElement);
+        modalInstance.show();
+    }
+}
+
 window.hienThiFile = function() {
     const fileInput = document.getElementById('fileDinhKem');
     const fileList = document.getElementById('danhSachFile');
+    
     if (!fileInput || !fileList) return;
 
-    const files = fileInput.files;
-    const dt = new DataTransfer(); 
-    
+    const dt = new DataTransfer();
     fileList.innerHTML = '';
+    let errorList = [];
 
-    for (let i = 0; i < files.length; i++) {
-        const file = files.item(i);
-        const fileSize = file.size;
-        const fileExt = getFileExtension(file.name);
+    Array.from(fileInput.files).forEach(file => {
+        const ext = getFileExtension(file.name);
+        let msg = "";
 
-        let fileItem = document.createElement('div');
-        fileItem.className = 'd-flex justify-content-between align-items-center border rounded p-2 mb-2';
+        if (file.size === 0) msg = "file bị rỗng";
+        else if (file.size > MAX_FILE_SIZE) msg = "vượt quá 20MB";
+        else if (!ALLOWED_EXTENSIONS.includes(ext)) msg = `định dạng .${ext} không hỗ trợ`;
 
-        let isValid = true;
-        let errorMessage = '';
-
-        if (fileSize === 0) {
-            isValid = false;
-            errorMessage = 'File rỗng, sẽ bị loại bỏ!';
-        } 
-        else if (fileSize > MAX_FILE_SIZE) {
-            isValid = false;
-            const sizeMB = (fileSize / (1024 * 1024)).toFixed(1);
-            errorMessage = `File quá 20MB (${sizeMB} MB), sẽ bị loại bỏ!`;
-        } 
-        else if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
-            isValid = false;
-            errorMessage = `Định dạng .${fileExt} không hỗ trợ, sẽ bị loại bỏ!`;
-        }
-
-        if (isValid) {
-            fileItem.classList.add('bg-light');
-            let fileSizeText = (fileSize / (1024 * 1024)).toFixed(1) + " MB";
-            if (fileSize < (1024 * 1024)) { 
-                fileSizeText = (fileSize / 1024).toFixed(0) + " KB";
-            }
-            fileItem.innerHTML = `
-                <div><i class="fas fa-file mr-2"></i> <strong>${file.name}</strong> (${fileSizeText})</div>
-                <button type="button" class="btn btn-sm btn-danger" onclick="xoaFile(${i})">×</button>
-            `;
+        if (msg !== "") {
+            errorList.push(`<li>File <b>${file.name}</b> (${msg})</li>`);
+        } else {
             dt.items.add(file);
-        } 
-        else {
-            fileItem.classList.add('bg-danger-light'); 
+            const fileSizeText = (file.size / (1024 * 1024)).toFixed(1) + " MB";
+            const fileItem = document.createElement('div');
+            fileItem.className = 'd-flex justify-content-between align-items-center border rounded p-2 mb-2 bg-light';
             fileItem.innerHTML = `
-                <div><i class="fas fa-exclamation-triangle text-danger mr-2"></i> 
-                     <strong>${file.name}</strong></div>
-                <small class="text-danger">${errorMessage}</small>
+                <div><i class="fas fa-file mr-2 text-primary"></i><strong>${file.name}</strong> (${fileSizeText})</div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="xoaFile(${dt.items.length - 1})">×</button>
             `;
+            fileList.appendChild(fileItem);
         }
-        fileList.appendChild(fileItem);
-    }
-    
+    });
+
     fileInput.files = dt.files;
+
+    if (errorList.length > 0) {
+        const finalMsg = `Phát hiện ${errorList.length} file lỗi đã bị loại bỏ:<ul class='text-left mt-2'>${errorList.join('')}</ul>`;
+        showBTAlert(finalMsg, 'fa-file-excel');
+    }
 }
 
 // Xóa file khỏi danh sách
@@ -94,9 +90,7 @@ window.xoaFile = function(index) {
     const fileInput = document.getElementById('fileDinhKem');
     const dt = new DataTransfer();
     const files = Array.from(fileInput.files);
-    
     files.splice(index, 1); 
-    
     files.forEach(file => dt.items.add(file));
     fileInput.files = dt.files;
     hienThiFile(); 
@@ -106,21 +100,18 @@ window.xoaFile = function(index) {
 document.addEventListener('DOMContentLoaded', function() {
     const formGiaoBaiTap = document.getElementById('formGiaoBaiTap');
     const hanNopInput = document.getElementById('hanNop');
-
     formGiaoBaiTap?.addEventListener('submit', function(event) {
         
         // Kiểm tra Hạn nộp
         if (hanNopInput.value) {
             const hanNopDate = new Date(hanNopInput.value);
             const now = new Date();
-            
             now.setSeconds(0, 0); 
             
             if (hanNopDate < now) {
                 event.preventDefault(); 
-                alert('Hạn nộp phải ở trong tương lai.\nVui lòng chọn lại ngày và giờ!');
-                hanNopInput.focus();
-                return; 
+                showBTAlert('Hạn nộp phải ở trong tương lai.<br>Vui lòng chọn lại ngày và giờ!', 'fa-calendar-times');
+                return;
             }
         }
         

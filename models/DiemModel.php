@@ -75,48 +75,50 @@ class DiemModel {
         return $ketQua;
     }
 
+    // Kiểm tra xem giáo viên có được phân công dạy lớp và môn này không
+    public function kiemTraPhanCong($maGiaoVien, $maLop, $maMonHoc) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT COUNT(*) FROM phanconggiangday 
+                WHERE maGiaoVien = ? AND maLop = ? AND maMonHoc = ? AND trangThai = 'Hoạt động'";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$maGiaoVien, $maLop, $maMonHoc]);
+        return $stmt->fetchColumn() > 0;
+    }
+
     // Lưu điểm 
     public function luuBangDiem($maMonHoc, $maGiaoVien, $hocKy, $namHoc, $maLop, $danhSachDiem) {
         $conn = $this->db->getConnection();
-        
         $conn->beginTransaction();
         try {
-            $sqlGetHS = "SELECT maHocSinh FROM hocsinh WHERE maLop = ?";
-            $stmtGetHS = $conn->prepare($sqlGetHS);
-            $stmtGetHS->execute([$maLop]);
-            $dsMaHocSinh = $stmtGetHS->fetchAll(PDO::FETCH_COLUMN);
-
-            if (empty($dsMaHocSinh)) {
-                $conn->commit();
-                return true;
-            }
-            $placeholders = implode(',', array_fill(0, count($dsMaHocSinh), '?'));
-
-            $sqlDelete = "DELETE FROM diem 
-                          WHERE maMonHoc = ? AND hocKy = ? AND namHoc = ? 
-                          AND maHocSinh IN ($placeholders)";
-            
-            $paramsDelete = array_merge([$maMonHoc, $hocKy, $namHoc], $dsMaHocSinh);
-            $stmtDelete = $conn->prepare($sqlDelete);
-            $stmtDelete->execute($paramsDelete);
-
-            $sqlInsert = "INSERT INTO diem (maHocSinh, maMonHoc, loaiDiem, hocKy, namHoc, diemSo, maGiaoVien, ngayNhap)
-                          VALUES (:maHocSinh, :maMonHoc, :loaiDiem, :hocKy, :namHoc, :diemSo, :maGiaoVien, CURDATE())";
-            $stmtInsert = $conn->prepare($sqlInsert);
-
             foreach ($danhSachDiem as $maHocSinh => $cacLoaiDiem) {
-                if (in_array($maHocSinh, $dsMaHocSinh)) {
-                    foreach ($cacLoaiDiem as $loaiDiem => $mangDiem) {
-                        if (is_array($mangDiem)) {
-                            foreach ($mangDiem as $diemSo) {
-                                $stmtInsert->execute([
-                                    'maHocSinh' => $maHocSinh,
-                                    'maMonHoc' => $maMonHoc,
-                                    'loaiDiem' => $loaiDiem,
-                                    'hocKy' => $hocKy,
-                                    'namHoc' => $namHoc,
-                                    'diemSo' => $diemSo,
-                                    'maGiaoVien' => $maGiaoVien
+                foreach ($cacLoaiDiem as $loaiDiem => $mangDiem) {
+                    $sqlCheck = "SELECT maDiem FROM diem 
+                                WHERE maHocSinh = ? AND maMonHoc = ? AND loaiDiem = ? 
+                                AND hocKy = ? AND namHoc = ? ORDER BY maDiem ASC";
+                    $stmtCheck = $conn->prepare($sqlCheck);
+                    $stmtCheck->execute([$maHocSinh, $maMonHoc, $loaiDiem, $hocKy, $namHoc]);
+                    $existingGrades = $stmtCheck->fetchAll(PDO::FETCH_ASSOC);
+
+                    $countExisting = count($existingGrades);
+                    $countNew = count($mangDiem);
+
+                    for ($i = 0; $i < max($countExisting, $countNew); $i++) {
+                        $newScore = isset($mangDiem[$i]) ? $mangDiem[$i] : '';
+
+                        if ($i < $countExisting) {
+                            if ($newScore !== '') {
+                                $sqlUpdate = "UPDATE diem SET diemSo = ? WHERE maDiem = ?";
+                                $conn->prepare($sqlUpdate)->execute([$newScore, $existingGrades[$i]['maDiem']]);
+                            } else {
+                                $sqlDel = "DELETE FROM diem WHERE maDiem = ?";
+                                $conn->prepare($sqlDel)->execute([$existingGrades[$i]['maDiem']]);
+                            }
+                        } else {
+                            if ($newScore !== '') {
+                                $sqlInsert = "INSERT INTO diem (maHocSinh, maMonHoc, loaiDiem, hocKy, namHoc, diemSo, maGiaoVien, ngayNhap)
+                                            VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE())";
+                                $conn->prepare($sqlInsert)->execute([
+                                    $maHocSinh, $maMonHoc, $loaiDiem, $hocKy, $namHoc, $newScore, $maGiaoVien
                                 ]);
                             }
                         }

@@ -37,11 +37,13 @@ public function __construct() {
         $accounts = $this->model->getAllUsers($search_id, $search_username);
         
         require 'views/auth/QuanLiTaiKhoan.php';
+        exit();
     }
 
     // ✅ Hiển thị form tạo tài khoản riêng
     public function create() {
         require 'views/auth/QuanLiTaiKhoan_create.php';
+        exit();
     }
 // ✅ Xử lý thêm tài khoản
 public function store() {
@@ -113,8 +115,11 @@ public function edit() {
         'email' => $userFromDB['email'] ?? '',
         'vaiTro' => $userFromDB['vaiTro'] ?? $userFromDB['loaiNguoiDung'] ?? 'USER'
     ];
-
+    $showSidebar = true;
     require 'views/auth/QuanLiTaiKhoan_edit.php';
+    require_once 'views/layouts/header.php';
+    require_once 'views/layouts/sidebar/admin.php';
+    exit();
 }
 
     // ✅ Cập nhật tài khoản

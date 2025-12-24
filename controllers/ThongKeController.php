@@ -33,14 +33,17 @@ class ThongKeController {
         $title = "Thống Kê Báo Cáo";
         
         try {
-            // Chỉ số tổng quan (Cho Dashboard mini trên trang lọc)
-            $tongSoLop = $this->giaoVienModel->getTotalClasses();
-            $lopCoGVCN = $this->giaoVienModel->getClassesWithGVCN();
-            $tongSoGV = $this->giaoVienModel->getTotalTeachers();
+            // Lấy maTruong từ session (giả sử user đã đăng nhập có trường)
+            $maTruong = $_SESSION['user']['maTruong'] ?? null;
             
-            // Dữ liệu cho bộ lọc
-            $danhSachKhoi = $this->giaoVienModel->getAllKhoi();
-            $danhSachLop = $this->giaoVienModel->getAllClasses(); 
+            // Chỉ số tổng quan (Cho Dashboard mini trên trang lọc) - THÊM maTruong
+            $tongSoLop = $this->giaoVienModel->getTotalClasses($maTruong);
+            $lopCoGVCN = $this->giaoVienModel->getClassesWithGVCN($maTruong);
+            $tongSoGV = $this->giaoVienModel->getTotalTeachers($maTruong);
+            
+            // Dữ liệu cho bộ lọc - THÊM maTruong
+            $danhSachKhoi = $this->giaoVienModel->getAllKhoi($maTruong);
+            $danhSachLop = $this->giaoVienModel->getAllClasses($maTruong); 
             
         } catch (Exception $e) {
             $_SESSION['error'] = "Lỗi hệ thống khi tải dữ liệu thống kê tổng quan!";
@@ -56,6 +59,7 @@ class ThongKeController {
         require_once $sidebarPath;
         require_once 'views/thongke/index.php'; // Quay lại view index.php cho trang lọc
         require_once 'views/layouts/footer.php';
+        exit();
     }
 
     /**
@@ -78,22 +82,25 @@ class ThongKeController {
         $baoCaoTitle = "";
 
         try {
+            // Lấy maTruong từ session
+            $maTruong = $_SESSION['user']['maTruong'] ?? null;
+            
             switch ($loaiBaoCao) {
                 case 'phanCong':
-                    // Sử dụng hàm chi tiết theo Khối/Lớp
-                    $baoCaoData = $this->thongKeModel->getThongKePhanCong($maKhoi, $maLop);
+                    // Sử dụng hàm chi tiết theo Khối/Lớp - THÊM maTruong
+                    $baoCaoData = $this->thongKeModel->getThongKePhanCong($maKhoi, $maLop, $maTruong);
                     $baoCaoTitle = "Thống kê Phân công Giáo viên Bộ môn và Chủ nhiệm";
                     $viewFile = 'views/thongke/chi_tiet_bao_cao_phan_cong.php';
                     break;
                 case 'hocLuc':
-                    // Sử dụng hàm chi tiết theo Khối/Lớp
-                    $baoCaoData = $this->thongKeModel->getThongKeHocLuc($maKhoi, $maLop, $hocKy);
+                    // Sử dụng hàm chi tiết theo Khối/Lớp - THÊM maTruong
+                    $baoCaoData = $this->thongKeModel->getThongKeHocLuc($maKhoi, $maLop, $hocKy, $maTruong);
                     $baoCaoTitle = "Thống kê Xếp loại Học lực Học kỳ $hocKy";
                     $viewFile = 'views/thongke/chi_tiet_bao_cao_hoc_luc.php';
                     break;
                 case 'chuyenCan':
-                    // Sử dụng hàm chi tiết theo Khối/Lớp
-                    $baoCaoData = $this->thongKeModel->getThongKeChuyenCan($maKhoi, $maLop, $hocKy);
+                    // Sử dụng hàm chi tiết theo Khối/Lớp - THÊM maTruong
+                    $baoCaoData = $this->thongKeModel->getThongKeChuyenCan($maKhoi, $maLop, $hocKy, $maTruong);
                     $baoCaoTitle = "Thống kê Chuyên cần Học kỳ $hocKy";
                     $viewFile = 'views/thongke/chi_tiet_bao_cao_chuyen_can.php';
                     break;
@@ -124,6 +131,7 @@ class ThongKeController {
         require_once $sidebarPath;
         require_once $viewFile;
         require_once 'views/layouts/footer.php';
+        exit();
     }
 }
 ?>

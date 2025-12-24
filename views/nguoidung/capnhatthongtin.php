@@ -130,6 +130,6 @@ unset($_SESSION['message'], $_SESSION['message_type']);
             document.getElementById('updateForm').submit();
         }
     </script>
-
+<script src="assets/js/active-menu.js"></script>
 </body>
 </html>
